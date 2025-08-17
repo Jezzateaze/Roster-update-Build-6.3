@@ -105,6 +105,16 @@ const convertTo24Hour = (timeString) => {
 };
 
 function App() {
+  // Authentication State
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [currentUser, setCurrentUser] = useState(null);
+  const [authToken, setAuthToken] = useState(null);
+  const [showLoginDialog, setShowLoginDialog] = useState(true);
+  const [showChangePinDialog, setShowChangePinDialog] = useState(false);
+  const [loginData, setLoginData] = useState({ username: '', pin: '' });
+  const [changePinData, setChangePinData] = useState({ current_pin: '', new_pin: '', confirm_pin: '' });
+  const [authError, setAuthError] = useState('');
+
   const [currentDate, setCurrentDate] = useState(getBrisbaneDate());
   const [staff, setStaff] = useState([]);
   const [shiftTemplates, setShiftTemplates] = useState([]);
