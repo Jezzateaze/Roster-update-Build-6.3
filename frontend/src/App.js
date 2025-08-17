@@ -1284,7 +1284,7 @@ function App() {
     // Simple logic for weekdays
     if (startHour < 6 || (endHour <= startHour && endHour > 0)) { // Night or overnight
       return <Badge variant="secondary" className="bg-purple-100 text-purple-800">Night</Badge>;
-    } else if (startHour >= 20) { // Evening start
+    } else if (startHour >= 15) { // Evening/afternoon start (3:00 PM or later)
       return <Badge variant="secondary" className="bg-orange-100 text-orange-800">Evening</Badge>;
     } else { // Day
       return <Badge variant="secondary" className="bg-green-100 text-green-800">Day</Badge>;
