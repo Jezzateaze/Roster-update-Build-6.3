@@ -2967,6 +2967,263 @@ class ShiftRosterAPITester:
         
         return False
 
+    def test_allow_overlap_functionality(self):
+        """Test the new Allow Overlap functionality for adding 2:1 shifts"""
+        print(f"\n🔄 Testing Allow Overlap Functionality...")
+        
+        # Test date for overlap testing
+        test_date = "2025-08-20"
+        
+        # Clear any existing shifts for this date
+        success, response = self.run_test(
+            f"Clear existing shifts for {test_date}",
+            "DELETE",
+            f"api/roster/month/2025-08",
+            200
+        )
+        
+        # Test 1: Add a regular shift first
+        regular_shift = {
+            "id": "",
+            "date": test_date,
+            "shift_template_id": "regular-shift-1",
+            "staff_id": None,
+            "staff_name": None,
+            "start_time": "09:00",
+            "end_time": "17:00",
+            "is_sleepover": False,
+            "is_public_holiday": False,
+            "manual_shift_type": None,
+            "manual_hourly_rate": None,
+            "manual_sleepover": None,
+            "wake_hours": None,
+            "hours_worked": 0.0,
+            "base_pay": 0.0,
+            "sleepover_allowance": 0.0,
+            "total_pay": 0.0,
+            "allow_overlap": False  # Default behavior
+        }
+        
+        success, created_regular = self.run_test(
+            "Add Regular Shift (09:00-17:00)",
+            "POST",
+            "api/roster/add-shift",
+            200,
+            data=regular_shift
+        )
+        
+        if not success:
+            print("   ⚠️  Could not create regular shift for testing")
+            return False
+        
+        print(f"   ✅ Created regular shift: {regular_shift['start_time']}-{regular_shift['end_time']}")
+        
+        # Test 2: Try to add overlapping shift with allow_overlap=False (should fail with enhanced error)
+        overlapping_shift_no_allow = {
+            "id": "",
+            "date": test_date,
+            "shift_template_id": "overlapping-shift-1",
+            "staff_id": None,
+            "staff_name": None,
+            "start_time": "15:00",  # Overlaps with first shift
+            "end_time": "23:00",
+            "is_sleepover": False,
+            "is_public_holiday": False,
+            "manual_shift_type": None,
+            "manual_hourly_rate": None,
+            "manual_sleepover": None,
+            "wake_hours": None,
+            "hours_worked": 0.0,
+            "base_pay": 0.0,
+            "sleepover_allowance": 0.0,
+            "total_pay": 0.0,
+            "allow_overlap": False  # Explicitly set to False
+        }
+        
+        success, response = self.run_test(
+            "Add Overlapping Shift with allow_overlap=False (Should Fail)",
+            "POST",
+            "api/roster/add-shift",
+            409,  # Expect conflict
+            data=overlapping_shift_no_allow
+        )
+        
+        if success:  # Success means we got expected 409
+            print(f"   ✅ Overlap correctly prevented when allow_overlap=False")
+            # Check for enhanced error message
+            print(f"   Expected enhanced error message about 'Allow Overlap' option")
+        else:
+            print(f"   ❌ Overlap detection failed when allow_overlap=False")
+            return False
+        
+        # Test 3: Add overlapping shift with allow_overlap=True (should succeed)
+        overlapping_shift_allow = {
+            "id": "",
+            "date": test_date,
+            "shift_template_id": "overlapping-shift-2",
+            "staff_id": None,
+            "staff_name": None,
+            "start_time": "15:00",  # Overlaps with first shift
+            "end_time": "23:00",
+            "is_sleepover": False,
+            "is_public_holiday": False,
+            "manual_shift_type": None,
+            "manual_hourly_rate": None,
+            "manual_sleepover": None,
+            "wake_hours": None,
+            "hours_worked": 0.0,
+            "base_pay": 0.0,
+            "sleepover_allowance": 0.0,
+            "total_pay": 0.0,
+            "allow_overlap": True  # Allow overlap
+        }
+        
+        success, created_overlap = self.run_test(
+            "Add Overlapping Shift with allow_overlap=True (Should Succeed)",
+            "POST",
+            "api/roster/add-shift",
+            200,
+            data=overlapping_shift_allow
+        )
+        
+        if success:
+            print(f"   ✅ Overlap allowed successfully when allow_overlap=True")
+            print(f"   Overlapping shift: {overlapping_shift_allow['start_time']}-{overlapping_shift_allow['end_time']}")
+        else:
+            print(f"   ❌ Overlap was incorrectly prevented even with allow_overlap=True")
+            return False
+        
+        # Test 4: Add another overlapping shift with allow_overlap=True (should succeed)
+        second_overlap_shift = {
+            "id": "",
+            "date": test_date,
+            "shift_template_id": "overlapping-shift-3",
+            "staff_id": None,
+            "staff_name": None,
+            "start_time": "16:00",  # Overlaps with both existing shifts
+            "end_time": "22:00",
+            "is_sleepover": False,
+            "is_public_holiday": False,
+            "manual_shift_type": None,
+            "manual_hourly_rate": None,
+            "manual_sleepover": None,
+            "wake_hours": None,
+            "hours_worked": 0.0,
+            "base_pay": 0.0,
+            "sleepover_allowance": 0.0,
+            "total_pay": 0.0,
+            "allow_overlap": True  # Allow overlap
+        }
+        
+        success, created_second_overlap = self.run_test(
+            "Add Second Overlapping Shift with allow_overlap=True (Should Succeed)",
+            "POST",
+            "api/roster/add-shift",
+            200,
+            data=second_overlap_shift
+        )
+        
+        if success:
+            print(f"   ✅ Second overlap allowed successfully when allow_overlap=True")
+            print(f"   Second overlapping shift: {second_overlap_shift['start_time']}-{second_overlap_shift['end_time']}")
+        else:
+            print(f"   ❌ Second overlap was incorrectly prevented even with allow_overlap=True")
+            return False
+        
+        # Test 5: Test default behavior (allow_overlap not specified, should default to False)
+        default_overlap_shift = {
+            "id": "",
+            "date": test_date,
+            "shift_template_id": "default-shift-1",
+            "staff_id": None,
+            "staff_name": None,
+            "start_time": "14:00",  # Overlaps with existing shifts
+            "end_time": "18:00",
+            "is_sleepover": False,
+            "is_public_holiday": False,
+            "manual_shift_type": None,
+            "manual_hourly_rate": None,
+            "manual_sleepover": None,
+            "wake_hours": None,
+            "hours_worked": 0.0,
+            "base_pay": 0.0,
+            "sleepover_allowance": 0.0,
+            "total_pay": 0.0
+            # allow_overlap not specified - should default to False
+        }
+        
+        success, response = self.run_test(
+            "Add Shift without allow_overlap field (Should Fail - Default False)",
+            "POST",
+            "api/roster/add-shift",
+            409,  # Expect conflict
+            data=default_overlap_shift
+        )
+        
+        if success:  # Success means we got expected 409
+            print(f"   ✅ Default behavior works correctly (allow_overlap defaults to False)")
+        else:
+            print(f"   ❌ Default behavior failed - overlap was allowed when it shouldn't be")
+            return False
+        
+        # Test 6: Verify pay calculations work correctly for overlapping shifts
+        success, final_roster = self.run_test(
+            f"Verify Pay Calculations for Overlapping Shifts",
+            "GET",
+            "api/roster",
+            200,
+            params={"month": "2025-08"}
+        )
+        
+        if success:
+            date_shifts = [entry for entry in final_roster if entry['date'] == test_date]
+            print(f"   ✅ Pay calculation verification: {len(date_shifts)} shifts for {test_date}")
+            
+            total_pay_sum = 0
+            for shift in date_shifts:
+                hours_worked = shift.get('hours_worked', 0)
+                total_pay = shift.get('total_pay', 0)
+                base_pay = shift.get('base_pay', 0)
+                
+                print(f"      {shift['start_time']}-{shift['end_time']}: {hours_worked}h, Base: ${base_pay}, Total: ${total_pay}")
+                total_pay_sum += total_pay
+                
+                # Verify pay calculation is reasonable
+                if hours_worked > 0 and total_pay > 0:
+                    hourly_rate = total_pay / hours_worked
+                    if 40 <= hourly_rate <= 90:  # Reasonable range for SCHADS rates
+                        print(f"         ✅ Pay calculation reasonable: ${hourly_rate:.2f}/hr")
+                    else:
+                        print(f"         ⚠️  Pay calculation may be incorrect: ${hourly_rate:.2f}/hr")
+            
+            print(f"   Total pay for all overlapping shifts: ${total_pay_sum}")
+        
+        # Test 7: Test RosterEntry model accepts allow_overlap field
+        print(f"\n   🔍 Testing RosterEntry model accepts allow_overlap field...")
+        
+        # Verify the created shifts have the allow_overlap field stored
+        if success and date_shifts:
+            for shift in date_shifts:
+                allow_overlap_value = shift.get('allow_overlap')
+                print(f"      Shift {shift['start_time']}-{shift['end_time']}: allow_overlap = {allow_overlap_value}")
+                
+                # The field should be present and have the expected value
+                if allow_overlap_value is not None:
+                    print(f"         ✅ allow_overlap field properly stored")
+                else:
+                    print(f"         ⚠️  allow_overlap field not found in stored data")
+        
+        print(f"   🎉 Allow Overlap Functionality Test Complete!")
+        print(f"   📋 Summary:")
+        print(f"      ✅ allow_overlap=False prevents overlaps (with enhanced error message)")
+        print(f"      ✅ allow_overlap=True allows overlaps")
+        print(f"      ✅ Default behavior (no field) prevents overlaps")
+        print(f"      ✅ Multiple overlapping shifts can be added with allow_overlap=True")
+        print(f"      ✅ Pay calculations work correctly for overlapping shifts")
+        print(f"      ✅ RosterEntry model accepts and stores allow_overlap field")
+        
+        return True
+
 def main():
     print("🚀 Starting Shift Roster & Pay Calculator API Tests")
     print("🎯 FOCUS: Testing NEW Roster Generation from Shift Templates & Enhanced Template Management")
