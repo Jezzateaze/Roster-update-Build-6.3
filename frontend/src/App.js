@@ -2457,6 +2457,18 @@ function App() {
                 />
                 <Label>Sleepover Shift</Label>
               </div>
+              
+              <div className="flex items-center space-x-2">
+                <Switch
+                  checked={newShift.allow_overlap}
+                  onCheckedChange={(checked) => setNewShift({...newShift, allow_overlap: checked})}
+                />
+                <Label>Allow Overlap (2:1 Shift - Multiple Staff)</Label>
+              </div>
+              
+              <div className="text-sm text-slate-600 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                <p><strong>Allow Overlap:</strong> Check this option if you need to add a shift that overlaps with existing shifts (e.g., 2:1 shifts requiring multiple staff members). This will override the normal overlap prevention.</p>
+              </div>
 
               <div className="flex justify-end space-x-2">
                 <Button variant="outline" onClick={() => setShowAddShiftDialog(false)}>
