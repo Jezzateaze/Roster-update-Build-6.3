@@ -1011,7 +1011,19 @@ function App() {
   };
 
   // Helper function to get alphabetically sorted active staff
-  const getSortedActiveStaff = () => {
+  // Helper to navigate dates with timezone awareness
+  const navigateDate = (direction) => {
+    const newDate = new Date(currentDate);
+    newDate.setDate(newDate.getDate() + direction);
+    // Ensure we're using Brisbane timezone
+    setCurrentDate(getBrisbaneDate(newDate));
+  };
+
+  const navigateMonth = (direction) => {
+    const newDate = new Date(currentDate);
+    newDate.setMonth(newDate.getMonth() + direction);
+    setCurrentDate(getBrisbaneDate(newDate));
+  };
     return staff
       .filter(member => member.active)
       .sort((a, b) => a.name.localeCompare(b.name));
