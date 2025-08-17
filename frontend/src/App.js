@@ -1465,7 +1465,7 @@ function App() {
                   onClick={() => {
                     setNewEvent({
                       ...newEvent,
-                      date: selectedDate.toISOString().split('T')[0]
+                      date: formatDateString(selectedDate)
                     });
                     setShowEventDialog(true);
                   }}
