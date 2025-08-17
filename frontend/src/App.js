@@ -1702,7 +1702,7 @@ function App() {
               <div key={index} className={`min-h-[400px] p-3 ${isToday ? 'bg-blue-50' : ''}`}>
                 <div className={`text-center mb-3 ${isToday ? 'font-bold text-blue-600' : 'font-medium text-slate-700'}`}>
                   <div className="text-sm">
-                    {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'][index]}
+                    {weekHeaders[index]}
                   </div>
                   <div className={`text-lg ${isToday ? 'bg-blue-600 text-white rounded-full w-8 h-8 flex items-center justify-center mx-auto' : ''}`}>
                     {date.getDate()}
