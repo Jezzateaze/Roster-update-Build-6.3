@@ -252,6 +252,7 @@ metadata:
 
 test_plan:
   current_focus:
+    - "Calendar Events Management"
     - "Railway Deployment Setup"
     - "Mobile Responsiveness Verification"
     - "Production Environment Configuration"
@@ -264,6 +265,11 @@ test_plan:
     - "Generate Roster from Template - Working with overlap detection"
     - "Shift Overlap Detection - Prevents conflicts on add/update operations"
     - "Day-of-Week Based Placement - Correctly places shifts on matching weekdays"
+    - "Calendar Events CRUD - All event types (meeting, appointment, task, reminder, personal) working"
+    - "Calendar Events Filtering - Date range and event type filtering functional"
+    - "Task Completion - Mark tasks as completed working correctly"
+    - "Priority System - All priority levels (low, medium, high, urgent) working"
+    - "All-Day vs Timed Events - Both event types handled correctly"
 
 agent_communication:
   - agent: "main"
