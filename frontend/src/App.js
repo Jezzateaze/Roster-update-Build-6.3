@@ -1614,12 +1614,17 @@ function App() {
   const renderMonthlyCalendar = () => {
     const year = currentDate.getFullYear();
     const month = currentDate.getMonth();
+    
+    console.log(`Rendering calendar for ${year}-${month + 1}`);
+    
     const firstDay = new Date(year, month, 1);
     const lastDay = new Date(year, month + 1, 0);
     
     // Start from Monday of the week containing the first day
     const startDate = new Date(firstDay);
-    startDate.setDate(startDate.getDate() - (firstDay.getDay() + 6) % 7); // Start from Monday
+    const firstDayOfWeek = firstDay.getDay(); // 0 = Sunday, 1 = Monday, etc.
+    const daysToSubtract = (firstDayOfWeek + 6) % 7; // Convert to Monday = 0 system
+    startDate.setDate(startDate.getDate() - daysToSubtract);
 
     const weeks = [];
     const currentWeekDate = new Date(startDate);
@@ -1627,8 +1632,10 @@ function App() {
     // Generate 6 weeks to ensure we capture the full month view
     for (let weekNum = 0; weekNum < 6; weekNum++) {
       const week = [];
-      for (let i = 0; i < 7; i++) {
-        week.push(new Date(currentWeekDate));
+      for (let dayNum = 0; dayNum < 7; dayNum++) {
+        // Create a clean date object to avoid timezone issues
+        const dayDate = new Date(currentWeekDate.getFullYear(), currentWeekDate.getMonth(), currentWeekDate.getDate());
+        week.push(dayDate);
         currentWeekDate.setDate(currentWeekDate.getDate() + 1);
       }
       weeks.push(week);
@@ -1650,11 +1657,14 @@ function App() {
         </div>
         {weeks.map((week, weekIndex) => (
           <div key={weekIndex} className="calendar-grid">
-            {week.map((date, dayIndex) => (
-              <div key={dayIndex}>
-                {renderCalendarDay(date)}
-              </div>
-            ))}
+            {week.map((date, dayIndex) => {
+              const dateKey = `${weekIndex}-${dayIndex}-${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
+              return (
+                <div key={dateKey}>
+                  {renderCalendarDay(date)}
+                </div>
+              );
+            })}
           </div>
         ))}
         
