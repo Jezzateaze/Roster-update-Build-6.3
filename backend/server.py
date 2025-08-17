@@ -848,14 +848,18 @@ async def generate_roster_from_template(template_id: str, month: str):
             day_shifts = template.template_data.get(day_of_week, [])  # Try integer key
         
         for shift_data in day_shifts:
-            # Check for overlaps before creating
-            if check_shift_overlap(date_str, shift_data["start_time"], shift_data["end_time"]):
+            # Get shift name from template if available
+            shift_name = shift_data.get("name", template.name)
+            
+            # Check for overlaps (allows 2:1 shifts to overlap)
+            if check_shift_overlap(date_str, shift_data["start_time"], shift_data["end_time"], shift_name=shift_name):
                 overlaps_detected.append({
                     "date": date_str,
                     "start_time": shift_data["start_time"],
-                    "end_time": shift_data["end_time"]
+                    "end_time": shift_data["end_time"],
+                    "name": shift_name
                 })
-                continue  # Skip overlapping shifts
+                continue  # Skip overlapping shifts (unless they're 2:1)
             
             # Check if entry already exists
             existing = db.roster.find_one({
@@ -890,6 +894,7 @@ async def generate_roster_from_template(template_id: str, month: str):
     if overlaps_detected:
         result["overlaps_detected"] = len(overlaps_detected)
         result["overlap_details"] = overlaps_detected[:5]  # Show first 5 overlaps
+        result["note"] = "Shifts with '2:1' in the name are allowed to overlap"
     
     return result
 
