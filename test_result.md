@@ -289,6 +289,18 @@ frontend:
           agent: "testing"
           comment: "✅ COMPREHENSIVE TESTING COMPLETED SUCCESSFULLY! All critical fixes verified and working: 1) React Select component errors RESOLVED - no more 'value prop' runtime errors, 2) Date placement accuracy WORKING - shifts appear on exact intended dates (Monday Aug 25th: 10:00-18:00 ✅, Sunday Aug 24th: 08:00-16:00 ✅), 3) Enhanced Add Shift dialog FULLY FUNCTIONAL - all fields working (date, staff dropdown, start/end time, sleepover, allow overlap), 4) Staff assignment dropdown ACCESSIBLE with 'No staff assigned' option working correctly, 5) Time-based shift sorting WORKING - shifts display in chronological order, 6) Cross-view consistency MAINTAINED - Monthly/Weekly/Daily view switching functional, 7) Backend API integration ACTIVE - staff endpoint responding. NO MORE DAY-OF-WEEK OFFSET ERRORS - the core timezone conversion issue has been completely resolved. All enhanced features are production-ready."
 
+  - task: "Staff Alphabetical Sorting Fix"
+    implemented: true
+    working: true
+    file: "App.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "testing"
+          comment: "🎉 ALPHABETICAL STAFF SORTING FIX FULLY VERIFIED AND WORKING! Comprehensive testing completed across all required areas: ✅ ADD SHIFT DIALOG: Staff dropdown displays perfect alphabetical order ['Angela', 'Caroline', 'Chanelle', 'Elina', 'Felicity', 'Issey', 'Kayla', 'Molly', 'Nikita', 'Nox', 'Rhet', 'Rose'] with 'No staff assigned' appearing first as expected. ✅ STAFF MANAGEMENT TAB: All 12 staff members found and displayed in correct alphabetical order in staff cards layout. ✅ BACKEND API: Confirmed staff endpoint returns data in proper alphabetical sequence. ✅ CRITICAL FIX CONFIRMED: The change from member.is_active to member.active in getSortedActiveStaff() function is working correctly - staff filtering and sorting now functions as intended. ✅ UI CONSISTENCY: All staff dropdowns across the application use consistent alphabetical ordering. The key issue preventing staff from appearing in dropdowns has been completely resolved. All 3 test requirements from review request successfully verified."
+
   - task: "React Frontend Mobile Responsiveness"
     implemented: true
     working: true
