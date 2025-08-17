@@ -2492,13 +2492,68 @@ function App() {
                       Adjust the default start and end times for each shift. These times will be used when generating new rosters.
                     </p>
                   </div>
-                  {shiftTemplates.length === 0 && (
-                    <Button onClick={createDefaultShiftTemplates}>
-                      <Plus className="w-4 h-4 mr-2" />
-                      Create Default Templates
-                    </Button>
-                  )}
+                  <div className="flex items-center space-x-2">
+                    {shiftTemplates.length > 0 && (
+                      <Button 
+                        variant={bulkEditMode ? 'default' : 'outline'}
+                        size="sm"
+                        onClick={() => {
+                          setBulkEditMode(!bulkEditMode);
+                          setSelectedTemplates(new Set());
+                        }}
+                      >
+                        {bulkEditMode ? 'Exit Bulk Edit' : 'Bulk Edit'}
+                      </Button>
+                    )}
+                    {shiftTemplates.length === 0 && (
+                      <Button onClick={createDefaultShiftTemplates}>
+                        <Plus className="w-4 h-4 mr-2" />
+                        Create Default Templates
+                      </Button>
+                    )}
+                  </div>
                 </div>
+                
+                {/* Bulk Action Toolbar */}
+                {bulkEditMode && (
+                  <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-4">
+                        <span className="text-sm font-medium text-blue-700">
+                          {selectedTemplates.size} template(s) selected
+                        </span>
+                        <div className="flex space-x-2">
+                          <Button size="sm" variant="outline" onClick={selectAllTemplates}>
+                            Select All
+                          </Button>
+                          <Button size="sm" variant="outline" onClick={clearTemplateSelection}>
+                            Clear Selection
+                          </Button>
+                        </div>
+                      </div>
+                      <div className="flex space-x-2">
+                        <Button 
+                          size="sm" 
+                          variant="outline"
+                          onClick={() => setShowBulkEditDialog(true)}
+                          disabled={selectedTemplates.size === 0}
+                        >
+                          <Edit className="w-4 h-4 mr-1" />
+                          Edit Selected
+                        </Button>
+                        <Button 
+                          size="sm" 
+                          variant="destructive"
+                          onClick={deleteSelectedTemplates}
+                          disabled={selectedTemplates.size === 0}
+                        >
+                          <Trash2 className="w-4 h-4 mr-1" />
+                          Delete Selected
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </CardHeader>
               <CardContent>
                 {shiftTemplates.length === 0 ? (
