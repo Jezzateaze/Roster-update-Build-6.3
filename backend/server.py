@@ -1,11 +1,17 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Depends
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from pymongo import MongoClient
 from pydantic import BaseModel
 from typing import List, Optional, Dict, Any
 from datetime import datetime, time, timedelta
 import os
 import uuid
+import hashlib
+import secrets
+import smtplib
+from email.mime.text import MimeText
+from email.mime.multipart import MimeMultipart
 from enum import Enum
 
 # Database setup
