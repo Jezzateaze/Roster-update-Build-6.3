@@ -58,6 +58,12 @@ function App() {
   });
   const [newStaffName, setNewStaffName] = useState('');
   const [activeTab, setActiveTab] = useState('roster');
+  const [dayTemplates, setDayTemplates] = useState([]);
+  const [showDayTemplateDialog, setShowDayTemplateDialog] = useState(false);
+  const [selectedDateForTemplate, setSelectedDateForTemplate] = useState(null);
+  const [dayTemplateAction, setDayTemplateAction] = useState(''); // 'save' or 'load'
+  const [selectedDayTemplate, setSelectedDayTemplate] = useState(null);
+  const [newDayTemplateName, setNewDayTemplateName] = useState('');
 
   useEffect(() => {
     fetchInitialData();
