@@ -2647,7 +2647,7 @@ class ShiftRosterAPITester:
         
         # Test 5: Test case insensitive detection - create "2:1 night shift" (lowercase)
         lowercase_2to1_template = {
-            "id": "2to1-night-test",
+            "id": "",  # Let backend auto-generate
             "name": "2:1 night shift",  # lowercase
             "start_time": "20:00",
             "end_time": "04:00",
@@ -2663,10 +2663,17 @@ class ShiftRosterAPITester:
             data=lowercase_2to1_template
         )
         
+        if not success or 'id' not in created_template3:
+            print("   ❌ Could not create lowercase 2:1 shift template")
+            return False
+        
+        template_id3 = created_template3['id']
+        print(f"   ✅ Created lowercase 2:1 shift template: {lowercase_2to1_template['name']} (ID: {template_id3})")
+        
         lowercase_2to1_shift = {
             "id": "",
             "date": test_date,
-            "shift_template_id": "2to1-night-test",
+            "shift_template_id": template_id3,  # Use the actual template ID
             "staff_id": None,
             "staff_name": None,
             "start_time": "20:00",  # Overlaps with existing shifts
