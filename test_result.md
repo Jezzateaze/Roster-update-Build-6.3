@@ -120,6 +120,18 @@ backend:
           agent: "testing"
           comment: "✅ All backend API endpoints tested successfully. Health check, staff management, shift templates, settings, roster generation and retrieval all working correctly. Fixed critical evening shift pay calculation bug (15:00-20:00 shifts now correctly use evening rate $44.50/hr). All 14 API tests passed including critical SCHADS pay calculation tests."
 
+  - task: "Enhanced Shift Template Editing"
+    implemented: true
+    working: true
+    file: "server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "testing"
+          comment: "✅ ENHANCED SHIFT TEMPLATE FUNCTIONALITY FULLY WORKING! Comprehensive testing completed: 1) GET /api/shift-templates returns templates with new fields (manual_shift_type, manual_hourly_rate), 2) PUT /api/shift-templates/{template_id} successfully updates templates with enhanced fields, 3) Template name editing working, 4) Manual shift type override functionality working (weekday_evening, weekday_night, saturday, sunday, public_holiday), 5) Manual hourly rate override functionality working (tested with various rates: $45.00, $50.25, $35.75, $60.00, $42.50), 6) Both manual fields can be updated simultaneously, 7) Optional fields can be set to null/None to remove overrides, 8) Backward compatibility maintained with existing templates. All 28/29 enhanced template tests passed. Core functionality is production-ready."
+
   - task: "MongoDB Integration"
     implemented: true
     working: true
