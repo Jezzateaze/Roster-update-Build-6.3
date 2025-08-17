@@ -162,34 +162,50 @@ function App() {
   };
 
   const generateMonthlyRoster = async () => {
+    if (!window.confirm(`Generate roster for ${currentDate.toLocaleString('default', { month: 'long', year: 'numeric' })} using your saved Shift Times templates?`)) {
+      return;
+    }
+
     try {
       const monthString = currentDate.toISOString().slice(0, 7);
-      await axios.post(`${API_BASE_URL}/api/generate-roster/${monthString}`);
+      console.log('Generating roster for month:', monthString);
+      console.log('Using shift templates:', shiftTemplates);
       
-      // Also generate roster for previous month dates if they appear in the first week
-      const firstDay = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
-      const startOfWeek = new Date(firstDay);
-      startOfWeek.setDate(startOfWeek.getDate() - (firstDay.getDay() + 6) % 7); // Start from Monday
-      
-      if (startOfWeek.getMonth() !== firstDay.getMonth()) {
-        const prevMonthString = startOfWeek.toISOString().slice(0, 7);
-        await axios.post(`${API_BASE_URL}/api/generate-roster/${prevMonthString}`);
+      if (shiftTemplates.length === 0) {
+        alert('No shift templates found in Shift Times section. Please create default templates first.');
+        return;
       }
-      
-      // Also generate for next month dates if they appear in the last week
-      const lastDay = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
-      const endOfWeek = new Date(lastDay);
-      endOfWeek.setDate(endOfWeek.getDate() + (7 - lastDay.getDay()) % 7);
-      
-      if (endOfWeek.getMonth() !== lastDay.getMonth()) {
-        const nextMonthString = endOfWeek.toISOString().slice(0, 7);
-        await axios.post(`${API_BASE_URL}/api/generate-roster/${nextMonthString}`);
-      }
+
+      // Generate roster using shift templates from Shift Times section
+      const response = await axios.post(`${API_BASE_URL}/api/generate-roster-from-shift-templates/${monthString}`, {
+        templates: shiftTemplates
+      });
       
       fetchRosterData();
+      
+      let message = `Generated roster for ${currentDate.toLocaleString('default', { month: 'long', year: 'numeric' })}`;
+      if (response.data.entries_created) {
+        message += `\n${response.data.entries_created} shifts created`;
+      }
+      if (response.data.overlaps_detected) {
+        message += `\n${response.data.overlaps_detected} overlapping shifts were skipped`;
+      }
+      
+      alert(message);
     } catch (error) {
       console.error('Error generating roster:', error);
-      alert(`Error generating roster: ${error.response?.data?.detail || error.message}`);
+      
+      // Fallback to the old method if new endpoint doesn't exist
+      try {
+        console.log('Trying fallback method...');
+        const monthString = currentDate.toISOString().slice(0, 7);
+        await axios.post(`${API_BASE_URL}/api/generate-roster/${monthString}`);
+        fetchRosterData();
+        alert(`Generated roster for ${currentDate.toLocaleString('default', { month: 'long', year: 'numeric' })}`);
+      } catch (fallbackError) {
+        console.error('Fallback also failed:', fallbackError);
+        alert(`Error generating roster: ${error.response?.data?.detail || error.message}`);
+      }
     }
   };
 
