@@ -1050,8 +1050,8 @@ function App() {
       : 'text-slate-500';
     
     return (
-      <div className={`min-h-[180px] p-1 border-r border-b border-slate-200 ${backgroundClass} group hover:bg-slate-50 transition-colors relative overflow-visible`}>
-        <div className={`font-medium text-sm mb-2 flex items-center justify-between ${textClass}`}>
+      <div className={`min-h-[200px] p-2 border-r border-b border-slate-200 ${backgroundClass} group hover:bg-slate-50 transition-colors relative`}>
+        <div className={`font-medium text-sm mb-3 flex items-center justify-between ${textClass}`}>
           <span>{date.getDate()}</span>
           <div className="flex items-center space-x-1">
             {!isCurrentMonth && (
@@ -1089,7 +1089,7 @@ function App() {
           </div>
         </div>
         
-        <div className="space-y-1 max-h-[130px] overflow-y-auto custom-scrollbar">
+        <div className="space-y-1">
           {/* Calendar Events */}
           {dayEvents.map(event => (
             <div
@@ -1132,21 +1132,21 @@ function App() {
           {dayEntries.map(entry => (
             <div
               key={entry.id}
-              className="text-xs p-1 rounded cursor-pointer hover:bg-slate-200 transition-colors group/shift relative"
+              className="text-xs p-2 rounded cursor-pointer hover:bg-slate-200 transition-colors group/shift relative border border-slate-100"
             >
               {bulkSelectionMode && (
-                <div className="absolute top-0 left-0 z-30 bg-white rounded">
+                <div className="absolute top-1 left-1 z-30 bg-white rounded p-0.5 shadow-sm border border-slate-300">
                   <input
                     type="checkbox"
                     checked={selectedShifts.has(entry.id)}
                     onChange={() => toggleShiftSelection(entry.id)}
-                    className="w-3 h-3 rounded border-gray-300 border-2"
+                    className="w-3 h-3 rounded border-gray-300 border-2 text-blue-600 focus:ring-blue-500"
                     onClick={(e) => e.stopPropagation()}
                   />
                 </div>
               )}
               <div 
-                className={`flex-1 ${bulkSelectionMode ? 'ml-4' : ''}`}
+                className={`flex-1 ${bulkSelectionMode ? 'ml-5' : ''}`}
                 onClick={() => {
                   if (bulkSelectionMode) {
                     toggleShiftSelection(entry.id);
@@ -1157,17 +1157,17 @@ function App() {
                 }}
               >
                 <div className="font-medium flex items-center justify-between">
-                  <span className={isCurrentMonth ? '' : 'opacity-75'}>
+                  <span className={`${isCurrentMonth ? '' : 'opacity-75'} font-semibold`}>
                     {entry.start_time}-{entry.end_time}
                   </span>
                   {!bulkSelectionMode && (
                     <Edit className="w-3 h-3 opacity-0 group-hover/shift:opacity-100 transition-opacity" />
                   )}
                 </div>
-                <div className={`text-slate-600 ${isCurrentMonth ? '' : 'opacity-75'}`}>
+                <div className={`text-slate-600 mt-1 ${isCurrentMonth ? '' : 'opacity-75'}`}>
                   {entry.staff_name || 'Unassigned'}
                 </div>
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between mt-1">
                   <div className={isCurrentMonth ? '' : 'opacity-75'}>
                     {getShiftTypeBadge(entry)}
                   </div>
@@ -1195,8 +1195,8 @@ function App() {
         </div>
         
         {dayTotal > 0 && (
-          <div className={`mt-1 pt-1 border-t border-slate-200 text-xs font-bold text-emerald-700 ${isCurrentMonth ? '' : 'opacity-75'}`}>
-            ${dayTotal.toFixed(0)}
+          <div className={`mt-3 pt-2 border-t border-slate-200 text-xs font-bold text-emerald-700 ${isCurrentMonth ? '' : 'opacity-75'}`}>
+            Total: ${dayTotal.toFixed(0)}
           </div>
         )}
         
