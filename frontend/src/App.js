@@ -1772,53 +1772,101 @@ function App() {
           <TabsContent value="shifts" className="space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
-                  <Clock className="w-5 h-5" />
-                  <span>Default Shift Times</span>
-                </CardTitle>
-                <p className="text-slate-600">
-                  Adjust the default start and end times for each shift. These times will be used when generating new rosters.
-                </p>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle className="flex items-center space-x-2">
+                      <Clock className="w-5 h-5" />
+                      <span>Default Shift Times</span>
+                    </CardTitle>
+                    <p className="text-slate-600">
+                      Adjust the default start and end times for each shift. These times will be used when generating new rosters.
+                    </p>
+                  </div>
+                  {shiftTemplates.length === 0 && (
+                    <Button onClick={createDefaultShiftTemplates}>
+                      <Plus className="w-4 h-4 mr-2" />
+                      Create Default Templates
+                    </Button>
+                  )}
+                </div>
               </CardHeader>
               <CardContent>
-                <div className="space-y-6">
-                  {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map((day, dayIndex) => {
-                    const dayTemplates = shiftTemplates.filter(t => t.day_of_week === dayIndex);
-                    return (
-                      <div key={day} className="border rounded-lg p-4">
-                        <h3 className="font-semibold text-lg mb-4">{day}</h3>
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                          {dayTemplates.map((template, shiftIndex) => (
-                            <Card key={template.id} className="p-4">
-                              <div className="space-y-3">
-                                <div className="flex items-center justify-between">
-                                  <h4 className="font-medium">
-                                    Shift {shiftIndex + 1}
-                                    {template.is_sleepover && <Badge variant="secondary" className="ml-2">Sleepover</Badge>}
-                                  </h4>
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => {
-                                      setSelectedTemplate(template);
-                                      setShowTemplateDialog(true);
-                                    }}
-                                  >
-                                    <Edit className="w-3 h-3 mr-1" />
-                                    Edit
-                                  </Button>
-                                </div>
-                                <div className="text-sm text-slate-600">
-                                  {template.start_time} - {template.end_time}
-                                </div>
-                              </div>
-                            </Card>
-                          ))}
+                {shiftTemplates.length === 0 ? (
+                  <div className="text-center py-8">
+                    <Clock className="w-12 h-12 mx-auto text-slate-400 mb-4" />
+                    <h3 className="text-lg font-semibold text-slate-600 mb-2">No Shift Templates Found</h3>
+                    <p className="text-slate-500 mb-4">Create default shift templates to get started with roster generation.</p>
+                    <Button onClick={createDefaultShiftTemplates}>
+                      <Plus className="w-4 h-4 mr-2" />
+                      Create Default Templates
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="space-y-6">
+                    {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map((day, dayIndex) => {
+                      const dayTemplates = shiftTemplates.filter(t => t.day_of_week === dayIndex);
+                      return (
+                        <div key={day} className="border rounded-lg p-4">
+                          <div className="flex items-center justify-between mb-4">
+                            <h3 className="font-semibold text-lg">{day}</h3>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => createShiftTemplateForDay(dayIndex)}
+                            >
+                              <Plus className="w-3 h-3 mr-1" />
+                              Add Shift
+                            </Button>
+                          </div>
+                          {dayTemplates.length === 0 ? (
+                            <div className="text-center py-4 text-slate-500">
+                              No shifts configured for {day}
+                            </div>
+                          ) : (
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                              {dayTemplates.map((template, shiftIndex) => (
+                                <Card key={template.id} className="p-4">
+                                  <div className="space-y-3">
+                                    <div className="flex items-center justify-between">
+                                      <h4 className="font-medium">
+                                        {template.name || `Shift ${shiftIndex + 1}`}
+                                        {template.is_sleepover && <Badge variant="secondary" className="ml-2">Sleepover</Badge>}
+                                      </h4>
+                                      <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => {
+                                          setSelectedTemplate(template);
+                                          setShowTemplateDialog(true);
+                                        }}
+                                      >
+                                        <Edit className="w-3 h-3 mr-1" />
+                                        Edit
+                                      </Button>
+                                    </div>
+                                    <div className="text-sm text-slate-600">
+                                      {template.start_time} - {template.end_time}
+                                    </div>
+                                    {template.manual_shift_type && (
+                                      <Badge variant="outline" className="text-xs">
+                                        Override: {template.manual_shift_type}
+                                      </Badge>
+                                    )}
+                                    {template.manual_hourly_rate && (
+                                      <Badge variant="outline" className="text-xs">
+                                        Rate: ${template.manual_hourly_rate}/hr
+                                      </Badge>
+                                    )}
+                                  </div>
+                                </Card>
+                              ))}
+                            </div>
+                          )}
                         </div>
-                      </div>
-                    );
-                  })}
-                </div>
+                      );
+                    })}
+                  </div>
+                )}
               </CardContent>
             </Card>
           </TabsContent>
