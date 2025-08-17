@@ -1632,7 +1632,7 @@ function App() {
           ))}
         </div>
         {weeks.map((week, weekIndex) => (
-          <div key={weekIndex} className="grid grid-cols-7">
+          <div key={weekIndex} className="calendar-grid">
             {week.map((date, dayIndex) => (
               <div key={dayIndex}>
                 {renderCalendarDay(date)}
