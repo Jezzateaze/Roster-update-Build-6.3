@@ -1012,18 +1012,35 @@ function App() {
               key={entry.id}
               className="text-xs p-1 rounded cursor-pointer hover:bg-slate-200 transition-colors group/shift relative"
             >
+              {bulkSelectionMode && (
+                <div className="absolute top-0 left-0 z-30">
+                  <input
+                    type="checkbox"
+                    checked={selectedShifts.has(entry.id)}
+                    onChange={() => toggleShiftSelection(entry.id)}
+                    className="w-3 h-3 rounded border-gray-300"
+                    onClick={(e) => e.stopPropagation()}
+                  />
+                </div>
+              )}
               <div 
-                className="flex-1"
+                className={`flex-1 ${bulkSelectionMode ? 'ml-4' : ''}`}
                 onClick={() => {
-                  setSelectedShift(entry);
-                  setShowShiftDialog(true);
+                  if (bulkSelectionMode) {
+                    toggleShiftSelection(entry.id);
+                  } else {
+                    setSelectedShift(entry);
+                    setShowShiftDialog(true);
+                  }
                 }}
               >
                 <div className="font-medium flex items-center justify-between">
                   <span className={isCurrentMonth ? '' : 'opacity-75'}>
                     {entry.start_time}-{entry.end_time}
                   </span>
-                  <Edit className="w-3 h-3 opacity-0 group-hover/shift:opacity-100 transition-opacity" />
+                  {!bulkSelectionMode && (
+                    <Edit className="w-3 h-3 opacity-0 group-hover/shift:opacity-100 transition-opacity" />
+                  )}
                 </div>
                 <div className={`text-slate-600 ${isCurrentMonth ? '' : 'opacity-75'}`}>
                   {entry.staff_name || 'Unassigned'}
@@ -1037,18 +1054,20 @@ function App() {
                   </span>
                 </div>
               </div>
-              <button
-                className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white rounded-full text-xs opacity-0 group-hover/shift:opacity-100 flex items-center justify-center hover:bg-red-600 transition-all z-10 shadow-sm border border-white"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  e.preventDefault();
-                  deleteShift(entry.id);
-                }}
-                title="Delete shift"
-                style={{ fontSize: '8px', lineHeight: '1' }}
-              >
-                ×
-              </button>
+              {!bulkSelectionMode && (
+                <button
+                  className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white rounded-full text-xs opacity-0 group-hover/shift:opacity-100 flex items-center justify-center hover:bg-red-600 transition-all z-10 shadow-sm border border-white"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    e.preventDefault();
+                    deleteShift(entry.id);
+                  }}
+                  title="Delete shift"
+                  style={{ fontSize: '8px', lineHeight: '1' }}
+                >
+                  ×
+                </button>
+              )}
             </div>
           ))}
         </div>
