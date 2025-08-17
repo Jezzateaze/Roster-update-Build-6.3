@@ -1033,6 +1033,12 @@ function App() {
     setCurrentDate(getBrisbaneDate(newDate));
   };
 
+  const navigateMonth = (direction) => {
+    const newDate = new Date(currentDate);
+    newDate.setMonth(newDate.getMonth() + direction);
+    setCurrentDate(getBrisbaneDate(newDate));
+  };
+
   // Helper to navigate dates with timezone awareness for daily view
   const navigateDailyDate = (direction) => {
     const newDate = new Date(selectedSingleDate);
