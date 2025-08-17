@@ -3510,36 +3510,6 @@ function App() {
             </div>
           </DialogContent>
         </Dialog>
-        
-        {/* Quick Settings Toggle Buttons */}
-        <div className="flex items-center justify-center space-x-3 mt-3 pt-3 border-t border-slate-200">
-          <Button
-            variant={settings.first_day_of_week === 'monday' ? 'default' : 'outline'}
-            size="sm"
-            onClick={toggleFirstDayOfWeek}
-            className="text-xs"
-          >
-            {settings.first_day_of_week === 'monday' ? '📅 Mon First' : '📅 Sun First'}
-          </Button>
-          
-          <Button
-            variant={settings.time_format === '24hr' ? 'default' : 'outline'}
-            size="sm"
-            onClick={toggleTimeFormat}
-            className="text-xs"
-          >
-            {settings.time_format === '24hr' ? '🕐 24hr' : '🕐 12hr'}
-          </Button>
-          
-          <Button
-            variant={settings.dark_mode ? 'default' : 'outline'}
-            size="sm"
-            onClick={toggleDarkMode}
-            className="text-xs"
-          >
-            {settings.dark_mode ? '🌙 Dark' : '☀️ Light'}
-          </Button>
-        </div>
 
         {/* Save Roster Template Dialog */}
         <Dialog open={showSaveTemplateDialog} onOpenChange={setShowSaveTemplateDialog}>
