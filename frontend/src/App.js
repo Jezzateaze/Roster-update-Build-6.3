@@ -1226,7 +1226,7 @@ function App() {
                   </div>
                   {!event.is_all_day && event.start_time && (
                     <div className="text-xs opacity-75">
-                      {event.start_time}{event.end_time && ` - ${event.end_time}`}
+                      {formatTime(event.start_time, settings.time_format === '24hr')}{event.end_time && ` - ${formatTime(event.end_time, settings.time_format === '24hr')}`}
                     </div>
                   )}
                 </div>
