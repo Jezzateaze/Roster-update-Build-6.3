@@ -25,6 +25,59 @@ const formatDateString = (date) => {
   return `${year}-${month}-${day}`;
 };
 
+// Helper function to get Brisbane AEST timezone date
+const getBrisbaneDate = (date = new Date()) => {
+  // Brisbane is AEST (UTC+10) - handle timezone conversion
+  const utc = date.getTime() + (date.getTimezoneOffset() * 60000);
+  const brisbaneTime = new Date(utc + (10 * 3600000)); // +10 hours for AEST
+  return brisbaneTime;
+};
+
+// Helper function to format time based on user preference
+const formatTime = (timeString, is24Hour = true) => {
+  if (!timeString) return '';
+  
+  if (is24Hour) {
+    return timeString; // Already in 24hr format (HH:MM)
+  }
+  
+  // Convert to 12hr format
+  const [hours, minutes] = timeString.split(':');
+  const hour24 = parseInt(hours, 10);
+  
+  if (hour24 === 0) {
+    return `12:${minutes} AM`;
+  } else if (hour24 < 12) {
+    return `${hour24}:${minutes} AM`;
+  } else if (hour24 === 12) {
+    return `12:${minutes} PM`;
+  } else {
+    return `${hour24 - 12}:${minutes} PM`;
+  }
+};
+
+// Helper function to convert 12hr format back to 24hr for storage
+const convertTo24Hour = (timeString) => {
+  if (!timeString) return '';
+  
+  // If already in 24hr format, return as is
+  if (!/AM|PM/i.test(timeString)) {
+    return timeString;
+  }
+  
+  const [time, period] = timeString.split(/\s+(AM|PM)/i);
+  const [hours, minutes] = time.split(':');
+  let hour24 = parseInt(hours, 10);
+  
+  if (period.toUpperCase() === 'AM' && hour24 === 12) {
+    hour24 = 0;
+  } else if (period.toUpperCase() === 'PM' && hour24 !== 12) {
+    hour24 += 12;
+  }
+  
+  return `${String(hour24).padStart(2, '0')}:${minutes}`;
+};
+
 function App() {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [staff, setStaff] = useState([]);
