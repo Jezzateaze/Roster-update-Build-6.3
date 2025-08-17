@@ -3059,6 +3059,20 @@ def main():
             print(f"❌ 2:1 overlap test failed with exception: {str(e)}")
     
     print("\n" + "=" * 60)
+    print("🔄 Running ALLOW OVERLAP FUNCTIONALITY TESTS...")
+    print("🎯 Testing: Manual Allow Overlap Override for 2:1 Shifts")
+    print("=" * 60)
+    
+    allow_overlap_tests_passed = 0
+    for test in allow_overlap_tests:
+        try:
+            result = test()
+            if result:
+                allow_overlap_tests_passed += 1
+        except Exception as e:
+            print(f"❌ Allow overlap test failed with exception: {str(e)}")
+    
+    print("\n" + "=" * 60)
     print("🚀 Running NEW ROSTER GENERATION TESTS...")
     print("🎯 Testing: Generate Roster from Shift Templates & Enhanced Template Management")
     print("=" * 60)
