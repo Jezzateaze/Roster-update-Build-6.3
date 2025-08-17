@@ -1078,12 +1078,12 @@ function App() {
               className="text-xs p-1 rounded cursor-pointer hover:bg-slate-200 transition-colors group/shift relative"
             >
               {bulkSelectionMode && (
-                <div className="absolute top-0 left-0 z-30">
+                <div className="absolute top-0 left-0 z-30 bg-white rounded">
                   <input
                     type="checkbox"
                     checked={selectedShifts.has(entry.id)}
                     onChange={() => toggleShiftSelection(entry.id)}
-                    className="w-3 h-3 rounded border-gray-300"
+                    className="w-3 h-3 rounded border-gray-300 border-2"
                     onClick={(e) => e.stopPropagation()}
                   />
                 </div>
