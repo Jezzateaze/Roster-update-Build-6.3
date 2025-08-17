@@ -295,6 +295,79 @@ function App() {
     }
   };
 
+  const addCalendarEvent = async () => {
+    if (!newEvent.title || !newEvent.date) {
+      alert('Please fill in the title and date');
+      return;
+    }
+    
+    try {
+      const eventData = {
+        id: '',
+        ...newEvent,
+        attendees: newEvent.attendees.filter(a => a.trim()),
+        created_at: new Date().toISOString()
+      };
+      
+      await axios.post(`${API_BASE_URL}/api/calendar-events`, eventData);
+      
+      setNewEvent({
+        title: '',
+        description: '',
+        date: '',
+        start_time: '',
+        end_time: '',
+        is_all_day: false,
+        event_type: 'appointment',
+        priority: 'medium',
+        location: '',
+        attendees: [],
+        reminder_minutes: 15
+      });
+      setShowEventDialog(false);
+      fetchInitialData();
+    } catch (error) {
+      console.error('Error adding event:', error);
+      alert(`Error adding event: ${error.response?.data?.detail || error.message}`);
+    }
+  };
+
+  const updateCalendarEvent = async () => {
+    if (!selectedEvent) return;
+    
+    try {
+      await axios.put(`${API_BASE_URL}/api/calendar-events/${selectedEvent.id}`, selectedEvent);
+      setShowEventDialog(false);
+      setSelectedEvent(null);
+      fetchInitialData();
+    } catch (error) {
+      console.error('Error updating event:', error);
+      alert(`Error updating event: ${error.response?.data?.detail || error.message}`);
+    }
+  };
+
+  const deleteCalendarEvent = async (eventId) => {
+    try {
+      if (window.confirm('Are you sure you want to delete this event?')) {
+        await axios.delete(`${API_BASE_URL}/api/calendar-events/${eventId}`);
+        fetchInitialData();
+      }
+    } catch (error) {
+      console.error('Error deleting event:', error);
+      alert(`Error deleting event: ${error.response?.data?.detail || error.message}`);
+    }
+  };
+
+  const completeTask = async (eventId) => {
+    try {
+      await axios.put(`${API_BASE_URL}/api/calendar-events/${eventId}/complete`);
+      fetchInitialData();
+    } catch (error) {
+      console.error('Error completing task:', error);
+      alert(`Error completing task: ${error.response?.data?.detail || error.message}`);
+    }
+  };
+
   const updateRosterEntry = async (entryId, updates) => {
     try {
       const entry = rosterEntries.find(e => e.id === entryId);
