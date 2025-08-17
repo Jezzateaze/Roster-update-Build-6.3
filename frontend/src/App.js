@@ -1908,11 +1908,7 @@ function App() {
                     </h2>
                     <Button
                       variant="outline"
-                      onClick={() => {
-                        const newDate = new Date(currentDate);
-                        newDate.setMonth(newDate.getMonth() + 1);
-                        setCurrentDate(newDate);
-                      }}
+                      onClick={() => navigateMonth(1)}
                     >
                       Next Month
                     </Button>
