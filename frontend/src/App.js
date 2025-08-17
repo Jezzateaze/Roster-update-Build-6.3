@@ -1770,6 +1770,105 @@ function App() {
             </div>
           </DialogContent>
         </Dialog>
+
+        {/* Save Roster Template Dialog */}
+        <Dialog open={showSaveTemplateDialog} onOpenChange={setShowSaveTemplateDialog}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>Save Current Roster as Template</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="template-name">Template Name</Label>
+                <Input
+                  id="template-name"
+                  value={newTemplateName}
+                  onChange={(e) => setNewTemplateName(e.target.value)}
+                  placeholder="Enter template name (e.g., 'Standard Weekly Template')"
+                />
+              </div>
+              <div className="text-sm text-slate-600 p-3 bg-slate-50 rounded-lg">
+                <p><strong>This will save:</strong></p>
+                <ul className="list-disc list-inside mt-1 space-y-1">
+                  <li>All shift times and patterns from current month</li>
+                  <li>Day-of-week based placement (Monday shifts → all Mondays)</li>
+                  <li>Sleepover status for each shift</li>
+                </ul>
+                <p className="mt-2"><strong>Note:</strong> Staff assignments are NOT saved in templates.</p>
+              </div>
+              <div className="flex justify-end space-x-2">
+                <Button variant="outline" onClick={() => setShowSaveTemplateDialog(false)}>
+                  Cancel
+                </Button>
+                <Button onClick={saveCurrentRosterAsTemplate}>
+                  Save Template
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* Generate from Template Dialog */}
+        <Dialog open={showGenerateFromTemplateDialog} onOpenChange={setShowGenerateFromTemplateDialog}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>Generate Roster from Template</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="roster-template">Select Template</Label>
+                <Select 
+                  value={selectedRosterTemplate || ''} 
+                  onValueChange={setSelectedRosterTemplate}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Choose a roster template" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {rosterTemplates.map(template => (
+                      <SelectItem key={template.id} value={template.id}>
+                        {template.name}
+                        {template.description && (
+                          <span className="text-sm text-slate-500 ml-2">- {template.description}</span>
+                        )}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              {rosterTemplates.length === 0 && (
+                <div className="text-sm text-slate-600 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                  <p><strong>No templates found.</strong></p>
+                  <p>Create a roster first, then use "Save Template" to save it for future use.</p>
+                </div>
+              )}
+              
+              <div className="text-sm text-slate-600 p-3 bg-slate-50 rounded-lg">
+                <p><strong>This will generate:</strong></p>
+                <ul className="list-disc list-inside mt-1 space-y-1">
+                  <li>Shifts for {currentDate.toLocaleString('default', { month: 'long', year: 'numeric' })}</li>
+                  <li>Day-of-week based placement (template Monday → all Mondays)</li>
+                  <li>Automatic overlap detection and prevention</li>
+                  <li>Unassigned shifts (you assign staff manually)</li>
+                </ul>
+              </div>
+              
+              <div className="flex justify-end space-x-2">
+                <Button variant="outline" onClick={() => setShowGenerateFromTemplateDialog(false)}>
+                  Cancel
+                </Button>
+                <Button 
+                  onClick={generateRosterFromTemplate}
+                  disabled={!selectedRosterTemplate}
+                >
+                  Generate Roster
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+
       </div>
     </div>
   );
