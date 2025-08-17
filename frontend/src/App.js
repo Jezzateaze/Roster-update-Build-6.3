@@ -449,7 +449,11 @@ function App() {
       fetchRosterData();
     } catch (error) {
       console.error('Error adding shift:', error);
-      alert(`Error adding shift: ${error.response?.data?.detail || error.message}`);
+      if (error.response?.status === 409) {
+        alert(`Cannot add shift: ${error.response.data.detail}`);
+      } else {
+        alert(`Error adding shift: ${error.response?.data?.detail || error.message}`);
+      }
     }
   };
 
