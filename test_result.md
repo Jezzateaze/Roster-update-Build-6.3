@@ -336,11 +336,11 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Calendar Events Management"
-    - "Railway Deployment Setup"
-    - "Mobile Responsiveness Verification"
-    - "Production Environment Configuration"
-  stuck_tasks: []
+    - "Enhanced Add Shift Dialog with Date Placement Testing"
+    - "React Frontend Mobile Responsiveness"
+    - "Staff Alphabetical Sorting Fix"
+  stuck_tasks:
+    - "Enhanced Add Shift Dialog with Date Placement Testing"
   test_all: false
   test_priority: "high_first"
   completed_features:
