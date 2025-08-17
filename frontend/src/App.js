@@ -644,6 +644,32 @@ function App() {
     return rosterEntries.filter(entry => entry.date === dateString);
   };
 
+  const getDayEvents = (date) => {
+    const dateString = date.toISOString().split('T')[0];
+    return calendarEvents.filter(event => event.date === dateString);
+  };
+
+  const getEventPriorityColor = (priority) => {
+    switch (priority) {
+      case 'urgent': return 'bg-red-100 text-red-800 border-red-200';
+      case 'high': return 'bg-orange-100 text-orange-800 border-orange-200';
+      case 'medium': return 'bg-blue-100 text-blue-800 border-blue-200';
+      case 'low': return 'bg-gray-100 text-gray-800 border-gray-200';
+      default: return 'bg-blue-100 text-blue-800 border-blue-200';
+    }
+  };
+
+  const getEventTypeIcon = (type) => {
+    switch (type) {
+      case 'meeting': return '👥';
+      case 'appointment': return '📅';
+      case 'task': return '✓';
+      case 'reminder': return '🔔';
+      case 'personal': return '👤';
+      default: return '📅';
+    }
+  };
+
   const getShiftTypeBadge = (entry) => {
     // Check for manual or automatic sleepover status
     const isSleepover = entry.manual_sleepover !== null ? entry.manual_sleepover : entry.is_sleepover;
