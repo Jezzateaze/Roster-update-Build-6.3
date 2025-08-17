@@ -1403,14 +1403,20 @@ function App() {
     
     // Weekday time-based check
     const startHour = parseInt(entry.start_time.split(':')[0]);
+    const startMin = parseInt(entry.start_time.split(':')[1]);
     const endHour = parseInt(entry.end_time.split(':')[0]);
+    const endMin = parseInt(entry.end_time.split(':')[1]);
     
-    // Simple logic for weekdays - shifts ending by 8:00 PM are considered "Day"
-    if (startHour < 6 || (endHour <= startHour && endHour > 0)) { // Night or overnight
+    // Convert to minutes for more accurate comparison
+    const startMinutes = startHour * 60 + startMin;
+    const endMinutes = endHour * 60 + endMin;
+    
+    // Simple logic for weekdays - shifts ending by 8:00 PM (20:00) are considered "Day"
+    if (startHour < 6 || (endMinutes <= startMinutes && endHour > 0)) { // Night or overnight
       return <Badge variant="secondary" className="bg-purple-100 text-purple-800">Night</Badge>;
-    } else if (endHour > 20) { // Evening (ends after 8:00 PM)
+    } else if (endMinutes > 20 * 60) { // Evening (ends after 8:00 PM / 20:00)
       return <Badge variant="secondary" className="bg-orange-100 text-orange-800">Evening</Badge>;
-    } else { // Day (includes shifts ending by 8:00 PM or earlier)
+    } else { // Day (includes shifts ending at or before 8:00 PM / 20:00)
       return <Badge variant="secondary" className="bg-green-100 text-green-800">Day</Badge>;
     }
   };
