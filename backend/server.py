@@ -75,6 +75,7 @@ class RosterEntry(BaseModel):
     base_pay: float = 0.0
     sleepover_allowance: float = 0.0
     total_pay: float = 0.0
+    allow_overlap: Optional[bool] = False  # Allow this shift to overlap with others (for 2:1 shifts)
 
 class Settings(BaseModel):
     pay_mode: PayMode = PayMode.DEFAULT
