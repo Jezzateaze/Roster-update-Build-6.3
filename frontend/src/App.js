@@ -1200,15 +1200,31 @@ function App() {
                   {dayEntries.map(entry => (
                     <div
                       key={entry.id}
-                      className="text-xs p-1 rounded cursor-pointer hover:bg-slate-200 transition-colors border border-slate-200"
-                      onClick={() => {
-                        setSelectedShift(entry);
-                        setShowShiftDialog(true);
-                      }}
+                      className="text-xs p-1 rounded cursor-pointer hover:bg-slate-200 transition-colors border border-slate-200 group relative"
                     >
-                      <div className="font-medium">{entry.start_time}-{entry.end_time}</div>
-                      <div className="text-slate-600 truncate">{entry.staff_name || 'Unassigned'}</div>
-                      <div className="font-medium text-emerald-600">{formatCurrency(entry.total_pay)}</div>
+                      <div
+                        onClick={() => {
+                          setSelectedShift(entry);
+                          setShowShiftDialog(true);
+                        }}
+                      >
+                        <div className="font-medium">{entry.start_time}-{entry.end_time}</div>
+                        <div className="text-slate-600 truncate">{entry.staff_name || 'Unassigned'}</div>
+                        <div className="font-medium text-emerald-600">{formatCurrency(entry.total_pay)}</div>
+                      </div>
+                      <button
+                        className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white rounded-full text-xs opacity-0 group-hover:opacity-100 flex items-center justify-center hover:bg-red-600 transition-all z-10 shadow-sm border border-white"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (window.confirm('Are you sure you want to delete this shift?')) {
+                            deleteShift(entry.id);
+                          }
+                        }}
+                        title="Delete shift"
+                        style={{ fontSize: '8px', lineHeight: '1' }}
+                      >
+                        ×
+                      </button>
                     </div>
                   ))}
                 </div>
