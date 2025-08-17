@@ -657,20 +657,47 @@ function App() {
       : 'text-slate-500';
     
     return (
-      <div className={`min-h-[120px] p-1 border-r border-b border-slate-200 ${backgroundClass}`}>
+      <div className={`min-h-[120px] p-1 border-r border-b border-slate-200 ${backgroundClass} group hover:bg-slate-50 transition-colors relative`}>
         <div className={`font-medium text-sm mb-2 flex items-center justify-between ${textClass}`}>
           <span>{date.getDate()}</span>
-          {!isCurrentMonth && (
-            <span className="text-xs text-slate-400">
-              {isPreviousMonth ? 'Prev' : 'Next'}
-            </span>
-          )}
+          <div className="flex items-center space-x-1">
+            {!isCurrentMonth && (
+              <span className="text-xs text-slate-400">
+                {isPreviousMonth ? 'Prev' : 'Next'}
+              </span>
+            )}
+            {/* Day Template Buttons - Only show for current month */}
+            {isCurrentMonth && (
+              <div className="opacity-0 group-hover:opacity-100 transition-opacity flex space-x-1">
+                <button
+                  className="w-5 h-5 bg-blue-500 text-white rounded text-xs hover:bg-blue-600 transition-colors flex items-center justify-center"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    openDayTemplateDialog(date, 'save');
+                  }}
+                  title={`Save ${['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][date.getDay()]} as template`}
+                >
+                  S
+                </button>
+                <button
+                  className="w-5 h-5 bg-green-500 text-white rounded text-xs hover:bg-green-600 transition-colors flex items-center justify-center"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    openDayTemplateDialog(date, 'load');
+                  }}
+                  title={`Load template to ${['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][date.getDay()]}`}
+                >
+                  L
+                </button>
+              </div>
+            )}
+          </div>
         </div>
         <div className="space-y-1">
           {dayEntries.map(entry => (
             <div
               key={entry.id}
-              className="text-xs p-1 rounded cursor-pointer hover:bg-slate-200 transition-colors group relative"
+              className="text-xs p-1 rounded cursor-pointer hover:bg-slate-200 transition-colors group/shift relative"
             >
               <div 
                 className="flex-1"
@@ -683,7 +710,7 @@ function App() {
                   <span className={isCurrentMonth ? '' : 'opacity-75'}>
                     {entry.start_time}-{entry.end_time}
                   </span>
-                  <Edit className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
+                  <Edit className="w-3 h-3 opacity-0 group-hover/shift:opacity-100 transition-opacity" />
                 </div>
                 <div className={`text-slate-600 ${isCurrentMonth ? '' : 'opacity-75'}`}>
                   {entry.staff_name || 'Unassigned'}
@@ -698,7 +725,7 @@ function App() {
                 </div>
               </div>
               <button
-                className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white rounded-full text-xs opacity-0 group-hover:opacity-100 flex items-center justify-center hover:bg-red-600 transition-all z-10 shadow-sm border border-white"
+                className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white rounded-full text-xs opacity-0 group-hover/shift:opacity-100 flex items-center justify-center hover:bg-red-600 transition-all z-10 shadow-sm border border-white"
                 onClick={(e) => {
                   e.stopPropagation();
                   e.preventDefault();
