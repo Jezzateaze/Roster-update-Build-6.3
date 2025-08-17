@@ -1792,65 +1792,163 @@ function App() {
     const year = currentDate.getFullYear();
     const month = currentDate.getMonth();
     
+    // Get all days of the month
     const firstDay = new Date(year, month, 1);
     const lastDay = new Date(year, month + 1, 0);
+    const daysInMonth = lastDay.getDate();
     
-    // Start from Monday of the week containing the first day
-    const startDate = new Date(firstDay);
-    const firstDayOfWeek = firstDay.getDay(); // 0 = Sunday, 1 = Monday, etc.
-    const daysToSubtract = (firstDayOfWeek + 6) % 7; // Convert to Monday = 0 system
-    startDate.setDate(startDate.getDate() - daysToSubtract);
-
-    const weeks = [];
-    const currentWeekDate = new Date(startDate);
-
-    // Always generate exactly 6 weeks for a complete calendar view
-    for (let weekNum = 0; weekNum < 6; weekNum++) {
-      const week = [];
-      for (let dayNum = 0; dayNum < 7; dayNum++) {
-        // Create a clean date object to avoid timezone issues
-        const dayDate = new Date(currentWeekDate.getFullYear(), currentWeekDate.getMonth(), currentWeekDate.getDate());
-        week.push(dayDate);
-        currentWeekDate.setDate(currentWeekDate.getDate() + 1);
-      }
-      weeks.push(week);
+    // Generate all days of the month
+    const monthDays = [];
+    for (let day = 1; day <= daysInMonth; day++) {
+      monthDays.push(new Date(year, month, day));
     }
 
     return (
       <div className="bg-white rounded-lg border border-slate-200 overflow-hidden">
-        <div className="grid grid-cols-7 bg-slate-50">
-          {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(day => (
-            <div key={day} className="p-3 text-center font-semibold text-slate-700 border-r border-slate-200 last:border-r-0">
-              {day}
+        {/* Header with navigation */}
+        <div className="bg-slate-50 p-4 border-b border-slate-200">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-4">
+              <Button
+                variant="outline"
+                onClick={() => navigateMonth(-1)}
+              >
+                Previous Month
+              </Button>
+              <h2 className="text-2xl font-bold text-slate-800">
+                {currentDate.toLocaleString('default', { month: 'long', year: 'numeric' })}
+              </h2>
+              <Button
+                variant="outline"
+                onClick={() => navigateMonth(1)}
+              >
+                Next Month
+              </Button>
             </div>
-          ))}
+          </div>
         </div>
-        {weeks.map((week, weekIndex) => (
-          <div key={weekIndex} className="calendar-grid">
-            {week.map((date, dayIndex) => {
-              const dateKey = `${weekIndex}-${dayIndex}-${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
+
+        {/* Horizontally scrollable month view */}
+        <div className="overflow-x-auto">
+          <div className="flex min-w-max">
+            {monthDays.map((date, index) => {
+              const dayEntries = getDayEntries(date);
+              const dayEvents = getDayEvents(date);
+              const dayTotal = dayEntries.reduce((sum, entry) => sum + entry.total_pay, 0);
+              const isToday = date.toDateString() === getBrisbaneDate().toDateString();
+              const dayOfWeek = (date.getDay() + 6) % 7; // Convert to Monday = 0
+              const dayNames = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+
               return (
-                <div key={dateKey}>
-                  {renderCalendarDay(date)}
+                <div key={index} className={`min-h-[400px] p-3 border-r border-slate-200 last:border-r-0 min-w-[180px] ${isToday ? 'bg-blue-50' : ''}`}>
+                  {/* Day header */}
+                  <div className={`text-center mb-3 ${isToday ? 'font-bold text-blue-600' : 'font-medium text-slate-700'}`}>
+                    <div className="text-sm">
+                      {dayNames[dayOfWeek]}
+                    </div>
+                    <div className={`text-lg ${isToday ? 'bg-blue-600 text-white rounded-full w-8 h-8 flex items-center justify-center mx-auto' : ''}`}>
+                      {date.getDate()}
+                    </div>
+                  </div>
+
+                  {/* Quick Add Shift Button */}
+                  <div className="mb-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="w-full text-xs"
+                      onClick={() => {
+                        setNewShift({
+                          ...newShift,
+                          date: formatDateString(date)
+                        });
+                        setShowAddShiftDialog(true);
+                      }}
+                    >
+                      + Add Shift
+                    </Button>
+                  </div>
+
+                  <div className="space-y-1">
+                    {/* Events */}
+                    {dayEvents.map(event => (
+                      <div
+                        key={event.id}
+                        className={`text-xs p-1 rounded cursor-pointer border ${getEventPriorityColor(event.priority)} ${event.is_completed ? 'line-through opacity-60' : ''}`}
+                        onClick={() => {
+                          setSelectedEvent(event);
+                          setShowEventDialog(true);
+                        }}
+                      >
+                        <div className="font-medium truncate">{getEventTypeIcon(event.event_type)} {event.title}</div>
+                        {!event.is_all_day && event.start_time && (
+                          <div className="text-xs opacity-75">
+                            {formatTime(event.start_time, settings.time_format === '24hr')}{event.end_time && ` - ${formatTime(event.end_time, settings.time_format === '24hr')}`}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+
+                    {/* Shifts */}
+                    {dayEntries.map(entry => (
+                      <div
+                        key={entry.id}
+                        className={`text-xs p-1 rounded cursor-pointer hover:bg-slate-200 transition-colors border border-slate-200 group relative ${selectedShifts.has(entry.id) ? 'ring-1 ring-blue-500 bg-blue-50' : ''}`}
+                      >
+                        {bulkSelectionMode && (
+                          <div className="absolute top-0 left-0 z-30 bg-white rounded p-0.5 shadow-sm border border-slate-300">
+                            <input
+                              type="checkbox"
+                              checked={selectedShifts.has(entry.id)}
+                              onChange={() => toggleShiftSelection(entry.id)}
+                              className="w-3 h-3 rounded border-gray-300 border-2 text-blue-600 focus:ring-blue-500"
+                              onClick={(e) => e.stopPropagation()}
+                            />
+                          </div>
+                        )}
+                        <div
+                          className={`${bulkSelectionMode ? 'ml-3' : ''}`}
+                          onClick={() => {
+                            if (bulkSelectionMode) {
+                              toggleShiftSelection(entry.id);
+                            } else {
+                              setSelectedShift(entry);
+                              setShowShiftDialog(true);
+                            }
+                          }}
+                        >
+                          <div className="font-medium">{formatTime(entry.start_time, settings.time_format === '24hr')}-{formatTime(entry.end_time, settings.time_format === '24hr')}</div>
+                          <div className="text-slate-600 truncate">{entry.staff_name || 'Unassigned'}</div>
+                          <div className="font-medium text-emerald-600">{formatCurrency(entry.total_pay)}</div>
+                        </div>
+                        {!bulkSelectionMode && (
+                          <button
+                            className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white rounded-full text-xs opacity-0 group-hover:opacity-100 flex items-center justify-center hover:bg-red-600 transition-all z-10 shadow-sm border border-white"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              if (window.confirm('Are you sure you want to delete this shift?')) {
+                                deleteShift(entry.id);
+                              }
+                            }}
+                            title="Delete shift"
+                            style={{ fontSize: '8px', lineHeight: '1' }}
+                          >
+                            ×
+                          </button>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Day total */}
+                  {dayTotal > 0 && (
+                    <div className="mt-2 pt-1 border-t border-slate-200 text-xs font-bold text-emerald-700">
+                      ${dayTotal.toFixed(0)}
+                    </div>
+                  )}
                 </div>
               );
             })}
-          </div>
-        ))}
-        
-        {/* Legend for different month indicators */}
-        <div className="p-3 bg-slate-50 border-t border-slate-200 flex items-center justify-center space-x-6 text-xs text-slate-600">
-          <div className="flex items-center space-x-2">
-            <div className="w-3 h-3 bg-white border border-slate-300 rounded"></div>
-            <span>Current Month</span>
-          </div>
-          <div className="flex items-center space-x-2">
-            <div className="w-3 h-3 bg-slate-100 border border-slate-300 rounded"></div>
-            <span>Previous Month</span>
-          </div>
-          <div className="flex items-center space-x-2">
-            <div className="w-3 h-3 bg-slate-50 border border-slate-300 rounded"></div>
-            <span>Next Month</span>
           </div>
         </div>
       </div>
