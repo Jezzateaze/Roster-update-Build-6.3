@@ -2506,7 +2506,21 @@ def main():
             print(f"❌ Test failed with exception: {str(e)}")
     
     print("\n" + "=" * 60)
-    print("📅 Running NEW CALENDAR EVENTS TESTS...")
+    print("🚀 Running NEW ROSTER GENERATION TESTS...")
+    print("🎯 Testing: Generate Roster from Shift Templates & Enhanced Template Management")
+    print("=" * 60)
+    
+    new_roster_generation_tests_passed = 0
+    for test in new_roster_generation_tests:
+        try:
+            result = test()
+            if result:
+                new_roster_generation_tests_passed += 1
+        except Exception as e:
+            print(f"❌ New roster generation test failed with exception: {str(e)}")
+    
+    print("\n" + "=" * 60)
+    print("📅 Running Calendar Events Tests...")
     print("=" * 60)
     
     calendar_events_tests_passed = 0
