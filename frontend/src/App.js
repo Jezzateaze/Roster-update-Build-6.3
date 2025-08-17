@@ -1647,22 +1647,8 @@ function App() {
       
       console.log(`Week ${weekNum}: ${week[0].toISOString().split('T')[0]} to ${week[6].toISOString().split('T')[0]}`);
       
-      // Stop if we've covered all days of the target month
-      // Check if this week contains the last day of the target month or goes beyond it
-      const lastDayOfTargetMonth = new Date(year, month + 1, 0);
-      const weekContainsLastDay = week.some(day => 
-        day.getFullYear() === year && 
-        day.getMonth() === month && 
-        day.getDate() === lastDayOfTargetMonth.getDate()
-      );
-      
-      console.log(`Week ${weekNum} contains last day of month (${lastDayOfTargetMonth.getDate()}): ${weekContainsLastDay}`);
-      
-      // If this week contains the last day of the month, we can stop after this iteration
-      if (weekContainsLastDay) {
-        console.log(`Completed calendar after week ${weekNum} - this week contains the last day`);
-        break;
-      }
+      // Continue generating weeks until we have shown the complete month
+      // For most months, 5-6 weeks is sufficient
     }
 
     return (
