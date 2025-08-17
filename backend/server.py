@@ -151,6 +151,42 @@ def calculate_hours_worked(start_time: str, end_time: str) -> float:
     total_minutes = end_minutes - start_minutes
     return total_minutes / 60.0
 
+def check_shift_overlap(date_str: str, start_time: str, end_time: str, exclude_id: Optional[str] = None) -> bool:
+    """Check if a shift overlaps with existing shifts on the same date"""
+    existing_shifts = list(db.roster.find({"date": date_str}))
+    
+    if exclude_id:
+        existing_shifts = [s for s in existing_shifts if s.get("id") != exclude_id]
+    
+    if not existing_shifts:
+        return False
+    
+    # Convert times to minutes for comparison
+    def time_to_minutes(time_str: str) -> int:
+        hours, minutes = map(int, time_str.split(':'))
+        return hours * 60 + minutes
+    
+    new_start = time_to_minutes(start_time)
+    new_end = time_to_minutes(end_time)
+    
+    # Handle overnight shift
+    if new_end <= new_start:
+        new_end += 24 * 60
+    
+    for shift in existing_shifts:
+        existing_start = time_to_minutes(shift["start_time"])
+        existing_end = time_to_minutes(shift["end_time"])
+        
+        # Handle overnight shift
+        if existing_end <= existing_start:
+            existing_end += 24 * 60
+        
+        # Check for overlap
+        if (new_start < existing_end and new_end > existing_start):
+            return True
+    
+    return False
+
 def calculate_pay(roster_entry: RosterEntry, settings: Settings) -> RosterEntry:
     """Calculate pay for a roster entry with sleepover logic"""
     hours = calculate_hours_worked(roster_entry.start_time, roster_entry.end_time)
