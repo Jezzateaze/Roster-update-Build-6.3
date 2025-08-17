@@ -2590,24 +2590,60 @@ function App() {
                           ) : (
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                               {dayTemplates.map((template, shiftIndex) => (
-                                <Card key={template.id} className="p-4">
-                                  <div className="space-y-3">
+                                <Card key={template.id} className={`p-4 relative ${bulkEditMode && selectedTemplates.has(template.id) ? 'ring-2 ring-blue-500 bg-blue-50' : ''}`}>
+                                  {/* Bulk Edit Checkbox */}
+                                  {bulkEditMode && (
+                                    <div className="absolute top-2 left-2 z-10">
+                                      <input
+                                        type="checkbox"
+                                        checked={selectedTemplates.has(template.id)}
+                                        onChange={() => toggleTemplateSelection(template.id)}
+                                        className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                                      />
+                                    </div>
+                                  )}
+                                  
+                                  <div className={`space-y-3 ${bulkEditMode ? 'ml-6' : ''}`}>
                                     <div className="flex items-center justify-between">
                                       <h4 className="font-medium">
                                         {template.name || `Shift ${shiftIndex + 1}`}
                                         {template.is_sleepover && <Badge variant="secondary" className="ml-2">Sleepover</Badge>}
                                       </h4>
-                                      <Button
-                                        variant="outline"
-                                        size="sm"
-                                        onClick={() => {
-                                          setSelectedTemplate(template);
-                                          setShowTemplateDialog(true);
-                                        }}
-                                      >
-                                        <Edit className="w-3 h-3 mr-1" />
-                                        Edit
-                                      </Button>
+                                      
+                                      {!bulkEditMode && (
+                                        <div className="flex space-x-1">
+                                          <Button
+                                            variant="outline"
+                                            size="sm"
+                                            onClick={() => {
+                                              setSelectedTemplate(template);
+                                              setShowTemplateDialog(true);
+                                            }}
+                                          >
+                                            <Edit className="w-3 h-3" />
+                                          </Button>
+                                          <Button
+                                            variant="outline"
+                                            size="sm"
+                                            onClick={() => cloneTemplate(template)}
+                                            title="Clone template"
+                                          >
+                                            <Copy className="w-3 h-3" />
+                                          </Button>
+                                          <Button
+                                            variant="outline"
+                                            size="sm"
+                                            onClick={() => {
+                                              if (window.confirm('Are you sure you want to delete this shift template?')) {
+                                                deleteTemplate(template.id);
+                                              }
+                                            }}
+                                            className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                                          >
+                                            <Trash2 className="w-3 h-3" />
+                                          </Button>
+                                        </div>
+                                      )}
                                     </div>
                                     <div className="text-sm text-slate-600">
                                       {formatTime(template.start_time, settings.time_format === '24hr')} - {formatTime(template.end_time, settings.time_format === '24hr')}
