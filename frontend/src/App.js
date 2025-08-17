@@ -1639,6 +1639,11 @@ function App() {
       weeks.push(week);
     }
 
+    console.log('Generated weeks for calendar:');
+    weeks.forEach((week, i) => {
+      console.log(`Week ${i}: ${week[0].toISOString().split('T')[0]} to ${week[6].toISOString().split('T')[0]}`);
+    });
+
     return (
       <div className="bg-white rounded-lg border border-slate-200 overflow-hidden">
         <div className="grid grid-cols-7 bg-slate-50">
