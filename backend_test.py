@@ -1938,7 +1938,7 @@ class ShiftRosterAPITester:
 
 def main():
     print("🚀 Starting Shift Roster & Pay Calculator API Tests")
-    print("🎯 FOCUS: Testing NEW Day Template Functionality")
+    print("🎯 FOCUS: Testing NEW Calendar Events Functionality")
     print("=" * 60)
     
     tester = ShiftRosterAPITester()
@@ -1951,7 +1951,18 @@ def main():
         tester.test_get_settings,
     ]
     
-    # NEW DAY TEMPLATE TESTS - Main focus
+    # NEW CALENDAR EVENTS TESTS - Main focus
+    calendar_events_tests = [
+        tester.test_calendar_events_crud,
+        tester.test_calendar_events_filtering,
+        tester.test_get_events_for_specific_date,
+        tester.test_task_completion,
+        tester.test_calendar_events_priority_levels,
+        tester.test_all_day_vs_timed_events,
+        tester.test_calendar_events_data_validation,
+    ]
+    
+    # EXISTING DAY TEMPLATE TESTS
     day_template_tests = [
         tester.test_day_templates_crud,
         tester.test_save_day_as_template,
@@ -1986,7 +1997,20 @@ def main():
             print(f"❌ Test failed with exception: {str(e)}")
     
     print("\n" + "=" * 60)
-    print("🌟 Running NEW DAY TEMPLATE TESTS...")
+    print("📅 Running NEW CALENDAR EVENTS TESTS...")
+    print("=" * 60)
+    
+    calendar_events_tests_passed = 0
+    for test in calendar_events_tests:
+        try:
+            result = test()
+            if result:
+                calendar_events_tests_passed += 1
+        except Exception as e:
+            print(f"❌ Calendar events test failed with exception: {str(e)}")
+    
+    print("\n" + "=" * 60)
+    print("🌟 Running Day Template Tests...")
     print("=" * 60)
     
     day_template_tests_passed = 0
@@ -1999,7 +2023,7 @@ def main():
             print(f"❌ Day template test failed with exception: {str(e)}")
     
     print("\n" + "=" * 60)
-    print("🎯 Running Existing Roster Template Tests...")
+    print("🎯 Running Roster Template Tests...")
     print("=" * 60)
     
     roster_template_tests_passed = 0
@@ -2023,18 +2047,25 @@ def main():
     # Print final results
     print("\n" + "=" * 60)
     print(f"📊 Overall Results: {tester.tests_passed}/{tester.tests_run} API tests passed")
+    print(f"📅 Calendar Events Tests: {calendar_events_tests_passed}/{len(calendar_events_tests)} calendar events tests passed")
     print(f"🌟 Day Template Tests: {day_template_tests_passed}/{len(day_template_tests)} day template tests passed")
     print(f"🎯 Roster Template Tests: {roster_template_tests_passed}/{len(roster_template_tests)} roster template tests passed")
     
+    calendar_events_success = calendar_events_tests_passed == len(calendar_events_tests)
     day_template_success = day_template_tests_passed == len(day_template_tests)
     roster_template_success = roster_template_tests_passed == len(roster_template_tests)
     
+    if calendar_events_success:
+        print("🎉 All NEW calendar events tests passed!")
+    else:
+        print("⚠️  Some calendar events tests failed.")
+    
     if day_template_success:
-        print("🎉 All NEW day template tests passed!")
+        print("🎉 All day template tests passed!")
     else:
         print("⚠️  Some day template tests failed.")
     
-    if day_template_success and roster_template_success and tester.tests_passed == tester.tests_run:
+    if calendar_events_success and day_template_success and roster_template_success and tester.tests_passed == tester.tests_run:
         print("🎉 All tests passed!")
         return 0
     else:
