@@ -1232,6 +1232,710 @@ class ShiftRosterAPITester:
         
         return filtering_correct
 
+    # ========================================
+    # CALENDAR EVENTS TESTS - NEW FUNCTIONALITY
+    # ========================================
+
+    def test_calendar_events_crud(self):
+        """Test calendar events CRUD operations"""
+        print(f"\n📅 Testing Calendar Events CRUD Operations...")
+        
+        # Test 1: Get all calendar events (should be empty initially)
+        success, events = self.run_test(
+            "Get All Calendar Events",
+            "GET",
+            "api/calendar-events",
+            200
+        )
+        if success:
+            print(f"   Found {len(events)} existing calendar events")
+        
+        # Test 2: Create different types of calendar events
+        test_events = [
+            {
+                "id": "",  # Will be auto-generated
+                "title": "Team Meeting",
+                "description": "Weekly team standup meeting",
+                "date": "2025-01-15",
+                "start_time": "09:00",
+                "end_time": "10:00",
+                "is_all_day": False,
+                "event_type": "meeting",
+                "priority": "high",
+                "location": "Conference Room A",
+                "attendees": ["Alice", "Bob", "Charlie"],
+                "reminder_minutes": 15,
+                "is_completed": False,
+                "is_active": True
+            },
+            {
+                "id": "",
+                "title": "Doctor Appointment",
+                "description": "Annual health checkup",
+                "date": "2025-01-16",
+                "start_time": "14:30",
+                "end_time": "15:30",
+                "is_all_day": False,
+                "event_type": "appointment",
+                "priority": "medium",
+                "location": "Medical Center",
+                "attendees": [],
+                "reminder_minutes": 30,
+                "is_completed": False,
+                "is_active": True
+            },
+            {
+                "id": "",
+                "title": "Complete Project Report",
+                "description": "Finish quarterly project report",
+                "date": "2025-01-17",
+                "start_time": None,
+                "end_time": None,
+                "is_all_day": True,
+                "event_type": "task",
+                "priority": "urgent",
+                "location": None,
+                "attendees": [],
+                "reminder_minutes": 60,
+                "is_completed": False,
+                "is_active": True
+            },
+            {
+                "id": "",
+                "title": "Birthday Party",
+                "description": "Sarah's birthday celebration",
+                "date": "2025-01-18",
+                "start_time": "18:00",
+                "end_time": "22:00",
+                "is_all_day": False,
+                "event_type": "personal",
+                "priority": "low",
+                "location": "Sarah's House",
+                "attendees": ["Sarah", "Mike", "Lisa"],
+                "reminder_minutes": 120,
+                "is_completed": False,
+                "is_active": True
+            },
+            {
+                "id": "",
+                "title": "Call Mom",
+                "description": "Weekly check-in call with mom",
+                "date": "2025-01-19",
+                "start_time": "19:00",
+                "end_time": "19:30",
+                "is_all_day": False,
+                "event_type": "reminder",
+                "priority": "medium",
+                "location": None,
+                "attendees": [],
+                "reminder_minutes": 10,
+                "is_completed": False,
+                "is_active": True
+            }
+        ]
+        
+        created_event_ids = []
+        
+        # Create all test events
+        for i, event_data in enumerate(test_events):
+            success, created_event = self.run_test(
+                f"Create {event_data['event_type'].title()} Event: {event_data['title']}",
+                "POST",
+                "api/calendar-events",
+                200,
+                data=event_data
+            )
+            
+            if success and 'id' in created_event:
+                created_event_ids.append(created_event['id'])
+                print(f"   ✅ Created {event_data['event_type']} event with ID: {created_event['id']}")
+                
+                # Verify event properties
+                if created_event.get('priority') == event_data['priority']:
+                    print(f"      Priority: {created_event.get('priority')} ✅")
+                else:
+                    print(f"      Priority mismatch: got {created_event.get('priority')}, expected {event_data['priority']} ❌")
+                
+                if created_event.get('is_all_day') == event_data['is_all_day']:
+                    print(f"      All-day: {created_event.get('is_all_day')} ✅")
+                else:
+                    print(f"      All-day mismatch: got {created_event.get('is_all_day')}, expected {event_data['is_all_day']} ❌")
+        
+        if len(created_event_ids) != len(test_events):
+            print(f"   ⚠️  Could not create all test events. Created {len(created_event_ids)}/{len(test_events)}")
+            return False
+        
+        print(f"   ✅ Successfully created {len(created_event_ids)} calendar events")
+        
+        # Test 3: Update an event
+        if created_event_ids:
+            event_to_update = created_event_ids[0]
+            updated_event_data = {
+                **test_events[0],
+                "id": event_to_update,
+                "title": "Updated Team Meeting",
+                "priority": "urgent",
+                "description": "Updated weekly team standup meeting"
+            }
+            
+            success, updated_event = self.run_test(
+                "Update Calendar Event",
+                "PUT",
+                f"api/calendar-events/{event_to_update}",
+                200,
+                data=updated_event_data
+            )
+            
+            if success:
+                print(f"   ✅ Successfully updated event: {updated_event.get('title')}")
+                print(f"      New priority: {updated_event.get('priority')}")
+        
+        # Test 4: Delete an event
+        if len(created_event_ids) > 1:
+            event_to_delete = created_event_ids[1]
+            success, response = self.run_test(
+                "Delete Calendar Event",
+                "DELETE",
+                f"api/calendar-events/{event_to_delete}",
+                200
+            )
+            
+            if success:
+                print(f"   ✅ Successfully deleted event")
+        
+        # Store created event IDs for other tests
+        self.calendar_event_ids = created_event_ids
+        return True
+
+    def test_calendar_events_filtering(self):
+        """Test calendar events filtering by date range and event type"""
+        print(f"\n🔍 Testing Calendar Events Filtering...")
+        
+        # Ensure we have events to test with
+        if not hasattr(self, 'calendar_event_ids') or not self.calendar_event_ids:
+            print("   ⚠️  No calendar events available for filtering test")
+            return False
+        
+        # Test 1: Filter by date range
+        success, filtered_events = self.run_test(
+            "Filter Events by Date Range (2025-01-15 to 2025-01-17)",
+            "GET",
+            "api/calendar-events",
+            200,
+            params={"start_date": "2025-01-15", "end_date": "2025-01-17"}
+        )
+        
+        if success:
+            print(f"   ✅ Found {len(filtered_events)} events in date range")
+            # Verify all events are within the date range
+            for event in filtered_events:
+                event_date = event.get('date')
+                if event_date and "2025-01-15" <= event_date <= "2025-01-17":
+                    print(f"      Event '{event.get('title')}' on {event_date} ✅")
+                else:
+                    print(f"      Event '{event.get('title')}' on {event_date} outside range ❌")
+        
+        # Test 2: Filter by event type
+        event_types_to_test = ["meeting", "appointment", "task", "personal", "reminder"]
+        
+        for event_type in event_types_to_test:
+            success, type_filtered_events = self.run_test(
+                f"Filter Events by Type: {event_type}",
+                "GET",
+                "api/calendar-events",
+                200,
+                params={"event_type": event_type}
+            )
+            
+            if success:
+                print(f"   ✅ Found {len(type_filtered_events)} {event_type} events")
+                # Verify all events are of the correct type
+                for event in type_filtered_events:
+                    if event.get('event_type') == event_type:
+                        print(f"      '{event.get('title')}' is {event_type} ✅")
+                    else:
+                        print(f"      '{event.get('title')}' is {event.get('event_type')}, not {event_type} ❌")
+        
+        # Test 3: Combined filtering (date range + event type)
+        success, combined_filtered = self.run_test(
+            "Filter Events by Date Range AND Type (meetings 2025-01-15 to 2025-01-16)",
+            "GET",
+            "api/calendar-events",
+            200,
+            params={"start_date": "2025-01-15", "end_date": "2025-01-16", "event_type": "meeting"}
+        )
+        
+        if success:
+            print(f"   ✅ Found {len(combined_filtered)} meeting events in date range")
+            for event in combined_filtered:
+                event_date = event.get('date')
+                event_type = event.get('event_type')
+                date_ok = "2025-01-15" <= event_date <= "2025-01-16"
+                type_ok = event_type == "meeting"
+                print(f"      '{event.get('title')}': date={event_date} ({date_ok}), type={event_type} ({type_ok})")
+        
+        return True
+
+    def test_get_events_for_specific_date(self):
+        """Test getting events for a specific date"""
+        print(f"\n📅 Testing Get Events for Specific Date...")
+        
+        # Test getting events for specific dates
+        test_dates = ["2025-01-15", "2025-01-16", "2025-01-17", "2025-01-20"]  # Last one should be empty
+        
+        for test_date in test_dates:
+            success, date_events = self.run_test(
+                f"Get Events for {test_date}",
+                "GET",
+                f"api/calendar-events/{test_date}",
+                200
+            )
+            
+            if success:
+                print(f"   ✅ Found {len(date_events)} events for {test_date}")
+                for event in date_events:
+                    event_title = event.get('title', 'Unknown')
+                    event_type = event.get('event_type', 'unknown')
+                    is_all_day = event.get('is_all_day', False)
+                    
+                    if is_all_day:
+                        print(f"      '{event_title}' ({event_type}) - All day")
+                    else:
+                        start_time = event.get('start_time', 'N/A')
+                        end_time = event.get('end_time', 'N/A')
+                        print(f"      '{event_title}' ({event_type}) - {start_time} to {end_time}")
+                    
+                    # Verify the event is actually for the requested date
+                    if event.get('date') != test_date:
+                        print(f"         ❌ Event date mismatch: {event.get('date')} != {test_date}")
+        
+        return True
+
+    def test_task_completion(self):
+        """Test marking tasks as completed"""
+        print(f"\n✅ Testing Task Completion...")
+        
+        # First, find a task event to complete
+        success, all_events = self.run_test(
+            "Get All Events to Find Tasks",
+            "GET",
+            "api/calendar-events",
+            200,
+            params={"event_type": "task"}
+        )
+        
+        if not success or not all_events:
+            print("   ⚠️  No task events found for completion test")
+            return False
+        
+        task_event = all_events[0]
+        task_id = task_event.get('id')
+        task_title = task_event.get('title', 'Unknown Task')
+        
+        print(f"   Testing completion of task: '{task_title}' (ID: {task_id})")
+        
+        # Verify task is not completed initially
+        if task_event.get('is_completed'):
+            print(f"   ⚠️  Task is already marked as completed")
+        else:
+            print(f"   ✅ Task is initially not completed")
+        
+        # Mark the task as completed
+        success, response = self.run_test(
+            f"Mark Task as Completed",
+            "PUT",
+            f"api/calendar-events/{task_id}/complete",
+            200
+        )
+        
+        if success:
+            print(f"   ✅ Task completion request successful")
+            
+            # Verify the task is now marked as completed
+            success, updated_events = self.run_test(
+                "Verify Task Completion",
+                "GET",
+                f"api/calendar-events/{task_event.get('date')}",
+                200
+            )
+            
+            if success:
+                completed_task = next((e for e in updated_events if e.get('id') == task_id), None)
+                if completed_task and completed_task.get('is_completed'):
+                    print(f"   ✅ Task is now marked as completed")
+                    return True
+                else:
+                    print(f"   ❌ Task completion status not updated")
+        
+        return False
+
+    def test_calendar_events_priority_levels(self):
+        """Test different priority levels for calendar events"""
+        print(f"\n🎯 Testing Calendar Events Priority Levels...")
+        
+        # Create events with different priority levels
+        priority_test_events = [
+            {
+                "id": "",
+                "title": "Low Priority Meeting",
+                "description": "Optional team sync",
+                "date": "2025-01-20",
+                "start_time": "10:00",
+                "end_time": "10:30",
+                "is_all_day": False,
+                "event_type": "meeting",
+                "priority": "low",
+                "location": "Virtual",
+                "attendees": [],
+                "reminder_minutes": 5,
+                "is_completed": False,
+                "is_active": True
+            },
+            {
+                "id": "",
+                "title": "Medium Priority Task",
+                "description": "Review documentation",
+                "date": "2025-01-20",
+                "start_time": None,
+                "end_time": None,
+                "is_all_day": True,
+                "event_type": "task",
+                "priority": "medium",
+                "location": None,
+                "attendees": [],
+                "reminder_minutes": 30,
+                "is_completed": False,
+                "is_active": True
+            },
+            {
+                "id": "",
+                "title": "High Priority Appointment",
+                "description": "Important client meeting",
+                "date": "2025-01-20",
+                "start_time": "14:00",
+                "end_time": "15:00",
+                "is_all_day": False,
+                "event_type": "appointment",
+                "priority": "high",
+                "location": "Client Office",
+                "attendees": ["Client", "Manager"],
+                "reminder_minutes": 60,
+                "is_completed": False,
+                "is_active": True
+            },
+            {
+                "id": "",
+                "title": "Urgent Reminder",
+                "description": "Submit tax documents",
+                "date": "2025-01-20",
+                "start_time": "16:00",
+                "end_time": "16:15",
+                "is_all_day": False,
+                "event_type": "reminder",
+                "priority": "urgent",
+                "location": None,
+                "attendees": [],
+                "reminder_minutes": 120,
+                "is_completed": False,
+                "is_active": True
+            }
+        ]
+        
+        created_priority_events = []
+        
+        for event_data in priority_test_events:
+            success, created_event = self.run_test(
+                f"Create {event_data['priority'].upper()} Priority Event: {event_data['title']}",
+                "POST",
+                "api/calendar-events",
+                200,
+                data=event_data
+            )
+            
+            if success:
+                created_priority_events.append(created_event)
+                priority = created_event.get('priority')
+                expected_priority = event_data['priority']
+                
+                if priority == expected_priority:
+                    print(f"   ✅ Priority correctly set to '{priority}'")
+                else:
+                    print(f"   ❌ Priority mismatch: got '{priority}', expected '{expected_priority}'")
+        
+        # Verify all priority levels are represented
+        priorities_created = [e.get('priority') for e in created_priority_events]
+        expected_priorities = ['low', 'medium', 'high', 'urgent']
+        
+        for expected_priority in expected_priorities:
+            if expected_priority in priorities_created:
+                print(f"   ✅ {expected_priority.upper()} priority event created successfully")
+            else:
+                print(f"   ❌ {expected_priority.upper()} priority event not found")
+        
+        return len(created_priority_events) == len(priority_test_events)
+
+    def test_all_day_vs_timed_events(self):
+        """Test handling of all-day vs timed events"""
+        print(f"\n⏰ Testing All-Day vs Timed Events...")
+        
+        # Create test events with different time configurations
+        time_test_events = [
+            {
+                "id": "",
+                "title": "All-Day Conference",
+                "description": "Annual tech conference",
+                "date": "2025-01-21",
+                "start_time": None,
+                "end_time": None,
+                "is_all_day": True,
+                "event_type": "meeting",
+                "priority": "high",
+                "location": "Convention Center",
+                "attendees": ["Team"],
+                "reminder_minutes": 480,  # 8 hours
+                "is_completed": False,
+                "is_active": True
+            },
+            {
+                "id": "",
+                "title": "Timed Meeting",
+                "description": "Project kickoff meeting",
+                "date": "2025-01-21",
+                "start_time": "09:00",
+                "end_time": "10:30",
+                "is_all_day": False,
+                "event_type": "meeting",
+                "priority": "high",
+                "location": "Conference Room B",
+                "attendees": ["Project Team"],
+                "reminder_minutes": 15,
+                "is_completed": False,
+                "is_active": True
+            },
+            {
+                "id": "",
+                "title": "All-Day Personal Event",
+                "description": "Vacation day",
+                "date": "2025-01-22",
+                "start_time": None,
+                "end_time": None,
+                "is_all_day": True,
+                "event_type": "personal",
+                "priority": "low",
+                "location": "Beach",
+                "attendees": [],
+                "reminder_minutes": 1440,  # 24 hours
+                "is_completed": False,
+                "is_active": True
+            },
+            {
+                "id": "",
+                "title": "Short Timed Task",
+                "description": "Quick status update",
+                "date": "2025-01-22",
+                "start_time": "15:00",
+                "end_time": "15:15",
+                "is_all_day": False,
+                "event_type": "task",
+                "priority": "medium",
+                "location": None,
+                "attendees": [],
+                "reminder_minutes": 5,
+                "is_completed": False,
+                "is_active": True
+            }
+        ]
+        
+        created_time_events = []
+        
+        for event_data in time_test_events:
+            success, created_event = self.run_test(
+                f"Create {'All-Day' if event_data['is_all_day'] else 'Timed'} Event: {event_data['title']}",
+                "POST",
+                "api/calendar-events",
+                200,
+                data=event_data
+            )
+            
+            if success:
+                created_time_events.append(created_event)
+                
+                # Verify all-day vs timed properties
+                is_all_day = created_event.get('is_all_day')
+                start_time = created_event.get('start_time')
+                end_time = created_event.get('end_time')
+                expected_all_day = event_data['is_all_day']
+                
+                if is_all_day == expected_all_day:
+                    print(f"   ✅ All-day flag correctly set to {is_all_day}")
+                else:
+                    print(f"   ❌ All-day flag mismatch: got {is_all_day}, expected {expected_all_day}")
+                
+                if expected_all_day:
+                    # All-day events should have None for start/end times
+                    if start_time is None and end_time is None:
+                        print(f"   ✅ All-day event has no specific times")
+                    else:
+                        print(f"   ❌ All-day event has times: {start_time}-{end_time}")
+                else:
+                    # Timed events should have start/end times
+                    if start_time and end_time:
+                        print(f"   ✅ Timed event has times: {start_time}-{end_time}")
+                    else:
+                        print(f"   ❌ Timed event missing times: {start_time}-{end_time}")
+        
+        print(f"   ✅ Created {len(created_time_events)} time-configuration test events")
+        
+        # Test retrieving events and verify time handling
+        success, events_for_date = self.run_test(
+            "Get Events for 2025-01-21 (Mixed All-Day and Timed)",
+            "GET",
+            "api/calendar-events/2025-01-21",
+            200
+        )
+        
+        if success:
+            all_day_count = sum(1 for e in events_for_date if e.get('is_all_day'))
+            timed_count = sum(1 for e in events_for_date if not e.get('is_all_day'))
+            print(f"   ✅ Found {all_day_count} all-day and {timed_count} timed events for 2025-01-21")
+        
+        return len(created_time_events) == len(time_test_events)
+
+    def test_calendar_events_data_validation(self):
+        """Test data validation and error handling for calendar events"""
+        print(f"\n🔍 Testing Calendar Events Data Validation...")
+        
+        # Test invalid event data
+        invalid_test_cases = [
+            {
+                "name": "Missing Required Title",
+                "data": {
+                    "id": "",
+                    "description": "Event without title",
+                    "date": "2025-01-25",
+                    "event_type": "meeting",
+                    "priority": "medium",
+                    "is_all_day": False,
+                    "is_active": True
+                },
+                "expected_status": 422  # Validation error
+            },
+            {
+                "name": "Invalid Date Format",
+                "data": {
+                    "id": "",
+                    "title": "Invalid Date Event",
+                    "description": "Event with invalid date",
+                    "date": "2025-13-45",  # Invalid date
+                    "event_type": "meeting",
+                    "priority": "medium",
+                    "is_all_day": False,
+                    "is_active": True
+                },
+                "expected_status": 422  # Validation error
+            },
+            {
+                "name": "Invalid Event Type",
+                "data": {
+                    "id": "",
+                    "title": "Invalid Type Event",
+                    "description": "Event with invalid type",
+                    "date": "2025-01-25",
+                    "event_type": "invalid_type",  # Not in allowed types
+                    "priority": "medium",
+                    "is_all_day": False,
+                    "is_active": True
+                },
+                "expected_status": 422  # Validation error
+            },
+            {
+                "name": "Invalid Priority Level",
+                "data": {
+                    "id": "",
+                    "title": "Invalid Priority Event",
+                    "description": "Event with invalid priority",
+                    "date": "2025-01-25",
+                    "event_type": "meeting",
+                    "priority": "super_urgent",  # Not in allowed priorities
+                    "is_all_day": False,
+                    "is_active": True
+                },
+                "expected_status": 422  # Validation error
+            }
+        ]
+        
+        validation_tests_passed = 0
+        
+        for test_case in invalid_test_cases:
+            success, response = self.run_test(
+                f"Test Validation: {test_case['name']}",
+                "POST",
+                "api/calendar-events",
+                test_case['expected_status'],
+                data=test_case['data']
+            )
+            
+            if success:  # Success means we got the expected error status
+                validation_tests_passed += 1
+                print(f"   ✅ Validation correctly rejected: {test_case['name']}")
+            else:
+                print(f"   ❌ Validation failed to reject: {test_case['name']}")
+        
+        # Test valid edge cases
+        valid_edge_cases = [
+            {
+                "name": "Minimal Valid Event",
+                "data": {
+                    "id": "",
+                    "title": "Minimal Event",
+                    "date": "2025-01-25",
+                    "event_type": "reminder",
+                    "priority": "low",
+                    "is_all_day": True,
+                    "is_active": True
+                }
+            },
+            {
+                "name": "Event with All Optional Fields",
+                "data": {
+                    "id": "",
+                    "title": "Complete Event",
+                    "description": "Event with all fields populated",
+                    "date": "2025-01-25",
+                    "start_time": "10:00",
+                    "end_time": "11:00",
+                    "is_all_day": False,
+                    "event_type": "appointment",
+                    "priority": "urgent",
+                    "location": "Test Location",
+                    "attendees": ["Person 1", "Person 2", "Person 3"],
+                    "reminder_minutes": 30,
+                    "is_completed": False,
+                    "is_active": True
+                }
+            }
+        ]
+        
+        for test_case in valid_edge_cases:
+            success, response = self.run_test(
+                f"Test Valid Edge Case: {test_case['name']}",
+                "POST",
+                "api/calendar-events",
+                200,
+                data=test_case['data']
+            )
+            
+            if success:
+                validation_tests_passed += 1
+                print(f"   ✅ Valid edge case accepted: {test_case['name']}")
+            else:
+                print(f"   ❌ Valid edge case rejected: {test_case['name']}")
+        
+        total_validation_tests = len(invalid_test_cases) + len(valid_edge_cases)
+        print(f"   📊 Validation tests: {validation_tests_passed}/{total_validation_tests} passed")
+        
+        return validation_tests_passed == total_validation_tests
+
 def main():
     print("🚀 Starting Shift Roster & Pay Calculator API Tests")
     print("🎯 FOCUS: Testing NEW Day Template Functionality")
