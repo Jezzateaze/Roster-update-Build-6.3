@@ -913,8 +913,15 @@ async def create_roster_entry(entry: RosterEntry):
 
 @app.put("/api/roster/{entry_id}")
 async def update_roster_entry(entry_id: str, entry: RosterEntry):
-    # Check for overlaps (excluding current entry)
-    if check_shift_overlap(entry.date, entry.start_time, entry.end_time, exclude_id=entry_id):
+    # Get shift name from template if available
+    shift_name = ""
+    if entry.shift_template_id:
+        template = db.shift_templates.find_one({"id": entry.shift_template_id})
+        if template:
+            shift_name = template.get("name", "")
+    
+    # Check for overlaps (excluding current entry, allows 2:1 shifts)
+    if check_shift_overlap(entry.date, entry.start_time, entry.end_time, exclude_id=entry_id, shift_name=shift_name):
         raise HTTPException(
             status_code=409, 
             detail=f"Updated shift would overlap with existing shift on {entry.date}"
