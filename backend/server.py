@@ -536,6 +536,21 @@ def initialize_default_data():
         settings = Settings()
         db.settings.insert_one(settings.dict())
 
+# Authentication dependency
+def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(HTTPBearer())):
+    """Get current authenticated user"""
+    token = credentials.credentials
+    session = db.sessions.find_one({"token": token, "is_active": True})
+    
+    if not session or session["expires_at"] < datetime.utcnow():
+        raise HTTPException(status_code=401, detail="Invalid or expired token")
+    
+    user = db.users.find_one({"id": session["user_id"], "is_active": True})
+    if not user:
+        raise HTTPException(status_code=401, detail="User not found")
+    
+    return user
+
 # API Endpoints
 
 @app.on_event("startup")
