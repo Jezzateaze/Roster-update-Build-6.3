@@ -328,7 +328,7 @@ function App() {
     }
     
     try {
-      const dateString = selectedDateForTemplate.toISOString().split('T')[0];
+      const dateString = formatDateString(selectedDateForTemplate);
       await axios.post(`${API_BASE_URL}/api/day-templates/save-day/${encodeURIComponent(newDayTemplateName)}?date=${dateString}`);
       
       setNewDayTemplateName('');
