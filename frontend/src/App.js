@@ -54,7 +54,8 @@ function App() {
     date: '',
     start_time: '09:00',
     end_time: '17:00',
-    is_sleepover: false
+    is_sleepover: false,
+    allow_overlap: false
   });
   const [newStaffName, setNewStaffName] = useState('');
   const [activeTab, setActiveTab] = useState('roster');
