@@ -93,7 +93,7 @@ class RosterTemplate(BaseModel):
     description: Optional[str] = None
     created_at: datetime = None
     is_active: bool = True
-    template_data: Dict[int, List[Dict]] = {}  # day_of_week -> list of shift templates
+    template_data: Dict[str, List[Dict]] = {}  # day_of_week (as string) -> list of shift templates
 
 # Pay calculation functions
 def determine_shift_type(date_str: str, start_time: str, end_time: str, is_public_holiday: bool) -> ShiftType:
