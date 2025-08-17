@@ -1636,7 +1636,13 @@ function App() {
   const renderWeeklyView = () => {
     const startOfWeek = new Date(currentDate);
     const day = startOfWeek.getDay();
-    const diff = startOfWeek.getDate() - day + (day === 0 ? -6 : 1); // Adjust for Monday start
+    
+    let diff;
+    if (settings.first_day_of_week === 'sunday') {
+      diff = startOfWeek.getDate() - day; // Sunday start
+    } else {
+      diff = startOfWeek.getDate() - day + (day === 0 ? -6 : 1); // Monday start
+    }
     startOfWeek.setDate(diff);
 
     const weekDays = [];
@@ -1645,6 +1651,11 @@ function App() {
       day.setDate(startOfWeek.getDate() + i);
       weekDays.push(day);
     }
+
+    // Week day headers based on first day of week setting
+    const weekHeaders = settings.first_day_of_week === 'sunday' 
+      ? ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+      : ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
     return (
       <div className="bg-white rounded-lg border border-slate-200 overflow-hidden">
