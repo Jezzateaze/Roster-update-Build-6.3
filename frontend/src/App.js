@@ -2025,20 +2025,37 @@ function App() {
 
         {/* Shift Template Edit Dialog */}
         <Dialog open={showTemplateDialog} onOpenChange={setShowTemplateDialog}>
-          <DialogContent className="max-w-md">
+          <DialogContent className="max-w-2xl">
             <DialogHeader>
-              <DialogTitle>Edit Default Shift Time</DialogTitle>
+              <DialogTitle>Edit Default Shift Template</DialogTitle>
             </DialogHeader>
             {selectedTemplate && (
-              <div className="space-y-4">
+              <div className="space-y-6">
                 <div>
-                  <Label>Shift</Label>
-                  <div className="text-sm text-slate-600 mb-2">
+                  <Label>Day & Shift</Label>
+                  <div className="text-sm text-slate-600 mb-4">
                     {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'][selectedTemplate.day_of_week]} - 
-                    {selectedTemplate.name}
+                    Template Shift
                   </div>
                 </div>
 
+                {/* Shift Name */}
+                <div>
+                  <Label htmlFor="template-name">Shift Name</Label>
+                  <Input
+                    id="template-name" 
+                    value={selectedTemplate.name}
+                    onChange={(e) => {
+                      setSelectedTemplate({
+                        ...selectedTemplate,
+                        name: e.target.value
+                      });
+                    }}
+                    placeholder="e.g., Morning Shift, Evening Shift, Night Shift"
+                  />
+                </div>
+
+                {/* Time Settings */}
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <Label htmlFor="template-start-time">Start Time</Label>
@@ -2070,6 +2087,7 @@ function App() {
                   </div>
                 </div>
 
+                {/* Sleepover Setting */}
                 <div className="flex items-center space-x-2">
                   <Switch
                     checked={selectedTemplate.is_sleepover}
@@ -2083,9 +2101,65 @@ function App() {
                   <Label>Sleepover Shift</Label>
                 </div>
 
+                {/* Manual Shift Type Override */}
+                <div>
+                  <Label htmlFor="template-manual-shift-type">Manual Shift Type Override (Optional)</Label>
+                  <Select 
+                    value={selectedTemplate.manual_shift_type || ''} 
+                    onValueChange={(value) => {
+                      setSelectedTemplate({
+                        ...selectedTemplate,
+                        manual_shift_type: value === 'auto' ? null : value
+                      });
+                    }}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Auto-detect shift type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="auto">🤖 Auto-detect shift type</SelectItem>
+                      <SelectItem value="weekday_day">☀️ Weekday Day (6am-8pm)</SelectItem>
+                      <SelectItem value="weekday_evening">🌆 Weekday Evening (after 8pm)</SelectItem>
+                      <SelectItem value="weekday_night">🌙 Weekday Night (overnight)</SelectItem>
+                      <SelectItem value="saturday">📅 Saturday Rate</SelectItem>
+                      <SelectItem value="sunday">📅 Sunday Rate</SelectItem>
+                      <SelectItem value="public_holiday">🎉 Public Holiday Rate</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <div className="text-sm text-slate-500 mt-1">
+                    Override automatic shift type detection for this template
+                  </div>
+                </div>
+
+                {/* Manual Hourly Rate Override */}
+                <div>
+                  <Label htmlFor="template-manual-rate">Manual Hourly Rate Override (Optional)</Label>
+                  <div className="flex items-center space-x-2">
+                    <span className="text-sm">$</span>
+                    <Input
+                      id="template-manual-rate"
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      value={selectedTemplate.manual_hourly_rate || ''}
+                      onChange={(e) => {
+                        setSelectedTemplate({
+                          ...selectedTemplate,
+                          manual_hourly_rate: e.target.value ? parseFloat(e.target.value) : null
+                        });
+                      }}
+                      placeholder="Leave blank for automatic rate"
+                    />
+                    <span className="text-sm text-slate-500">per hour</span>
+                  </div>
+                  <div className="text-sm text-slate-500 mt-1">
+                    Override automatic hourly rate calculation for this template
+                  </div>
+                </div>
+
                 <div className="text-sm text-slate-600 p-3 bg-slate-50 rounded-lg">
-                  <strong>Note:</strong> Changes to default shift times will only affect newly generated rosters. 
-                  Existing roster entries can be edited individually.
+                  <strong>Note:</strong> Changes to default shift templates will only affect newly generated rosters. 
+                  Existing roster entries can be edited individually. Manual overrides will be applied to all shifts created from this template.
                 </div>
 
                 <div className="flex justify-end space-x-2">
@@ -2094,9 +2168,12 @@ function App() {
                   </Button>
                   <Button onClick={() => {
                     updateShiftTemplate(selectedTemplate.id, {
+                      name: selectedTemplate.name,
                       start_time: selectedTemplate.start_time,
                       end_time: selectedTemplate.end_time,
-                      is_sleepover: selectedTemplate.is_sleepover
+                      is_sleepover: selectedTemplate.is_sleepover,
+                      manual_shift_type: selectedTemplate.manual_shift_type,
+                      manual_hourly_rate: selectedTemplate.manual_hourly_rate
                     });
                     setShowTemplateDialog(false);
                   }}>
