@@ -1971,6 +1971,112 @@ function App() {
           </DialogContent>
         </Dialog>
 
+        {/* Day Template Dialog */}
+        <Dialog open={showDayTemplateDialog} onOpenChange={setShowDayTemplateDialog}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>
+                {dayTemplateAction === 'save' ? 'Save Day as Template' : 'Load Day Template'}
+              </DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              {selectedDateForTemplate && (
+                <div className="text-sm text-slate-600 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                  <p><strong>Selected Date:</strong> {selectedDateForTemplate.toLocaleDateString('en-US', { 
+                    weekday: 'long', 
+                    year: 'numeric', 
+                    month: 'long', 
+                    day: 'numeric' 
+                  })}</p>
+                </div>
+              )}
+
+              {dayTemplateAction === 'save' && (
+                <>
+                  <div>
+                    <Label htmlFor="day-template-name">Template Name</Label>
+                    <Input
+                      id="day-template-name"
+                      value={newDayTemplateName}
+                      onChange={(e) => setNewDayTemplateName(e.target.value)}
+                      placeholder="Enter template name (e.g., 'Busy Monday', 'Light Friday')"
+                    />
+                  </div>
+                  <div className="text-sm text-slate-600 p-3 bg-slate-50 rounded-lg">
+                    <p><strong>This will save:</strong></p>
+                    <ul className="list-disc list-inside mt-1 space-y-1">
+                      <li>All shift times from this specific day</li>
+                      <li>Sleepover status for each shift</li>
+                      <li>Reusable template for any future date</li>
+                    </ul>
+                    <p className="mt-2"><strong>Note:</strong> Staff assignments are NOT saved in templates.</p>
+                  </div>
+                </>
+              )}
+
+              {dayTemplateAction === 'load' && (
+                <>
+                  <div>
+                    <Label htmlFor="day-template-select">Select Day Template</Label>
+                    <Select 
+                      value={selectedDayTemplate || ''} 
+                      onValueChange={setSelectedDayTemplate}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Choose a day template" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {dayTemplates.map(template => (
+                          <SelectItem key={template.id} value={template.id}>
+                            {template.name}
+                            <span className="text-sm text-slate-500 ml-2">
+                              ({template.shifts?.length || 0} shifts)
+                            </span>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  {dayTemplates.length === 0 && (
+                    <div className="text-sm text-slate-600 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                      <p><strong>No day templates found.</strong></p>
+                      <p>Save a day first by hovering over a calendar day and clicking the "S" button.</p>
+                    </div>
+                  )}
+                  
+                  <div className="text-sm text-slate-600 p-3 bg-slate-50 rounded-lg">
+                    <p><strong>This will:</strong></p>
+                    <ul className="list-disc list-inside mt-1 space-y-1">
+                      <li>Add all shifts from the template to the selected date</li>
+                      <li>Prevent overlaps with existing shifts</li>
+                      <li>Create unassigned shifts (you assign staff manually)</li>
+                    </ul>
+                  </div>
+                </>
+              )}
+              
+              <div className="flex justify-end space-x-2">
+                <Button variant="outline" onClick={() => setShowDayTemplateDialog(false)}>
+                  Cancel
+                </Button>
+                {dayTemplateAction === 'save' ? (
+                  <Button onClick={saveDayAsTemplate}>
+                    Save Day Template
+                  </Button>
+                ) : (
+                  <Button 
+                    onClick={applyDayTemplate}
+                    disabled={!selectedDayTemplate}
+                  >
+                    Apply Template
+                  </Button>
+                )}
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+
       </div>
     </div>
   );
