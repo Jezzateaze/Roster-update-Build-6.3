@@ -11,6 +11,7 @@ class ShiftRosterAPITester:
         self.staff_data = []
         self.shift_templates = []
         self.roster_entries = []
+        self.auth_token = None
 
     def run_test(self, name, method, endpoint, expected_status, data=None, params=None):
         """Run a single API test"""
