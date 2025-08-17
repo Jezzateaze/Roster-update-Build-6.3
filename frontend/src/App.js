@@ -494,6 +494,7 @@ function App() {
   };
 
   const toggleBulkSelectionMode = () => {
+    console.log('Toggling bulk selection mode from:', bulkSelectionMode, 'to:', !bulkSelectionMode);
     setBulkSelectionMode(!bulkSelectionMode);
     setSelectedShifts(new Set());
   };
