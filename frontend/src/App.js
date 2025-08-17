@@ -1546,7 +1546,7 @@ function App() {
             <div className="flex items-center space-x-4">
               <Button
                 variant="outline"
-                onClick={() => navigateDate(-1)}
+                onClick={() => navigateDailyDate(-1)}
               >
                 Previous Day
               </Button>
