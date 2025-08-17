@@ -453,6 +453,7 @@ async def create_shift_template(template: ShiftTemplate):
 
 @app.put("/api/shift-templates/{template_id}")
 async def update_shift_template(template_id: str, template: ShiftTemplate):
+    """Update a shift template with all fields including manual overrides"""
     result = db.shift_templates.update_one({"id": template_id}, {"$set": template.dict()})
     if result.matched_count == 0:
         raise HTTPException(status_code=404, detail="Shift template not found")
