@@ -54,6 +54,8 @@ class ShiftTemplate(BaseModel):
     end_time: str
     is_sleepover: bool = False
     day_of_week: int  # 0=Monday, 6=Sunday
+    manual_shift_type: Optional[str] = None  # Override automatic shift type detection
+    manual_hourly_rate: Optional[float] = None  # Override automatic hourly rate calculation
 
 class RosterEntry(BaseModel):
     id: str
