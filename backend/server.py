@@ -430,6 +430,153 @@ async def update_shift_template(template_id: str, template: ShiftTemplate):
         raise HTTPException(status_code=404, detail="Shift template not found")
     return template
 
+# Roster template endpoints
+@app.get("/api/roster-templates")
+async def get_roster_templates():
+    """Get all roster templates"""
+    templates = list(db.roster_templates.find({"is_active": True}, {"_id": 0}))
+    return templates
+
+@app.post("/api/roster-templates")
+async def create_roster_template(template: RosterTemplate):
+    """Create a new roster template"""
+    template.id = str(uuid.uuid4())
+    template.created_at = datetime.now()
+    db.roster_templates.insert_one(template.dict())
+    return template
+
+@app.put("/api/roster-templates/{template_id}")
+async def update_roster_template(template_id: str, template: RosterTemplate):
+    """Update an existing roster template"""
+    result = db.roster_templates.update_one({"id": template_id}, {"$set": template.dict()})
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Roster template not found")
+    return template
+
+@app.delete("/api/roster-templates/{template_id}")
+async def delete_roster_template(template_id: str):
+    """Delete a roster template"""
+    result = db.roster_templates.update_one({"id": template_id}, {"$set": {"is_active": False}})
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Roster template not found")
+    return {"message": "Roster template deleted"}
+
+@app.post("/api/roster-templates/save-current/{template_name}")
+async def save_current_roster_as_template(template_name: str, month: str):
+    """Save current month's roster as a template"""
+    # Get all roster entries for the month
+    roster_entries = list(db.roster.find({"date": {"$regex": f"^{month}"}}, {"_id": 0}))
+    
+    if not roster_entries:
+        raise HTTPException(status_code=404, detail="No roster entries found for the specified month")
+    
+    # Group entries by day of week
+    template_data = {}
+    
+    for entry in roster_entries:
+        date_obj = datetime.strptime(entry["date"], "%Y-%m-%d")
+        day_of_week = date_obj.weekday()  # 0=Monday, 6=Sunday
+        
+        if day_of_week not in template_data:
+            template_data[day_of_week] = []
+        
+        # Store the shift template info (without staff assignments and dates)
+        shift_template = {
+            "start_time": entry["start_time"],
+            "end_time": entry["end_time"],
+            "is_sleepover": entry.get("is_sleepover", False)
+        }
+        
+        # Avoid duplicates by checking if this shift template already exists for this day
+        if shift_template not in template_data[day_of_week]:
+            template_data[day_of_week].append(shift_template)
+    
+    # Create the roster template
+    roster_template = RosterTemplate(
+        id=str(uuid.uuid4()),
+        name=template_name,
+        description=f"Template created from {month} roster",
+        created_at=datetime.now(),
+        template_data=template_data
+    )
+    
+    db.roster_templates.insert_one(roster_template.dict())
+    return roster_template
+
+@app.post("/api/generate-roster-from-template/{template_id}/{month}")
+async def generate_roster_from_template(template_id: str, month: str):
+    """Generate roster entries for a month using a roster template"""
+    # Get the roster template
+    template_doc = db.roster_templates.find_one({"id": template_id, "is_active": True})
+    if not template_doc:
+        raise HTTPException(status_code=404, detail="Roster template not found")
+    
+    template = RosterTemplate(**template_doc)
+    year, month_num = map(int, month.split("-"))
+    
+    # Generate entries for each day of the month
+    from calendar import monthrange
+    _, days_in_month = monthrange(year, month_num)
+    
+    entries_created = 0
+    overlaps_detected = []
+    
+    for day in range(1, days_in_month + 1):
+        date_obj = datetime(year, month_num, day)
+        date_str = date_obj.strftime("%Y-%m-%d")
+        day_of_week = date_obj.weekday()  # 0=Monday, 6=Sunday
+        
+        # Get shift templates for this day of week
+        day_shifts = template.template_data.get(str(day_of_week), [])
+        if not day_shifts:
+            day_shifts = template.template_data.get(day_of_week, [])  # Try integer key
+        
+        for shift_data in day_shifts:
+            # Check for overlaps before creating
+            if check_shift_overlap(date_str, shift_data["start_time"], shift_data["end_time"]):
+                overlaps_detected.append({
+                    "date": date_str,
+                    "start_time": shift_data["start_time"],
+                    "end_time": shift_data["end_time"]
+                })
+                continue  # Skip overlapping shifts
+            
+            # Check if entry already exists
+            existing = db.roster.find_one({
+                "date": date_str,
+                "start_time": shift_data["start_time"],
+                "end_time": shift_data["end_time"]
+            })
+            
+            if not existing:
+                entry = RosterEntry(
+                    id=str(uuid.uuid4()),
+                    date=date_str,
+                    shift_template_id=f"template-{template_id}-{day_of_week}",
+                    start_time=shift_data["start_time"],
+                    end_time=shift_data["end_time"],
+                    is_sleepover=shift_data.get("is_sleepover", False)
+                )
+                
+                # Calculate pay
+                settings_doc = db.settings.find_one()
+                settings = Settings(**settings_doc) if settings_doc else Settings()
+                entry = calculate_pay(entry, settings)
+                
+                db.roster.insert_one(entry.dict())
+                entries_created += 1
+    
+    result = {
+        "message": f"Generated {entries_created} roster entries for {month} using template '{template.name}'",
+        "entries_created": entries_created
+    }
+    
+    if overlaps_detected:
+        result["overlaps_detected"] = len(overlaps_detected)
+        result["overlap_details"] = overlaps_detected[:5]  # Show first 5 overlaps
+    
+    return result
+
 # Roster endpoints
 @app.get("/api/roster")
 async def get_roster(month: str):
