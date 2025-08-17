@@ -151,6 +151,52 @@ function App() {
       fetchRosterData();
     } catch (error) {
       console.error('Error generating roster:', error);
+      alert(`Error generating roster: ${error.response?.data?.detail || error.message}`);
+    }
+  };
+
+  const saveCurrentRosterAsTemplate = async () => {
+    if (!newTemplateName.trim()) {
+      alert('Please enter a template name');
+      return;
+    }
+    
+    try {
+      const monthString = currentDate.toISOString().slice(0, 7);
+      await axios.post(`${API_BASE_URL}/api/roster-templates/save-current/${encodeURIComponent(newTemplateName)}?month=${monthString}`);
+      
+      setNewTemplateName('');
+      setShowSaveTemplateDialog(false);
+      fetchInitialData(); // Reload templates
+      alert(`Template "${newTemplateName}" saved successfully!`);
+    } catch (error) {
+      console.error('Error saving template:', error);
+      alert(`Error saving template: ${error.response?.data?.detail || error.message}`);
+    }
+  };
+
+  const generateRosterFromTemplate = async () => {
+    if (!selectedRosterTemplate) {
+      alert('Please select a template');
+      return;
+    }
+    
+    try {
+      const monthString = currentDate.toISOString().slice(0, 7);
+      const response = await axios.post(`${API_BASE_URL}/api/generate-roster-from-template/${selectedRosterTemplate}/${monthString}`);
+      
+      setShowGenerateFromTemplateDialog(false);
+      setSelectedRosterTemplate(null);
+      fetchRosterData();
+      
+      let message = response.data.message;
+      if (response.data.overlaps_detected) {
+        message += `\n\nNote: ${response.data.overlaps_detected} overlapping shifts were skipped to prevent conflicts.`;
+      }
+      alert(message);
+    } catch (error) {
+      console.error('Error generating roster from template:', error);
+      alert(`Error generating roster: ${error.response?.data?.detail || error.message}`);
     }
   };
 
