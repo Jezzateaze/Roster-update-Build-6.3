@@ -1718,6 +1718,76 @@ function App() {
     );
   };
 
+  // Calendar View (Traditional Monthly Grid)
+  const renderCalendarView = () => {
+    const year = currentDate.getFullYear();
+    const month = currentDate.getMonth();
+    
+    const firstDay = new Date(year, month, 1);
+    const lastDay = new Date(year, month + 1, 0);
+    
+    // Start from Monday of the week containing the first day
+    const startDate = new Date(firstDay);
+    const firstDayOfWeek = firstDay.getDay(); // 0 = Sunday, 1 = Monday, etc.
+    const daysToSubtract = (firstDayOfWeek + 6) % 7; // Convert to Monday = 0 system
+    startDate.setDate(startDate.getDate() - daysToSubtract);
+
+    const weeks = [];
+    const currentWeekDate = new Date(startDate);
+
+    // Always generate exactly 6 weeks for a complete calendar view
+    for (let weekNum = 0; weekNum < 6; weekNum++) {
+      const week = [];
+      for (let dayNum = 0; dayNum < 7; dayNum++) {
+        // Create a clean date object to avoid timezone issues
+        const dayDate = new Date(currentWeekDate.getFullYear(), currentWeekDate.getMonth(), currentWeekDate.getDate());
+        week.push(dayDate);
+        currentWeekDate.setDate(currentWeekDate.getDate() + 1);
+      }
+      weeks.push(week);
+    }
+
+    return (
+      <div className="bg-white rounded-lg border border-slate-200 overflow-hidden">
+        <div className="grid grid-cols-7 bg-slate-50">
+          {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(day => (
+            <div key={day} className="p-3 text-center font-semibold text-slate-700 border-r border-slate-200 last:border-r-0">
+              {day}
+            </div>
+          ))}
+        </div>
+        {weeks.map((week, weekIndex) => (
+          <div key={weekIndex} className="calendar-grid">
+            {week.map((date, dayIndex) => {
+              const dateKey = `${weekIndex}-${dayIndex}-${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
+              return (
+                <div key={dateKey}>
+                  {renderCalendarDay(date)}
+                </div>
+              );
+            })}
+          </div>
+        ))}
+        
+        {/* Legend for different month indicators */}
+        <div className="p-3 bg-slate-50 border-t border-slate-200 flex items-center justify-center space-x-6 text-xs text-slate-600">
+          <div className="flex items-center space-x-2">
+            <div className="w-3 h-3 bg-white border border-slate-300 rounded"></div>
+            <span>Current Month</span>
+          </div>
+          <div className="flex items-center space-x-2">
+            <div className="w-3 h-3 bg-slate-100 border border-slate-300 rounded"></div>
+            <span>Previous Month</span>
+          </div>
+          <div className="flex items-center space-x-2">
+            <div className="w-3 h-3 bg-slate-50 border border-slate-300 rounded"></div>
+            <span>Next Month</span>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   const renderMonthlyCalendar = () => {
     const year = currentDate.getFullYear();
     const month = currentDate.getMonth();
