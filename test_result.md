@@ -147,17 +147,29 @@ backend:
           agent: "main"
           comment: "SCHADS Award pay calculation is fully implemented and working"
 
-  - task: "Shift Management APIs"
-    implemented: true
-    working: true
+  - task: "Roster Template Management"
+    implemented: false
+    working: false
+    file: "server.py, App.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: false
+          agent: "main"
+          comment: "User reports missing save roster template function, generate roster from saved templates, day-of-week placement logic, and overlap prevention"
+
+  - task: "Shift Placement Logic"
+    implemented: false
+    working: false
     file: "server.py"
     stuck_count: 0
-    priority: "medium"
-    needs_retesting: false
+    priority: "high"
+    needs_retesting: true
     status_history:
-        - working: true
+        - working: false
           agent: "main"
-          comment: "All CRUD operations for shifts, staff, and roster management are working"
+          comment: "Need to fix shift placement to be day-of-week based, not date-based, with overlap detection and prevention"
 
 frontend:
   - task: "React Frontend Mobile Responsiveness"
