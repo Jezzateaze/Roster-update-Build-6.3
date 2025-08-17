@@ -1806,10 +1806,17 @@ function App() {
     const firstDay = new Date(year, month, 1);
     const lastDay = new Date(year, month + 1, 0);
     
-    // Start from Monday of the week containing the first day
+    // Start from first day of week (Monday or Sunday) containing the first day
     const startDate = new Date(firstDay);
     const firstDayOfWeek = firstDay.getDay(); // 0 = Sunday, 1 = Monday, etc.
-    const daysToSubtract = (firstDayOfWeek + 6) % 7; // Convert to Monday = 0 system
+    
+    let daysToSubtract;
+    if (settings.first_day_of_week === 'sunday') {
+      daysToSubtract = firstDayOfWeek; // Sunday = 0 system
+    } else {
+      daysToSubtract = (firstDayOfWeek + 6) % 7; // Convert to Monday = 0 system
+    }
+    
     startDate.setDate(startDate.getDate() - daysToSubtract);
 
     const weeks = [];
@@ -1827,10 +1834,15 @@ function App() {
       weeks.push(week);
     }
 
+    // Week day headers based on first day of week setting
+    const weekHeaders = settings.first_day_of_week === 'sunday' 
+      ? ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+      : ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+
     return (
       <div className="bg-white rounded-lg border border-slate-200 overflow-hidden">
         <div className="grid grid-cols-7 bg-slate-50">
-          {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(day => (
+          {weekHeaders.map(day => (
             <div key={day} className="p-3 text-center font-semibold text-slate-700 border-r border-slate-200 last:border-r-0">
               {day}
             </div>
