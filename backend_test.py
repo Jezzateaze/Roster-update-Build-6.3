@@ -2440,7 +2440,7 @@ class ShiftRosterAPITester:
 
 def main():
     print("🚀 Starting Shift Roster & Pay Calculator API Tests")
-    print("🎯 FOCUS: Testing NEW Calendar Events Functionality")
+    print("🎯 FOCUS: Testing NEW Roster Generation from Shift Templates & Enhanced Template Management")
     print("=" * 60)
     
     tester = ShiftRosterAPITester()
@@ -2453,7 +2453,14 @@ def main():
         tester.test_get_settings,
     ]
     
-    # NEW CALENDAR EVENTS TESTS - Main focus
+    # NEW ROSTER GENERATION TESTS - Main focus
+    new_roster_generation_tests = [
+        tester.test_generate_roster_from_shift_templates,
+        tester.test_roster_template_edit_delete,
+        tester.test_overlap_detection_in_template_generation,
+    ]
+    
+    # NEW CALENDAR EVENTS TESTS
     calendar_events_tests = [
         tester.test_calendar_events_crud,
         tester.test_calendar_events_filtering,
