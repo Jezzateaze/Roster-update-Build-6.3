@@ -1234,7 +1234,7 @@ class ShiftRosterAPITester:
 
 def main():
     print("🚀 Starting Shift Roster & Pay Calculator API Tests")
-    print("🎯 FOCUS: Testing NEW Roster Template Functionality")
+    print("🎯 FOCUS: Testing NEW Day Template Functionality")
     print("=" * 60)
     
     tester = ShiftRosterAPITester()
@@ -1247,8 +1247,17 @@ def main():
         tester.test_get_settings,
     ]
     
-    # NEW ROSTER TEMPLATE TESTS - Main focus
-    template_tests = [
+    # NEW DAY TEMPLATE TESTS - Main focus
+    day_template_tests = [
+        tester.test_day_templates_crud,
+        tester.test_save_day_as_template,
+        tester.test_apply_day_template_to_date,
+        tester.test_day_template_overlap_detection,
+        tester.test_day_template_filtering,
+    ]
+    
+    # EXISTING ROSTER TEMPLATE TESTS
+    roster_template_tests = [
         tester.test_roster_templates_crud,
         tester.test_save_current_roster_as_template,
         tester.test_generate_roster_from_template,
@@ -1273,17 +1282,30 @@ def main():
             print(f"❌ Test failed with exception: {str(e)}")
     
     print("\n" + "=" * 60)
-    print("🎯 Running NEW ROSTER TEMPLATE TESTS...")
+    print("🌟 Running NEW DAY TEMPLATE TESTS...")
     print("=" * 60)
     
-    template_tests_passed = 0
-    for test in template_tests:
+    day_template_tests_passed = 0
+    for test in day_template_tests:
         try:
             result = test()
             if result:
-                template_tests_passed += 1
+                day_template_tests_passed += 1
         except Exception as e:
-            print(f"❌ Template test failed with exception: {str(e)}")
+            print(f"❌ Day template test failed with exception: {str(e)}")
+    
+    print("\n" + "=" * 60)
+    print("🎯 Running Existing Roster Template Tests...")
+    print("=" * 60)
+    
+    roster_template_tests_passed = 0
+    for test in roster_template_tests:
+        try:
+            result = test()
+            if result:
+                roster_template_tests_passed += 1
+        except Exception as e:
+            print(f"❌ Roster template test failed with exception: {str(e)}")
     
     print("\n" + "=" * 60)
     print("🔧 Running Additional Tests...")
@@ -1297,16 +1319,18 @@ def main():
     # Print final results
     print("\n" + "=" * 60)
     print(f"📊 Overall Results: {tester.tests_passed}/{tester.tests_run} API tests passed")
-    print(f"🎯 Template Tests: {template_tests_passed}/{len(template_tests)} template tests passed")
+    print(f"🌟 Day Template Tests: {day_template_tests_passed}/{len(day_template_tests)} day template tests passed")
+    print(f"🎯 Roster Template Tests: {roster_template_tests_passed}/{len(roster_template_tests)} roster template tests passed")
     
-    if template_tests_passed == len(template_tests):
-        print("🎉 All NEW roster template tests passed!")
-        template_success = True
+    day_template_success = day_template_tests_passed == len(day_template_tests)
+    roster_template_success = roster_template_tests_passed == len(roster_template_tests)
+    
+    if day_template_success:
+        print("🎉 All NEW day template tests passed!")
     else:
-        print("⚠️  Some roster template tests failed.")
-        template_success = False
+        print("⚠️  Some day template tests failed.")
     
-    if tester.tests_passed == tester.tests_run and template_success:
+    if day_template_success and roster_template_success and tester.tests_passed == tester.tests_run:
         print("🎉 All tests passed!")
         return 0
     else:
