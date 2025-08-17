@@ -1640,8 +1640,10 @@ function App() {
       }
       weeks.push(week);
       
-      // Stop if we've gone past the current month and captured at least one full week after
-      if (weekNum > 0 && week[0].getMonth() !== month) {
+      // Stop if we've covered all days of the target month
+      // Check if the last day of this week is past the target month
+      const lastDayOfWeek = week[week.length - 1];
+      if (weekNum > 0 && lastDayOfWeek.getMonth() > month) {
         break;
       }
     }
