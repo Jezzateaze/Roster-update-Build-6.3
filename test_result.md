@@ -301,6 +301,18 @@ frontend:
           agent: "testing"
           comment: "🎉 ALPHABETICAL STAFF SORTING FIX FULLY VERIFIED AND WORKING! Comprehensive testing completed across all required areas: ✅ ADD SHIFT DIALOG: Staff dropdown displays perfect alphabetical order ['Angela', 'Caroline', 'Chanelle', 'Elina', 'Felicity', 'Issey', 'Kayla', 'Molly', 'Nikita', 'Nox', 'Rhet', 'Rose'] with 'No staff assigned' appearing first as expected. ✅ STAFF MANAGEMENT TAB: All 12 staff members found and displayed in correct alphabetical order in staff cards layout. ✅ BACKEND API: Confirmed staff endpoint returns data in proper alphabetical sequence. ✅ CRITICAL FIX CONFIRMED: The change from member.is_active to member.active in getSortedActiveStaff() function is working correctly - staff filtering and sorting now functions as intended. ✅ UI CONSISTENCY: All staff dropdowns across the application use consistent alphabetical ordering. The key issue preventing staff from appearing in dropdowns has been completely resolved. All 3 test requirements from review request successfully verified."
 
+  - task: "ISO 8601 Week System, Brisbane AEST Timezone & 12hr/24hr Time Format Implementation"
+    implemented: true
+    working: true
+    file: "App.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "testing"
+          comment: "🌏 COMPREHENSIVE ISO 8601 WEEK SYSTEM, BRISBANE AEST TIMEZONE & 12HR/24HR TIME FORMAT TESTING COMPLETED! All professional workforce management requirements verified: ✅ ISO 8601 MONDAY-FIRST WEEK LAYOUT: Calendar displays Mon-Tue-Wed-Thu-Fri-Sat-Sun order correctly and maintains layout after navigation, ✅ BRISBANE AEST TIMEZONE DEFAULT: Settings show 'Brisbane, Queensland (AEST UTC+10)' as current timezone with proper initialization, ✅ AUSTRALIAN TIMEZONE OPTIONS: Dropdown includes Sydney (AEDT UTC+11), Melbourne (AEDT UTC+11), Perth (AWST UTC+8), Adelaide (ACDT UTC+10:30), ✅ REGIONAL & TIME SETTINGS SECTION: Visible and functional in Settings dialog with proper timezone and time format dropdowns, ✅ TIME FORMAT SWITCHING: 12hr and 24hr options available and functional, ✅ WEEK BOUNDARY BEHAVIOR: ISO 8601 compliant - previous month days properly shown in first week of calendar, ✅ CALENDAR NAVIGATION: Maintains Monday-first layout and timezone consistency across month transitions, ✅ VIEW SWITCHING CONSISTENCY: Daily/Weekly/Monthly views all maintain proper timezone handling and Monday-first layout, ✅ TIME INPUT CONSISTENCY: Add Shift dialog uses 24hr format (HH:MM) consistently, ✅ CURRENT DATE INITIALIZATION: Working correctly with Brisbane timezone (August 2025 display). All core timezone and time format functionality is production-ready and meets professional workforce management standards."
+
   - task: "React Frontend Mobile Responsiveness"
     implemented: true
     working: true
