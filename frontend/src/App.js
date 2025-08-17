@@ -1010,7 +1010,6 @@ function App() {
     }
   };
 
-  // Helper function to get alphabetically sorted active staff
   // Helper to navigate dates with timezone awareness
   const navigateDate = (direction) => {
     const newDate = new Date(currentDate);
@@ -1024,6 +1023,9 @@ function App() {
     newDate.setMonth(newDate.getMonth() + direction);
     setCurrentDate(getBrisbaneDate(newDate));
   };
+
+  // Helper function to get alphabetically sorted active staff
+  const getSortedActiveStaff = () => {
     return staff
       .filter(member => member.active)
       .sort((a, b) => a.name.localeCompare(b.name));
