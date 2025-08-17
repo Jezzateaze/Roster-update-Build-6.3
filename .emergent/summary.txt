@@ -1,90 +1,133 @@
 <analysis>
-The previous AI engineer meticulously developed a full-stack Shift Roster and Pay Calculation application, evolving it from an MVP through iterative enhancements driven by user feedback. Initially, the focus was on core rostering, complex pay calculations adhering to SCHADS Award, staff management, and shift assignments, resolving subtle bugs in logic and display. The engineer then addressed user experience, attempting simplified local deployment and later pivoting to substantial feature additions. Key developments included comprehensive roster and day template management (save/load), implementation of multiple calendar views (daily, weekly, monthly), and integration of Google Calendar-like event management. Significant UI/UX improvements were made for mobile responsiveness, button layouts, and calendar readability. Most recently, the engineer added robust bulk shift selection/management and a nuanced 2:1 shift overlap allowance. The process involved constant debugging, backend/frontend synchronization, and immediate visual verification via screenshots. The trajectory concludes with the engineer actively fixing a critical date alignment bug in the monthly calendar view.
+The previous AI engineer meticulously developed a full-stack Shift Roster and Pay Calculation application, starting from an MVP and iteratively enhancing it based on user feedback. Initial development focused on core rostering, complex pay calculations adhering to the SCHADS Award, staff management, and shift assignments, alongside resolving subtle bugs. Subsequently, the engineer improved user experience, adding comprehensive roster/day template management, multiple calendar views (daily, weekly, monthly), and event management. UI/UX was significantly refined for mobile responsiveness and readability.
+
+Key technical challenges addressed included a persistent monthly calendar date misalignment, which was debugged and fixed by standardizing date handling and ensuring full month display, often requiring  intervention. Following this, shift placement inaccuracies were resolved by fixing  usage, enforcing consistent Monday-first day-of-week logic, and enhancing staff assignment with alphabetical sorting and chronological shift ordering. A major feature addition was the comprehensive bulk editing system for shift templates, incorporating individual deletion, bulk selection, editing, and cloning.
+
+The engineer also implemented dynamic quick-access UI toggles for the first day of the week, time format (12hr/24hr), and dark mode. Most recently, the engineer initiated a large-scale authentication and user management system. The immediate focus before this summary request was on fixing critical bugs (pay summary display, daily navigation) and beginning the backend and frontend implementation of the new authentication system with detailed PIN management and role-based access control, as confirmed by the user, setting the stage for significant architectural changes.
 </analysis>
 
 <product_requirements>
-The user requires a professional, mobile-friendly workforce management application for shift rostering and pay calculation, specifically tailored for Queensland. The application should support:
--   **Core Rostering and Pay Calculation**: Displaying shifts on a Monday-start calendar, with accurate pay calculation based on SCHADS Award rules (Weekday Day/Evening/Night, Saturday, Sunday, Public Holiday rates, 75 sleepover allowance with wake time).
--   **Public Holiday Integration**: Utilizing an external API for Queensland public holidays.
--   **Management Features**: Staff management (listing 12 staff, active status, adding staff), shift assignment with real-time pay, and configurable pay rates via settings (Default/SCHADS Award modes).
--   **Shift Customization**: Adjusting default shift templates and individual shift times, including manual overrides for pay rates and shift types.
--   **Break Warning System**: Notifying users of less than 10-hour breaks between shifts, with sleepover exceptions.
--   **Shift Operations**: Adding, removing (individual), clearing (monthly), and managing shifts.
--   **Calendar Views**: Displaying shifts from previous/next months and offering Daily, Weekly, and Monthly calendar views.
--   **Template Management**: Saving/loading entire roster templates and individual day templates (favorites) based on day-of-week, not specific dates.
--   **Event Management**: Adding Google Calendar-like appointments, meetings, tasks, reminders with priorities, completion tracking, and location/description.
--   **Bulk Actions**: Selecting and performing actions (delete, edit) on multiple shifts simultaneously.
--   **Overlap Management**: Allowing specific shifts (identified by 2:1 in name) to overlap for multiple staff, with a manual override option in the Add Shift dialog.
--   **UI Enhancements**: Ensuring all content is visible without excessive scrolling in calendar cells, and organizing action buttons for better display on mobile.
+The application is a professional, mobile-friendly workforce management system for shift rostering and pay calculation in Queensland, Australia. It supports:
+-   **Core Rostering & Pay**: Monday-start calendar, SCHADS Award-compliant pay (day/evening/night, weekend, public holiday rates, 75 sleepover allowance), public holiday integration.
+-   **Management**: Staff listing (12 staff, active status, add staff), real-time pay calculation, configurable pay rates (Default/SCHADS).
+-   **Shift Customization**: Adjusting default templates, individual shift times, manual overrides for pay/shift types.
+-   **Break Warnings**: 10-hour break violation alerts with sleepover exceptions.
+-   **Shift Operations**: Add, remove (individual), clear (monthly), bulk actions (select, delete, edit multiple).
+-   **Calendar Views**: Daily, Weekly, Monthly, and a new Calendar (traditional grid). Redesigned Monthly view for horizontal timeline scroll. All views must start on Monday.
+-   **Template Management**: Save/load roster templates and day templates (favorites).
+-   **Event Management**: Google Calendar-like events (appointments, tasks, reminders).
+-   **Overlap Management**: 2:1 shifts and manual  flag.
+-   **UI Enhancements**: No scrolling in calendar cells, improved button layouts, mobile responsiveness.
+-   **Time/Timezone**: Brisbane AEST (UTC+10) by default, 12hr/24hr format option, ISO 8601 week system (Monday start), option to change first day of week.
+-   **Quick Settings**: UI toggles for first day of week, time format, and dark mode.
+-   **Shift Times Panel**: Individual delete, bulk selection, bulk editing (time, shift type, day, clone/duplicate).
+-   **Shift Ordering**: Shifts on a day sorted chronologically by time.
+-   **Bug Fixes**: Correct badge display (e.g., 3:30pm-11:30pm weekday shifts as Evening badge), pay summary display, daily view navigation.
+-   **Upcoming**: Comprehensive Authentication with PIN (4/6 digit), Role-Based Access (Admin, Supervisor, Staff), individual staff dashboard, availability management, shift request system, Admin panel, staff profiles, privacy controls (no cross-staff pay viewing).
 </product_requirements>
 
 <key_technical_concepts>
 -   **Full-stack Development**: React (frontend), FastAPI (backend), MongoDB (database).
--   **UI Framework**: Shadcn UI for components.
--   **Styling**: Tailwind CSS for responsive design.
--   **Date/Time Handling**:  (frontend),  (backend).
--   **API Communication**:  (frontend).
--   **Environment Variables**: , .
--   **Process Management**: Supervisor for services.
+-   **UI/Styling**: Shadcn UI, Tailwind CSS.
+-   **Date/Time Handling**:  (frontend),  (backend), timezone-safe formatting.
+-   **API Communication**: .
+-   **Process Management**: Supervisor.
 -   **Data Serialization**: UUIDs for MongoDB IDs.
+-   **Authentication**: Hashing (bcrypt-like), JWTs.
 </key_technical_concepts>
 
 <code_architecture>
-The application follows a standard full-stack architecture with distinct  (React) and  (FastAPI) directories.
+The application uses a standard full-stack architecture with distinct  (React) and  (FastAPI) directories.
 
 
 
 -   **/app/backend/server.py**:
-    -   **Importance**: Core FastAPI application, handling all business logic, API endpoints, and MongoDB interactions.
+    -   **Importance**: The core FastAPI application, managing all business logic, API endpoints, and MongoDB interactions.
     -   **Changes Made**:
-        -   Extensive modifications to  for SCHADS Award rules, including evening/weekend/public holiday rates and sleepover allowances.
-        -   Added  for 10-hour break rule with sleepover exceptions.
-        -   Implemented  for badge classification.
-        -   Introduced CRUD endpoints for roster entries, staff, settings, and new functionality: , , and .
-        -   Enhanced  logic to include exceptions for 2:1 shifts and a manual  flag.
-        -   Updated shift creation/update endpoints to pass  and  for overlap checks.
+        -   Enhanced , , .
+        -   Added CRUD for roster entries, staff, settings, roster/day templates, and calendar events.
+        -   Updated  for 2:1 shifts and .
+        -   Modified  to return staff in alphabetical order: .
+        -   Extended  model with , , ,  fields, with defaults.
+        -   **Authentication System Added**:
+            -   New  enum (, , ).
+            -   New  model (id, username, hashed_pin, role, etc.).
+            -   Helper functions for password hashing, JWT token creation/decoding, and current user retrieval.
+            -   New authentication endpoints: ,  (login), , , , , , , .
 
 -   **/app/frontend/src/App.js**:
-    -   **Importance**: The main React component managing UI, state, and API calls.
+    -   **Importance**: The main React component handling UI, state, and API calls.
     -   **Changes Made**:
-        -   Refactored for main calendar, staff, and settings tabs.
-        -   Integrated Shadcn UI components for various dialogs (shift assignment, template editing, add shift, break warning).
-        -   Implemented , , , ,  functions.
-        -   Added logic for  management (save/load) and  management (save/load with S/L buttons on days).
-        -   Implemented  (Daily, Weekly, Monthly) and dynamic rendering for each view.
-        -   Integrated  management (add/edit events, tasks, reminders) with dedicated dialogs and display logic.
-        -   Added : ,  state, toolbar with , , ,  buttons.
-        -   Implemented  for daily view.
-        -   Updated  dialog to include Allow Overlap toggle with warning.
-        -   Introduced  for easier setup in  tab.
-        -   Modified  and related date logic to fix date misalignment issues.
+        -   Refactored for calendar, staff, and settings tabs. Integrated Shadcn UI.
+        -   Implemented , , , , .
+        -   Added  and  management.
+        -   Implemented  (Daily, Weekly, Monthly).
+        -   **Date Alignment Fix**: Simplified  to always generate 6 weeks to ensure full month display.
+        -   **Timezone Fix**: Created  helper and replaced all  instances (e.g., lines 323, 348, 921, 938, 1448, 1460, 1776, 1840, 1846) with this timezone-safe function. Updated  and .
+        -   **Shift Placement Fix**: Corrected day-of-week calculation mismatches (e.g., lines 316, 1106-1118) to consistently use Monday=0.
+        -   **Enhanced Add Shift Dialog**: Added  and  to  state. Integrated staff assignment dropdown with alphabetical sorting (). Used  for no staff instead of empty string in  component.
+        -   **Shift Sorting**: Implemented time-based sorting for shifts displayed on a day.
+        -   **Alphabetical Staff Sorting**: Ensured  is used consistently for all staff displays (e.g., lines 2066, 2253), and corrected filtering from  to .
+        -   **Timezone & Format**: Added , ,  helpers. Updated settings state and dialog with  and  options. Updated  initialization and navigation to use Brisbane time. Updated all time displays to use .
+        -   **View System Enhancement**:
+            -   Added  'calendar' option.
+            -   Created  (copy of old monthly view).
+            -   Redesigned  as a horizontal timeline.
+            -   Added quick Add Shift buttons to each day in all views.
+        -   **Quick Settings Toggles**: Added state (, ) and toggle functions (, , ). Updated calendar logic for . Added toggle buttons under month headers in all views.
+        -   **Bulk Editing (Shift Times Panel)**: Added ,  states. Implemented , ,  functions. Enhanced UI with checkboxes, individual delete/clone buttons, bulk action toolbar (Select All, Clear, Delete Selected, Edit Selected). Added  with comprehensive options.
+        -   **Authentication System (Initial)**: Added authentication state (, ) and functions (, ). Added , ,  UI components.
 
 -   **/app/frontend/src/App.css**:
     -   **Importance**: Global and component-specific styling using Tailwind CSS.
-    -   **Changes Made**: Applied styling for professional layout, consistent spacing, color schemes, badges, and dialogs. Significantly updated to improve calendar cell height (), ensure all shifts are visible without scrolling, and adjust button layout (two rows) for better mobile responsiveness. Added styles for improved scrolling and checkbox visibility.
+    -   **Changes Made**: Applied styling for professional layout, spacing, color schemes, badges, and dialogs. Updated calendar cell height () and button layouts for responsiveness. Added styles for scrolling and checkbox visibility. Includes styles for light/dark mode.
 
 -   **/app/frontend/.env & /app/backend/.env**:
-    -   **Importance**: Store environment variables (, ).
-    -   **Changes Made**: Values were read but never modified as per system instructions.
+    -   **Importance**: Store environment variables.
+    -   **Changes Made**: Values were read; no modifications.  and  are used.
 </code_architecture>
 
 <pending_tasks>
--   Implement the actual functionality for exporting rosters/data into PDF, Excel, and CSV formats, beyond the existing export capabilities framework. (This was an initial pending task).
--   Investigate and propose the simplest possible local deployment solution for the user. (This was an initial pending task, but was addressed by proposing existing live link and Vercel/Railway options, then the user changed context).
--   Complete the fix for the monthly view shift date misalignment.
+-   Implement the actual functionality for exporting rosters/data into PDF, Excel, and CSV formats.
+-   Complete the fix for the pay summary not working for staff.
+-   Complete the implementation of the comprehensive authentication system (PIN-based login, role-based access control, admin functions like PIN reset).
+-   Implement individual staff dashboards, availability management, and a shift request system.
+-   Develop an admin panel for full user management.
+-   Create a staff profile system with personal details, photo upload, and account information updates.
+-   Implement privacy controls to prevent staff from seeing other staff's pay.
+-   Fix badge logic for weekday shifts ending by 8:00 PM to correctly display Day.
+-   Fix daily view navigation buttons.
+-   Implement the ability to edit any unassigned shift to assign staff.
+-   Ensure existing shifts can be fully edited and changes persist.
+-   Implement a clickable profile button on the main page after login, leading to user profile settings.
 </pending_tasks>
 
 <current_work>
-Immediately before this summary request, the previous AI engineer was actively debugging and fixing a critical date misalignment bug in the monthly calendar view. The user reported that shifts added were displaying under the wrong calendar day in the monthly view, despite having the correct underlying date when clicked. For example, a shift added to Monday 25th August 2025 was appearing under Tuesday 19th August 2025 in the monthly calendar.
+Immediately before this summary request, the previous AI engineer was working on a significant expansion of the application to include a comprehensive **user authentication and management system** with role-based access control, as per the user's explicit request.
 
-The engineer identified the problem as likely related to date calculation, timezone issues, or inconsistent date object handling within the  and  functions in .
+This work was initiated by the user reporting several immediate issues:
+1.  **Pay summary not working** for individual staff.
+2.  **Badge logic fix**: Weekday shifts ending by 8:00 PM should display Day badge.
+3.  **Daily view navigation buttons not working**.
 
-The engineer's last action (Chat Message 308) was to modify the  function, specifically updating how date objects are generated and used within the calendar grid to ensure consistent date matching.
-Specifically, the engineer updated the  function to iterate through dates more reliably:
+The engineer prioritized these immediate bug fixes, starting with:
+-   **Daily View Navigation**: Identified and fixed issues related to  vs  state mismatches and incorrect function calls in  to ensure proper navigation.
+-   **Pay Summary**: Examined existing code (, ) and confirmed  component import, but the fix itself was not explicitly stated as completed; rather, it was next in the immediate fixes queue.
 
-The engineer is currently at the stage of testing this fix to see if the date alignment issue is resolved, as indicated by the final tool call to take a screenshot (Chat Message 309). The state of the application is that all previously implemented features (pay calculation, roster/day templates, multiple views, event management, bulk selection, 2:1 overlap allowance, UI enhancements) are considered functional based on prior tests and screenshots, with this date display bug being the immediate problem.
+Following these immediate fixes, the engineer proceeded with the initial steps of the authentication system:
+-   **Backend ()**:
+    -   Defined  enum (, , ).
+    -   Created a  model with fields like , , and .
+    -   Implemented authentication helper functions (, , , , ).
+    -   Added core authentication API endpoints (,  for login, , , , , and endpoints for user management like ).
+-   **Frontend ()**:
+    -   Introduced authentication state variables (, ).
+    -   Added authentication functions (, ).
+    -   Integrated authentication UI components (LoginDialog, ChangePinDialog, RegisterDialog).
+
+The engineer's last explicit action in the trajectory was adding these authentication UI components to the frontend, indicating the core framework for login and user management is now in place. The next immediate steps are to address the remaining bug fixes (pay summary, badge logic, daily navigation) and then build out the comprehensive profile and shift editing features on top of the newly established authentication foundation.
 </current_work>
 
 <optional_next_step>
-Take a screenshot to confirm the fix for the monthly calendar date alignment issue.
+Fix the pay summary display for staff and the badge logic for weekday shifts.
 </optional_next_step>

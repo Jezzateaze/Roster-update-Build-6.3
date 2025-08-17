@@ -8,7 +8,7 @@ import requests
 import sys
 from datetime import datetime
 
-API_BASE_URL = "https://shiftroster-2.preview.emergentagent.com"
+API_BASE_URL = "https://staffshift-app.preview.emergentagent.com"
 
 def test_critical_15_20_scenario():
     """Test the exact 15:00-20:00 scenario that was failing"""
