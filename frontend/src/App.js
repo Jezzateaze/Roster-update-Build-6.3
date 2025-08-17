@@ -113,6 +113,8 @@ function App() {
     pay_mode: 'default',
     timezone: 'Australia/Brisbane', // AEST UTC+10
     time_format: '24hr', // '12hr' or '24hr'
+    first_day_of_week: 'monday', // 'monday' or 'sunday'
+    dark_mode: false, // true or false
     rates: {
       weekday_day: 42.00,
       weekday_evening: 44.50,
