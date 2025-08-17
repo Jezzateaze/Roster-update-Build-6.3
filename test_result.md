@@ -313,6 +313,8 @@ test_plan:
     - "Priority System - All priority levels (low, medium, high, urgent) working"
     - "All-Day vs Timed Events - Both event types handled correctly"
     - "Enhanced Shift Template Editing - Name editing, manual shift type override, manual hourly rate override, simultaneous updates, null value handling, backward compatibility all working"
+    - "Enhanced Roster Generation from Shift Templates - Generate roster using shift templates with manual overrides working perfectly"
+    - "Enhanced Roster Template Management - Template edit (PUT) and delete (DELETE) functionality working"
 
 agent_communication:
   - agent: "main"
