@@ -30,17 +30,28 @@
   touch-action: pan-y;
 }
 
-/* Improved calendar cells for mobile */
+/* Enhanced calendar cells - larger and no scrolling limitations */
 .calendar-cell {
-  min-height: 180px;
+  min-height: 200px;
   position: relative;
 }
 
 .calendar-cell-content {
-  max-height: 130px;
-  overflow-y: auto;
-  scrollbar-width: thin;
-  scrollbar-color: #cbd5e1 #f1f5f9;
+  overflow: visible;
+  max-height: none;
+}
+
+/* Calendar grid optimization for larger cells */
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 0;
+  min-height: 200px;
+}
+
+.calendar-grid > div {
+  min-height: 200px;
+  flex: 1;
 }
 
 /* Enhanced delete button visibility on mobile */
@@ -53,6 +64,11 @@
   .group:active .mobile-delete-hover {
     opacity: 1 !important;
   }
+  
+  /* Slightly smaller calendar cells on mobile while keeping them large enough */
+  .calendar-grid > div {
+    min-height: 180px;
+  }
 }
 
 /* Swipe gesture indicator */
@@ -64,17 +80,22 @@
 /* Improved shift entry styling */
 .shift-entry {
   transition: all 0.2s ease;
+  border: 1px solid #e2e8f0;
+  background: #ffffff;
+  margin: 2px 0;
 }
 
 .shift-entry:hover {
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border-color: #cbd5e1;
 }
 
 /* Calendar event styling improvements */
 .calendar-event {
   border-left: 3px solid;
   transition: all 0.2s ease;
+  margin: 1px 0;
 }
 
 .calendar-event:hover {
@@ -95,6 +116,34 @@
 
 .priority-low {
   border-left-color: #6b7280;
+}
+
+/* Button layout improvements */
+.button-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+.button-group {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+/* Responsive button layout */
+@media (max-width: 640px) {
+  .button-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .button-group {
+    justify-content: center;
+  }
 }
 
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
