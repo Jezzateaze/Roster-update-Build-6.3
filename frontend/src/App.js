@@ -4221,6 +4221,154 @@ function App() {
           </DialogContent>
         </Dialog>
 
+        {/* Bulk Edit Templates Dialog */}
+        <Dialog open={showBulkEditDialog} onOpenChange={setShowBulkEditDialog}>
+          <DialogContent className="max-w-2xl">
+            <DialogHeader>
+              <DialogTitle>Bulk Edit Shift Templates</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-6">
+              <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                <p className="text-sm text-blue-700">
+                  <strong>Editing {selectedTemplates.size} selected template(s)</strong>
+                </p>
+                <p className="text-xs text-blue-600 mt-1">
+                  Only fields you modify will be applied to the selected templates. Leave fields empty to keep existing values.
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Time Settings */}
+                <div className="space-y-4">
+                  <h3 className="font-semibold text-lg">Time Settings</h3>
+                  
+                  <div>
+                    <Label htmlFor="bulk-start-time">Start Time</Label>
+                    <Input
+                      id="bulk-start-time"
+                      type="time"
+                      value={bulkEditData.start_time}
+                      onChange={(e) => setBulkEditData({...bulkEditData, start_time: e.target.value})}
+                      placeholder="Keep existing time"
+                    />
+                  </div>
+                  
+                  <div>
+                    <Label htmlFor="bulk-end-time">End Time</Label>
+                    <Input
+                      id="bulk-end-time"
+                      type="time"
+                      value={bulkEditData.end_time}
+                      onChange={(e) => setBulkEditData({...bulkEditData, end_time: e.target.value})}
+                      placeholder="Keep existing time"
+                    />
+                  </div>
+                  
+                  <div className="flex items-center space-x-2">
+                    <Switch
+                      checked={bulkEditData.is_sleepover}
+                      onCheckedChange={(checked) => setBulkEditData({...bulkEditData, is_sleepover: checked})}
+                    />
+                    <Label>Sleepover Shift</Label>
+                  </div>
+                </div>
+
+                {/* Advanced Settings */}
+                <div className="space-y-4">
+                  <h3 className="font-semibold text-lg">Advanced Settings</h3>
+                  
+                  <div>
+                    <Label htmlFor="bulk-shift-type">Manual Shift Type Override</Label>
+                    <Select
+                      value={bulkEditData.shift_type_override}
+                      onValueChange={(value) => setBulkEditData({...bulkEditData, shift_type_override: value})}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Keep existing type" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="">No Override (Auto-detect)</SelectItem>
+                        <SelectItem value="weekday_day">Weekday Day</SelectItem>
+                        <SelectItem value="weekday_evening">Weekday Evening</SelectItem>
+                        <SelectItem value="weekday_night">Weekday Night</SelectItem>
+                        <SelectItem value="saturday">Saturday</SelectItem>
+                        <SelectItem value="sunday">Sunday</SelectItem>
+                        <SelectItem value="public_holiday">Public Holiday</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  <div>
+                    <Label htmlFor="bulk-day-change">Move to Different Day</Label>
+                    <Select
+                      value={bulkEditData.day_of_week.toString()}
+                      onValueChange={(value) => setBulkEditData({...bulkEditData, day_of_week: value})}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Keep current day" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="">Keep Current Day</SelectItem>
+                        <SelectItem value="0">Monday</SelectItem>
+                        <SelectItem value="1">Tuesday</SelectItem>
+                        <SelectItem value="2">Wednesday</SelectItem>
+                        <SelectItem value="3">Thursday</SelectItem>
+                        <SelectItem value="4">Friday</SelectItem>
+                        <SelectItem value="5">Saturday</SelectItem>
+                        <SelectItem value="6">Sunday</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              </div>
+
+              {/* Action Options */}
+              <div className="space-y-3">
+                <h3 className="font-semibold text-lg">Action Options</h3>
+                <div className="flex space-x-4">
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="radio"
+                      id="apply-selected"
+                      name="apply-to"
+                      value="selected"
+                      checked={bulkEditData.apply_to === 'selected'}
+                      onChange={(e) => setBulkEditData({...bulkEditData, apply_to: e.target.value})}
+                      className="w-4 h-4"
+                    />
+                    <Label htmlFor="apply-selected">Apply to Selected Templates Only</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="radio"
+                      id="apply-all"
+                      name="apply-to"
+                      value="all"
+                      checked={bulkEditData.apply_to === 'all'}
+                      onChange={(e) => setBulkEditData({...bulkEditData, apply_to: e.target.value})}
+                      className="w-4 h-4"
+                    />
+                    <Label htmlFor="apply-all">Apply to All Templates</Label>
+                  </div>
+                </div>
+              </div>
+
+              <div className="text-sm text-amber-600 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                <p><strong>⚠️ Warning:</strong> Bulk editing will modify multiple shift templates at once. This action cannot be undone. Please review your changes carefully before applying.</p>
+              </div>
+
+              <div className="flex justify-end space-x-2">
+                <Button variant="outline" onClick={() => setShowBulkEditDialog(false)}>
+                  Cancel
+                </Button>
+                <Button onClick={applyBulkEdit} disabled={selectedTemplates.size === 0}>
+                  Apply Bulk Edit to {selectedTemplates.size} Template(s)
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+
       </div>
     </div>
   );
