@@ -345,8 +345,7 @@ test_plan:
     - "Enhanced Add Shift Dialog with Date Placement Testing"
     - "React Frontend Mobile Responsiveness"
     - "Staff Alphabetical Sorting Fix"
-  stuck_tasks:
-    - "Enhanced Add Shift Dialog with Date Placement Testing"
+  stuck_tasks: []
   test_all: false
   test_priority: "high_first"
   completed_features:
@@ -365,6 +364,8 @@ test_plan:
     - "Enhanced Roster Template Management - Template edit (PUT) and delete (DELETE) functionality working"
     - "2:1 Shift Overlap Functionality - Automatic overlap detection for shifts with '2:1' in name working perfectly"
     - "Allow Overlap Manual Override - Manual allow_overlap field enables users to add overlapping shifts through Add Shift dialog working perfectly"
+    - "Enhanced Add Shift Dialog with Date Placement Testing - All critical fixes verified and working perfectly"
+    - "React Frontend Mobile Responsiveness - All date alignment and Select component issues resolved"
 
 agent_communication:
   - agent: "main"
