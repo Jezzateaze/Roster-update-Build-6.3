@@ -1077,6 +1077,128 @@ function App() {
     }
   };
 
+  // Bulk editing functions for Shift Times
+  const toggleTemplateSelection = (templateId) => {
+    const newSelection = new Set(selectedTemplates);
+    if (newSelection.has(templateId)) {
+      newSelection.delete(templateId);
+    } else {
+      newSelection.add(templateId);
+    }
+    setSelectedTemplates(newSelection);
+  };
+
+  const selectAllTemplates = () => {
+    const allTemplateIds = new Set(shiftTemplates.map(template => template.id));
+    setSelectedTemplates(allTemplateIds);
+  };
+
+  const clearTemplateSelection = () => {
+    setSelectedTemplates(new Set());
+  };
+
+  const deleteTemplate = async (templateId) => {
+    try {
+      await axios.delete(`${API_BASE_URL}/api/shift-templates/${templateId}`);
+      const updatedTemplates = shiftTemplates.filter(t => t.id !== templateId);
+      setShiftTemplates(updatedTemplates);
+      alert('✅ Shift template deleted successfully!');
+    } catch (error) {
+      console.error('Error deleting template:', error);
+      alert(`❌ Error deleting template: ${error.response?.data?.detail || error.message}`);
+    }
+  };
+
+  const deleteSelectedTemplates = async () => {
+    if (selectedTemplates.size === 0) return;
+    
+    if (window.confirm(`Are you sure you want to delete ${selectedTemplates.size} selected shift template(s)?`)) {
+      try {
+        const deletePromises = Array.from(selectedTemplates).map(templateId =>
+          axios.delete(`${API_BASE_URL}/api/shift-templates/${templateId}`)
+        );
+        
+        await Promise.all(deletePromises);
+        
+        const updatedTemplates = shiftTemplates.filter(t => !selectedTemplates.has(t.id));
+        setShiftTemplates(updatedTemplates);
+        setSelectedTemplates(new Set());
+        setBulkEditMode(false);
+        alert('✅ Selected shift templates deleted successfully!');
+      } catch (error) {
+        console.error('Error deleting templates:', error);
+        alert(`❌ Error deleting templates: ${error.response?.data?.detail || error.message}`);
+      }
+    }
+  };
+
+  const cloneTemplate = async (template) => {
+    try {
+      const clonedTemplate = {
+        ...template,
+        id: undefined, // Will be auto-generated
+        name: `${template.name || 'Shift'} (Copy)`,
+      };
+      
+      const response = await axios.post(`${API_BASE_URL}/api/shift-templates`, clonedTemplate);
+      const updatedTemplates = [...shiftTemplates, response.data];
+      setShiftTemplates(updatedTemplates);
+      alert('✅ Shift template cloned successfully!');
+    } catch (error) {
+      console.error('Error cloning template:', error);
+      alert(`❌ Error cloning template: ${error.response?.data?.detail || error.message}`);
+    }
+  };
+
+  const applyBulkEdit = async () => {
+    if (selectedTemplates.size === 0) return;
+    
+    try {
+      const updatePromises = Array.from(selectedTemplates).map(async (templateId) => {
+        const template = shiftTemplates.find(t => t.id === templateId);
+        const updatedTemplate = { ...template };
+        
+        // Apply bulk edit changes
+        if (bulkEditData.start_time) updatedTemplate.start_time = bulkEditData.start_time;
+        if (bulkEditData.end_time) updatedTemplate.end_time = bulkEditData.end_time;
+        if (bulkEditData.shift_type_override) updatedTemplate.shift_type_override = bulkEditData.shift_type_override;
+        if (bulkEditData.day_of_week !== '') updatedTemplate.day_of_week = parseInt(bulkEditData.day_of_week);
+        updatedTemplate.is_sleepover = bulkEditData.is_sleepover;
+        
+        return axios.put(`${API_BASE_URL}/api/shift-templates/${templateId}`, updatedTemplate);
+      });
+      
+      const responses = await Promise.all(updatePromises);
+      
+      // Update local state
+      const updatedTemplates = shiftTemplates.map(template => {
+        if (selectedTemplates.has(template.id)) {
+          const response = responses.find(r => r.data.id === template.id);
+          return response ? response.data : template;
+        }
+        return template;
+      });
+      
+      setShiftTemplates(updatedTemplates);
+      setSelectedTemplates(new Set());
+      setBulkEditMode(false);
+      setShowBulkEditDialog(false);
+      setBulkEditData({
+        start_time: '',
+        end_time: '',
+        is_sleepover: false,
+        shift_type_override: '',
+        day_of_week: '',
+        apply_to: 'selected'
+      });
+      
+      alert('✅ Bulk edit applied successfully!');
+    } catch (error) {
+      console.error('Error applying bulk edit:', error);
+      alert(`❌ Error applying bulk edit: ${error.response?.data?.detail || error.message}`);
+    }
+  };
+
   const getDayEntries = (date) => {
     // Ensure we're working with a proper date and format it consistently
     const targetDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
