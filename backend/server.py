@@ -9,9 +9,6 @@ import os
 import uuid
 import hashlib
 import secrets
-import smtplib
-from email.mime.text import MimeText
-from email.mime.multipart import MimeMultipart
 from enum import Enum
 
 # Database setup
