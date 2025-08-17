@@ -216,3 +216,5 @@ agent_communication:
     message: "Starting deployment process to Railway free hosting. Current app is working on preview.emergentagent.com but user needs independent deployment for iPhone access."
   - agent: "testing"
     message: "✅ BACKEND TESTING COMPLETE: All API endpoints working perfectly. Fixed critical evening shift pay calculation bug. Backend is ready for Railway deployment. All 6 requested endpoints tested: health check, staff management, shift templates, settings, roster generation/retrieval. Pay calculations accurate including SCHADS award compliance. 14/14 tests passed."
+  - agent: "main"  
+    message: "⚠️ USER FEEDBACK: Missing roster template features - save roster template function, generate roster from saved templates, day-of-week based placement (not date-based), and overlap prevention. Need to implement these core template management features."
