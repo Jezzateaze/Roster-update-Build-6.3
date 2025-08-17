@@ -2063,7 +2063,9 @@ function App() {
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {staff.map(member => (
+                  {staff
+                    .sort((a, b) => a.name.localeCompare(b.name))
+                    .map(member => (
                     <Card key={member.id} className="p-4">
                       <div className="flex items-center justify-between">
                         <div>
