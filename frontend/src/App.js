@@ -33,6 +33,32 @@ const getBrisbaneDate = (date = new Date()) => {
   return brisbaneTime;
 };
 
+// ISO 8601 week date system functions
+const getISOWeek = (date) => {
+  const tempDate = new Date(date.getTime());
+  tempDate.setHours(0, 0, 0, 0);
+  // Thursday in current week decides the year
+  tempDate.setDate(tempDate.getDate() + 3 - (tempDate.getDay() + 6) % 7);
+  // January 4 is always in week 1
+  const week1 = new Date(tempDate.getFullYear(), 0, 4);
+  // Adjust to Thursday in week 1 and count weeks from there
+  return 1 + Math.round(((tempDate.getTime() - week1.getTime()) / 86400000 - 3 + (week1.getDay() + 6) % 7) / 7);
+};
+
+const getISOWeekYear = (date) => {
+  const tempDate = new Date(date.getTime());
+  tempDate.setDate(tempDate.getDate() + 3 - (tempDate.getDay() + 6) % 7);
+  return tempDate.getFullYear();
+};
+
+// Get Monday of the ISO week
+const getMondayOfISOWeek = (week, year) => {
+  const jan4 = new Date(year, 0, 4);
+  const jan4Day = (jan4.getDay() + 6) % 7; // Monday = 0
+  const mondayOfWeek1 = new Date(jan4.getTime() - jan4Day * 86400000);
+  return new Date(mondayOfWeek1.getTime() + (week - 1) * 7 * 86400000);
+};
+
 // Helper function to format time based on user preference
 const formatTime = (timeString, is24Hour = true) => {
   if (!timeString) return '';
