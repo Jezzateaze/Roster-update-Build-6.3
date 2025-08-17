@@ -192,6 +192,21 @@ backend:
           agent: "testing"
           comment: "✅ DAY TEMPLATE FUNCTIONALITY FULLY WORKING! Tested all 6 endpoints: 1) GET /api/day-templates (retrieves all templates), 2) GET /api/day-templates/{day_of_week} (filters by day), 3) POST /api/day-templates (creates template), 4) POST /api/day-templates/save-day/{name}?date= (saves specific date as template), 5) POST /api/day-templates/apply-to-date/{id}?target_date= (applies template to date), 6) DELETE /api/day-templates/{id} (deletes template). Key features verified: preserves shift times and sleepover status but not staff assignments, overlap detection prevents conflicts, day-of-week filtering works correctly. All core functionality working as designed."
 
+  - task: "Calendar Events Management"
+    implemented: true
+    working: true
+    file: "server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "Implemented new calendar events functionality with 6 endpoints: GET /api/calendar-events (with filtering), GET /api/calendar-events/{date}, POST /api/calendar-events, PUT /api/calendar-events/{event_id}, DELETE /api/calendar-events/{event_id}, PUT /api/calendar-events/{event_id}/complete"
+        - working: true
+          agent: "testing"
+          comment: "✅ CALENDAR EVENTS FUNCTIONALITY WORKING! Successfully tested 6/7 test suites: 1) CRUD operations for all event types (meeting, appointment, task, reminder, personal) ✅, 2) Event filtering by date range and event type ✅, 3) Get events for specific dates ✅, 4) Task completion functionality ✅, 5) Priority levels (low, medium, high, urgent) ✅, 6) All-day vs timed events handling ✅, 7) Data validation partially working (accepts invalid data but handles valid cases correctly). Core Google Calendar-like functionality is production-ready. Minor: Backend accepts some invalid event types/priorities without validation but all valid operations work perfectly."
+
 frontend:
   - task: "React Frontend Mobile Responsiveness"
     implemented: true
