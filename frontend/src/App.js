@@ -932,7 +932,7 @@ function App() {
   // Helper function to get alphabetically sorted active staff
   const getSortedActiveStaff = () => {
     return staff
-      .filter(member => member.is_active)
+      .filter(member => member.active)
       .sort((a, b) => a.name.localeCompare(b.name));
   };
 
