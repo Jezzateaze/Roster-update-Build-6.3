@@ -1474,7 +1474,7 @@ function App() {
                         <div className="flex items-center justify-between">
                           <div className="flex items-center space-x-4">
                             <div className="text-xl font-bold text-slate-700">
-                              {entry.start_time} - {entry.end_time}
+                              {formatTime(entry.start_time, settings.time_format === '24hr')} - {formatTime(entry.end_time, settings.time_format === '24hr')}
                             </div>
                             <div>
                               {getShiftTypeBadge(entry)}
