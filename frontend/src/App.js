@@ -757,6 +757,7 @@ function App() {
 
   const renderCalendarDay = (date) => {
     const dayEntries = getDayEntries(date);
+    const dayEvents = getDayEvents(date);
     const dayTotal = dayEntries.reduce((sum, entry) => sum + entry.total_pay, 0);
     
     // Check if this date is from a different month (previous or next)
@@ -776,7 +777,7 @@ function App() {
       : 'text-slate-500';
     
     return (
-      <div className={`min-h-[120px] p-1 border-r border-b border-slate-200 ${backgroundClass} group hover:bg-slate-50 transition-colors relative`}>
+      <div className={`min-h-[140px] p-1 border-r border-b border-slate-200 ${backgroundClass} group hover:bg-slate-50 transition-colors relative overflow-hidden`}>
         <div className={`font-medium text-sm mb-2 flex items-center justify-between ${textClass}`}>
           <span>{date.getDate()}</span>
           <div className="flex items-center space-x-1">
@@ -789,22 +790,24 @@ function App() {
             {isCurrentMonth && (
               <div className="opacity-0 group-hover:opacity-100 transition-opacity flex space-x-1">
                 <button
-                  className="w-5 h-5 bg-blue-500 text-white rounded text-xs hover:bg-blue-600 transition-colors flex items-center justify-center"
+                  className="w-4 h-4 bg-blue-500 text-white rounded text-xs hover:bg-blue-600 transition-colors flex items-center justify-center"
                   onClick={(e) => {
                     e.stopPropagation();
                     openDayTemplateDialog(date, 'save');
                   }}
                   title={`Save ${['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][date.getDay()]} as template`}
+                  style={{ fontSize: '8px' }}
                 >
                   S
                 </button>
                 <button
-                  className="w-5 h-5 bg-green-500 text-white rounded text-xs hover:bg-green-600 transition-colors flex items-center justify-center"
+                  className="w-4 h-4 bg-green-500 text-white rounded text-xs hover:bg-green-600 transition-colors flex items-center justify-center"
                   onClick={(e) => {
                     e.stopPropagation();
                     openDayTemplateDialog(date, 'load');
                   }}
                   title={`Load template to ${['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][date.getDay()]}`}
+                  style={{ fontSize: '8px' }}
                 >
                   L
                 </button>
@@ -812,7 +815,47 @@ function App() {
             )}
           </div>
         </div>
-        <div className="space-y-1">
+        
+        <div className="space-y-1 max-h-[100px] overflow-y-auto">
+          {/* Calendar Events */}
+          {dayEvents.map(event => (
+            <div
+              key={event.id}
+              className={`text-xs p-1 rounded cursor-pointer hover:bg-opacity-80 transition-colors border ${getEventPriorityColor(event.priority)} ${event.is_completed ? 'line-through opacity-60' : ''}`}
+              onClick={() => {
+                setSelectedEvent(event);
+                setShowEventDialog(true);
+              }}
+            >
+              <div className="flex items-start justify-between">
+                <div className="flex-1 min-w-0">
+                  <div className="font-medium flex items-center gap-1">
+                    <span>{getEventTypeIcon(event.event_type)}</span>
+                    <span className="truncate">{event.title}</span>
+                  </div>
+                  {!event.is_all_day && event.start_time && (
+                    <div className="text-xs opacity-75">
+                      {event.start_time}{event.end_time && ` - ${event.end_time}`}
+                    </div>
+                  )}
+                </div>
+                {event.event_type === 'task' && !event.is_completed && (
+                  <button
+                    className="w-4 h-4 text-green-600 hover:text-green-800"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      completeTask(event.id);
+                    }}
+                    title="Mark as completed"
+                  >
+                    ✓
+                  </button>
+                )}
+              </div>
+            </div>
+          ))}
+          
+          {/* Shift Entries */}
           {dayEntries.map(entry => (
             <div
               key={entry.id}
@@ -844,27 +887,28 @@ function App() {
                 </div>
               </div>
               <button
-                className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white rounded-full text-xs opacity-0 group-hover/shift:opacity-100 flex items-center justify-center hover:bg-red-600 transition-all z-10 shadow-sm border border-white"
+                className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white rounded-full text-xs opacity-0 group-hover/shift:opacity-100 flex items-center justify-center hover:bg-red-600 transition-all z-10 shadow-sm border border-white"
                 onClick={(e) => {
                   e.stopPropagation();
                   e.preventDefault();
-                  console.log('Delete button clicked for shift:', entry.id);
                   deleteShift(entry.id);
                 }}
                 title="Delete shift"
-                style={{ fontSize: '10px', lineHeight: '1' }}
+                style={{ fontSize: '8px', lineHeight: '1' }}
               >
                 ×
               </button>
             </div>
           ))}
         </div>
+        
         {dayTotal > 0 && (
-          <div className={`mt-2 pt-1 border-t border-slate-200 text-xs font-bold text-emerald-700 ${isCurrentMonth ? '' : 'opacity-75'}`}>
-            Total: {formatCurrency(dayTotal)}
+          <div className={`mt-1 pt-1 border-t border-slate-200 text-xs font-bold text-emerald-700 ${isCurrentMonth ? '' : 'opacity-75'}`}>
+            ${dayTotal.toFixed(0)}
           </div>
         )}
-        {!isCurrentMonth && dayEntries.length === 0 && (
+        
+        {!isCurrentMonth && dayEntries.length === 0 && dayEvents.length === 0 && (
           <div className="text-xs text-slate-400 italic mt-2">
             {isPreviousMonth ? 'Previous month' : 'Next month'}
           </div>
