@@ -1007,9 +1007,16 @@ async def clear_monthly_roster(month: str):
 
 @app.post("/api/roster/add-shift")
 async def add_individual_shift(entry: RosterEntry):
-    """Add a single shift to the roster with overlap detection"""
-    # Check for overlaps first
-    if check_shift_overlap(entry.date, entry.start_time, entry.end_time):
+    """Add a single shift to the roster with overlap detection (allows 2:1 shifts)"""
+    # Get shift name from template if available
+    shift_name = ""
+    if entry.shift_template_id:
+        template = db.shift_templates.find_one({"id": entry.shift_template_id})
+        if template:
+            shift_name = template.get("name", "")
+    
+    # Check for overlaps (allows 2:1 shifts to overlap)
+    if check_shift_overlap(entry.date, entry.start_time, entry.end_time, shift_name=shift_name):
         raise HTTPException(
             status_code=409, 
             detail=f"Shift overlaps with existing shift on {entry.date} from {entry.start_time} to {entry.end_time}"
