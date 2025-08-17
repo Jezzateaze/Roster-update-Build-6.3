@@ -239,11 +239,13 @@ def check_shift_overlap(date_str: str, start_time: str, end_time: str, exclude_i
             current_has_2to1 = shift_name and "2:1" in shift_name.lower()
             existing_has_2to1 = "2:1" in existing_shift_name.lower()
             
-            if current_has_2to1 or existing_has_2to1:
+            # Only allow overlap if BOTH shifts have "2:1" in their names
+            # OR if the current shift being added/updated has "2:1" in its name
+            if current_has_2to1:
                 print(f"Allowing overlap for 2:1 shift - Current: {shift_name}, Existing: {existing_shift_name}")
-                continue  # Allow this overlap
+                continue  # Allow this overlap because current shift is 2:1
             else:
-                return True  # Prevent overlap
+                return True  # Prevent overlap - regular shifts cannot overlap with anything
     
     return False
 
