@@ -1837,7 +1837,7 @@ function App() {
                               onClick={() => {
                                 setNewShift({
                                   ...newShift,
-                                  date: currentDate.toISOString().split('T')[0]
+                                  date: formatDateString(currentDate)
                                 });
                                 setShowAddShiftDialog(true);
                               }}
