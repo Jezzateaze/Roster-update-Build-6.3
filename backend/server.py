@@ -46,6 +46,11 @@ class ShiftType(str, Enum):
     PUBLIC_HOLIDAY = "public_holiday"
     SLEEPOVER = "sleepover"
 
+class UserRole(str, Enum):
+    ADMIN = "admin"
+    SUPERVISOR = "supervisor"
+    STAFF = "staff"
+
 # Pydantic models
 class Staff(BaseModel):
     id: str
