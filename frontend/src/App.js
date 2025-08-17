@@ -2287,6 +2287,218 @@ function App() {
           </DialogContent>
         </Dialog>
 
+        {/* Calendar Event Dialog */}
+        <Dialog open={showEventDialog} onOpenChange={setShowEventDialog}>
+          <DialogContent className="max-w-lg">
+            <DialogHeader>
+              <DialogTitle>
+                {selectedEvent ? 'Edit Event' : 'Add New Event'}
+              </DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="col-span-2">
+                  <Label htmlFor="event-title">Title *</Label>
+                  <Input
+                    id="event-title"
+                    value={selectedEvent ? selectedEvent.title : newEvent.title}
+                    onChange={(e) => {
+                      if (selectedEvent) {
+                        setSelectedEvent({...selectedEvent, title: e.target.value});
+                      } else {
+                        setNewEvent({...newEvent, title: e.target.value});
+                      }
+                    }}
+                    placeholder="Event title"
+                  />
+                </div>
+                
+                <div>
+                  <Label htmlFor="event-date">Date *</Label>
+                  <Input
+                    id="event-date"
+                    type="date"
+                    value={selectedEvent ? selectedEvent.date : newEvent.date}
+                    onChange={(e) => {
+                      if (selectedEvent) {
+                        setSelectedEvent({...selectedEvent, date: e.target.value});
+                      } else {
+                        setNewEvent({...newEvent, date: e.target.value});
+                      }
+                    }}
+                  />
+                </div>
+                
+                <div>
+                  <Label htmlFor="event-type">Type</Label>
+                  <Select 
+                    value={selectedEvent ? selectedEvent.event_type : newEvent.event_type}
+                    onValueChange={(value) => {
+                      if (selectedEvent) {
+                        setSelectedEvent({...selectedEvent, event_type: value});
+                      } else {
+                        setNewEvent({...newEvent, event_type: value});
+                      }
+                    }}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="appointment">📅 Appointment</SelectItem>
+                      <SelectItem value="meeting">👥 Meeting</SelectItem>
+                      <SelectItem value="task">✓ Task</SelectItem>
+                      <SelectItem value="reminder">🔔 Reminder</SelectItem>
+                      <SelectItem value="personal">👤 Personal</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <div className="flex items-center space-x-2">
+                <Switch
+                  checked={selectedEvent ? selectedEvent.is_all_day : newEvent.is_all_day}
+                  onCheckedChange={(checked) => {
+                    if (selectedEvent) {
+                      setSelectedEvent({...selectedEvent, is_all_day: checked});
+                    } else {
+                      setNewEvent({...newEvent, is_all_day: checked});
+                    }
+                  }}
+                />
+                <Label>All day event</Label>
+              </div>
+
+              {!(selectedEvent ? selectedEvent.is_all_day : newEvent.is_all_day) && (
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="event-start-time">Start Time</Label>
+                    <Input
+                      id="event-start-time"
+                      type="time"
+                      value={selectedEvent ? selectedEvent.start_time : newEvent.start_time}
+                      onChange={(e) => {
+                        if (selectedEvent) {
+                          setSelectedEvent({...selectedEvent, start_time: e.target.value});
+                        } else {
+                          setNewEvent({...newEvent, start_time: e.target.value});
+                        }
+                      }}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="event-end-time">End Time</Label>
+                    <Input
+                      id="event-end-time"
+                      type="time"
+                      value={selectedEvent ? selectedEvent.end_time : newEvent.end_time}
+                      onChange={(e) => {
+                        if (selectedEvent) {
+                          setSelectedEvent({...selectedEvent, end_time: e.target.value});
+                        } else {
+                          setNewEvent({...newEvent, end_time: e.target.value});
+                        }
+                      }}
+                    />
+                  </div>
+                </div>
+              )}
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="event-priority">Priority</Label>
+                  <Select 
+                    value={selectedEvent ? selectedEvent.priority : newEvent.priority}
+                    onValueChange={(value) => {
+                      if (selectedEvent) {
+                        setSelectedEvent({...selectedEvent, priority: value});
+                      } else {
+                        setNewEvent({...newEvent, priority: value});
+                      }
+                    }}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="low">Low</SelectItem>
+                      <SelectItem value="medium">Medium</SelectItem>
+                      <SelectItem value="high">High</SelectItem>
+                      <SelectItem value="urgent">Urgent</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div>
+                  <Label htmlFor="event-reminder">Reminder (minutes)</Label>
+                  <Input
+                    id="event-reminder"
+                    type="number"
+                    value={selectedEvent ? selectedEvent.reminder_minutes : newEvent.reminder_minutes}
+                    onChange={(e) => {
+                      if (selectedEvent) {
+                        setSelectedEvent({...selectedEvent, reminder_minutes: parseInt(e.target.value)});
+                      } else {
+                        setNewEvent({...newEvent, reminder_minutes: parseInt(e.target.value)});
+                      }
+                    }}
+                    placeholder="15"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <Label htmlFor="event-location">Location</Label>
+                <Input
+                  id="event-location"
+                  value={selectedEvent ? selectedEvent.location : newEvent.location}
+                  onChange={(e) => {
+                    if (selectedEvent) {
+                      setSelectedEvent({...selectedEvent, location: e.target.value});
+                    } else {
+                      setNewEvent({...newEvent, location: e.target.value});
+                    }
+                  }}
+                  placeholder="Event location"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="event-description">Description</Label>
+                <Input
+                  id="event-description"
+                  value={selectedEvent ? selectedEvent.description : newEvent.description}
+                  onChange={(e) => {
+                    if (selectedEvent) {
+                      setSelectedEvent({...selectedEvent, description: e.target.value});
+                    } else {
+                      setNewEvent({...newEvent, description: e.target.value});
+                    }
+                  }}
+                  placeholder="Event description or notes"
+                />
+              </div>
+
+              <div className="flex justify-end space-x-2">
+                <Button variant="outline" onClick={() => {
+                  setShowEventDialog(false);
+                  setSelectedEvent(null);
+                }}>
+                  Cancel
+                </Button>
+                {selectedEvent && (
+                  <Button variant="destructive" onClick={() => deleteCalendarEvent(selectedEvent.id)}>
+                    Delete
+                  </Button>
+                )}
+                <Button onClick={selectedEvent ? updateCalendarEvent : addCalendarEvent}>
+                  {selectedEvent ? 'Update Event' : 'Add Event'}
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+
       </div>
     </div>
   );
