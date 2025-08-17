@@ -64,6 +64,24 @@ function App() {
   const [dayTemplateAction, setDayTemplateAction] = useState(''); // 'save' or 'load'
   const [selectedDayTemplate, setSelectedDayTemplate] = useState(null);
   const [newDayTemplateName, setNewDayTemplateName] = useState('');
+  const [viewMode, setViewMode] = useState('monthly'); // 'daily', 'weekly', 'monthly'
+  const [selectedSingleDate, setSelectedSingleDate] = useState(new Date());
+  const [calendarEvents, setCalendarEvents] = useState([]);
+  const [showEventDialog, setShowEventDialog] = useState(false);
+  const [selectedEvent, setSelectedEvent] = useState(null);
+  const [newEvent, setNewEvent] = useState({
+    title: '',
+    description: '',
+    date: '',
+    start_time: '',
+    end_time: '',
+    is_all_day: false,
+    event_type: 'appointment',
+    priority: 'medium',
+    location: '',
+    attendees: [],
+    reminder_minutes: 15
+  });
 
   useEffect(() => {
     fetchInitialData();
