@@ -344,7 +344,6 @@ test_plan:
   current_focus:
     - "Enhanced Add Shift Dialog with Date Placement Testing"
     - "React Frontend Mobile Responsiveness"
-    - "Staff Alphabetical Sorting Fix"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
