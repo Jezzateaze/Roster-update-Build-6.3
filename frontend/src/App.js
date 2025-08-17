@@ -3194,6 +3194,59 @@ function App() {
           </DialogContent>
         </Dialog>
 
+        {/* Bulk Actions Dialog */}
+        <Dialog open={showBulkActionsDialog} onOpenChange={setShowBulkActionsDialog}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>Bulk Edit Selected Shifts</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div className="text-sm text-slate-600 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                <p><strong>Selected:</strong> {selectedShifts.size} shifts</p>
+                <p>Choose which properties to update for all selected shifts.</p>
+              </div>
+
+              <div className="space-y-4">
+                <div className="flex items-center space-x-2">
+                  <input type="checkbox" id="bulk-staff" className="w-4 h-4" />
+                  <Label htmlFor="bulk-staff">Assign Staff Member</Label>
+                </div>
+                
+                <div className="flex items-center space-x-2">
+                  <input type="checkbox" id="bulk-sleepover" className="w-4 h-4" />
+                  <Label htmlFor="bulk-sleepover">Set Sleepover Status</Label>
+                </div>
+                
+                <div className="flex items-center space-x-2">
+                  <input type="checkbox" id="bulk-shift-type" className="w-4 h-4" />
+                  <Label htmlFor="bulk-shift-type">Override Shift Type</Label>
+                </div>
+                
+                <div className="flex items-center space-x-2">
+                  <input type="checkbox" id="bulk-hourly-rate" className="w-4 h-4" />
+                  <Label htmlFor="bulk-hourly-rate">Override Hourly Rate</Label>
+                </div>
+              </div>
+
+              <div className="text-sm text-slate-500 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                <p><strong>Note:</strong> This is a preview of bulk editing functionality. Select the properties you want to modify and click "Apply Changes" to update all selected shifts at once.</p>
+              </div>
+
+              <div className="flex justify-end space-x-2">
+                <Button variant="outline" onClick={() => setShowBulkActionsDialog(false)}>
+                  Cancel
+                </Button>
+                <Button onClick={() => {
+                  alert('Bulk editing functionality coming soon! For now, you can use bulk delete.');
+                  setShowBulkActionsDialog(false);
+                }}>
+                  Apply Changes
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+
       </div>
     </div>
   );
