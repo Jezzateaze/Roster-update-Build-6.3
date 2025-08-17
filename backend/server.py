@@ -81,6 +81,8 @@ class Settings(BaseModel):
     pay_mode: PayMode = PayMode.DEFAULT
     timezone: str = "Australia/Brisbane"  # AEST UTC+10
     time_format: str = "24hr"  # "12hr" or "24hr"
+    first_day_of_week: str = "monday"  # "monday" or "sunday"
+    dark_mode: bool = False  # true or false
     rates: Dict[str, float] = {
         "weekday_day": 42.00,
         "weekday_evening": 44.50,
