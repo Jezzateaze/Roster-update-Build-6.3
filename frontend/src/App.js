@@ -816,7 +816,7 @@ function App() {
           </div>
         </div>
         
-        <div className="space-y-1 max-h-[100px] overflow-y-auto">
+        <div className="space-y-1 max-h-[130px] overflow-y-auto custom-scrollbar">
           {/* Calendar Events */}
           {dayEvents.map(event => (
             <div
