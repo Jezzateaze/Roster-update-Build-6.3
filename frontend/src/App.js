@@ -1412,31 +1412,50 @@ function App() {
                   {dayEntries.map(entry => (
                     <div
                       key={entry.id}
-                      className="text-xs p-1 rounded cursor-pointer hover:bg-slate-200 transition-colors border border-slate-200 group relative"
+                      className={`text-xs p-1 rounded cursor-pointer hover:bg-slate-200 transition-colors border border-slate-200 group relative ${selectedShifts.has(entry.id) ? 'ring-1 ring-blue-500 bg-blue-50' : ''}`}
                     >
+                      {bulkSelectionMode && (
+                        <div className="absolute top-0 left-0 z-30">
+                          <input
+                            type="checkbox"
+                            checked={selectedShifts.has(entry.id)}
+                            onChange={() => toggleShiftSelection(entry.id)}
+                            className="w-2 h-2 rounded border-gray-300"
+                            onClick={(e) => e.stopPropagation()}
+                            style={{ transform: 'scale(0.8)' }}
+                          />
+                        </div>
+                      )}
                       <div
+                        className={`${bulkSelectionMode ? 'ml-3' : ''}`}
                         onClick={() => {
-                          setSelectedShift(entry);
-                          setShowShiftDialog(true);
+                          if (bulkSelectionMode) {
+                            toggleShiftSelection(entry.id);
+                          } else {
+                            setSelectedShift(entry);
+                            setShowShiftDialog(true);
+                          }
                         }}
                       >
                         <div className="font-medium">{entry.start_time}-{entry.end_time}</div>
                         <div className="text-slate-600 truncate">{entry.staff_name || 'Unassigned'}</div>
                         <div className="font-medium text-emerald-600">{formatCurrency(entry.total_pay)}</div>
                       </div>
-                      <button
-                        className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white rounded-full text-xs opacity-0 group-hover:opacity-100 flex items-center justify-center hover:bg-red-600 transition-all z-10 shadow-sm border border-white"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          if (window.confirm('Are you sure you want to delete this shift?')) {
-                            deleteShift(entry.id);
-                          }
-                        }}
-                        title="Delete shift"
-                        style={{ fontSize: '8px', lineHeight: '1' }}
-                      >
-                        ×
-                      </button>
+                      {!bulkSelectionMode && (
+                        <button
+                          className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white rounded-full text-xs opacity-0 group-hover:opacity-100 flex items-center justify-center hover:bg-red-600 transition-all z-10 shadow-sm border border-white"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (window.confirm('Are you sure you want to delete this shift?')) {
+                              deleteShift(entry.id);
+                            }
+                          }}
+                          title="Delete shift"
+                          style={{ fontSize: '8px', lineHeight: '1' }}
+                        >
+                          ×
+                        </button>
+                      )}
                     </div>
                   ))}
                 </div>
