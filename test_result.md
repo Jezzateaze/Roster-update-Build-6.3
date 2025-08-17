@@ -249,6 +249,18 @@ backend:
           agent: "testing"
           comment: "✅ ENHANCED ROSTER TEMPLATE MANAGEMENT FULLY WORKING! Successfully tested: 1) PUT /api/roster-templates/{template_id} updates template name, description, and template_data correctly, 2) DELETE /api/roster-templates/{template_id} removes template from active list, 3) Template update verification working (name and description changes confirmed), 4) Template deletion verification working (template no longer in active list), 5) All CRUD operations for roster templates functional. Minor: Error handling for deleted templates could be improved (currently allows operations on deleted templates). Core functionality is production-ready."
 
+  - task: "2:1 Shift Overlap Functionality"
+    implemented: true
+    working: true
+    file: "server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "testing"
+          comment: "✅ 2:1 SHIFT OVERLAP FUNCTIONALITY FULLY WORKING! Comprehensive testing completed: 1) Regular shifts correctly prevent overlaps with other regular shifts (409 Conflict returned), 2) Shifts with '2:1' in the name are allowed to overlap with any other shift (case insensitive detection working), 3) Multiple 2:1 shifts can overlap with each other successfully, 4) Regular shifts cannot be updated to overlap with 2:1 shifts (409 Conflict returned), 5) 2:1 shifts can be updated to extend overlaps with other shifts, 6) Enhanced overlap detection logic works across all endpoints: POST /api/roster/add-shift, PUT /api/roster/{entry_id}, POST /api/generate-roster-from-shift-templates/{month}, POST /api/day-templates/apply-to-date/{template_id}. Backend console logging shows when 2:1 overlaps are allowed. All 3/3 2:1 overlap tests passed. Core functionality is production-ready."
+
 frontend:
   - task: "React Frontend Mobile Responsiveness"
     implemented: true
