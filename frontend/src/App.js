@@ -1645,10 +1645,15 @@ function App() {
       }
       weeks.push(week);
       
+      console.log(`Week ${weekNum}: ${week[0].toISOString().split('T')[0]} to ${week[6].toISOString().split('T')[0]}`);
+      
       // Stop if we've covered all days of the target month
       // Check if the last day of this week is past the target month
       const lastDayOfWeek = week[week.length - 1];
+      console.log(`Last day of week ${weekNum}: ${lastDayOfWeek.toISOString().split('T')[0]} (month: ${lastDayOfWeek.getMonth()}, target month: ${month})`);
+      
       if (weekNum > 0 && lastDayOfWeek.getMonth() > month) {
+        console.log(`Stopping at week ${weekNum} because last day is past target month`);
         break;
       }
     }
