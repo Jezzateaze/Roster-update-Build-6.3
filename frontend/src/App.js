@@ -1276,7 +1276,7 @@ function App() {
               >
                 <div className="font-medium flex items-center justify-between">
                   <span className={`${isCurrentMonth ? '' : 'opacity-75'} font-semibold`}>
-                    {entry.start_time}-{entry.end_time}
+                    {formatTime(entry.start_time, settings.time_format === '24hr')}-{formatTime(entry.end_time, settings.time_format === '24hr')}
                   </span>
                   {!bulkSelectionMode && (
                     <Edit className="w-3 h-3 opacity-0 group-hover/shift:opacity-100 transition-opacity" />
