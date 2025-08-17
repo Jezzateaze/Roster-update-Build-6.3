@@ -410,15 +410,36 @@ function App() {
     }
   };
 
-  const updateShiftTemplate = async (templateId, updates) => {
+  const updateShiftTemplate = async (templateId, updatedData) => {
     try {
-      const template = shiftTemplates.find(t => t.id === templateId);
-      const updatedTemplate = { ...template, ...updates };
+      console.log('Updating shift template:', templateId, updatedData);
       
-      await axios.put(`${API_BASE_URL}/api/shift-templates/${templateId}`, updatedTemplate);
-      fetchInitialData();
+      // Get the current template to preserve all fields
+      const currentTemplate = shiftTemplates.find(t => t.id === templateId);
+      if (!currentTemplate) {
+        console.error('Template not found:', templateId);
+        alert('Template not found');
+        return;
+      }
+      
+      // Merge the updated data with current template
+      const completeTemplate = {
+        ...currentTemplate,
+        ...updatedData,
+        id: templateId
+      };
+      
+      console.log('Complete template data:', completeTemplate);
+      
+      const response = await axios.put(`${API_BASE_URL}/api/shift-templates/${templateId}`, completeTemplate);
+      console.log('Update response:', response.data);
+      
+      // Refresh the templates list
+      await fetchInitialData();
+      alert('Shift template updated successfully!');
     } catch (error) {
       console.error('Error updating shift template:', error);
+      alert(`Error updating template: ${error.response?.data?.detail || error.message}`);
     }
   };
 
