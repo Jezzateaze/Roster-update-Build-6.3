@@ -85,6 +85,8 @@ function App() {
   const [rosterEntries, setRosterEntries] = useState([]);
   const [settings, setSettings] = useState({
     pay_mode: 'default',
+    timezone: 'Australia/Brisbane', // AEST UTC+10
+    time_format: '24hr', // '12hr' or '24hr'
     rates: {
       weekday_day: 42.00,
       weekday_evening: 44.50,
