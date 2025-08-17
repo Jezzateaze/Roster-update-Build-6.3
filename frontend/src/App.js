@@ -874,7 +874,8 @@ function App() {
         hours_worked: 0.0,
         base_pay: 0.0,
         sleepover_allowance: 0.0,
-        total_pay: 0.0
+        total_pay: 0.0,
+        allow_overlap: newShift.allow_overlap // Pass the overlap permission
       };
       
       console.log('Adding shift:', shiftData);
@@ -885,14 +886,15 @@ function App() {
         date: '',
         start_time: '09:00',
         end_time: '17:00',
-        is_sleepover: false
+        is_sleepover: false,
+        allow_overlap: false
       });
       setShowAddShiftDialog(false);
       fetchRosterData();
     } catch (error) {
       console.error('Error adding shift:', error);
       if (error.response?.status === 409) {
-        alert(`Cannot add shift: ${error.response.data.detail}`);
+        alert(`Cannot add shift: ${error.response.data.detail}\n\nTip: Check "Allow Overlap" if this is a 2:1 shift requiring multiple staff.`);
       } else {
         alert(`Error adding shift: ${error.response?.data?.detail || error.message}`);
       }
