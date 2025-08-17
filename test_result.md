@@ -276,11 +276,11 @@ backend:
 frontend:
   - task: "React Frontend Mobile Responsiveness"
     implemented: true
-    working: true
+    working: false
     file: "App.js"
-    stuck_count: 0
+    stuck_count: 1
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
         - working: true
           agent: "main"
@@ -288,6 +288,9 @@ frontend:
         - working: true
           agent: "testing"
           comment: "✅ DATE ALIGNMENT FIX FULLY WORKING! Comprehensive testing completed: 1) Monthly Calendar Display: Shows complete August 2025 (days 1-31) with proper Monday-Sunday week structure, 2) Existing Shifts Verification: Found all expected shifts - August 18: 12:00-20:00 (Issey), August 20: 09:00-17:00, 15:00-23:00, 16:00-22:00, 3) Cross-View Consistency: Monthly view shows all shifts correctly, Weekly view displays 5 shifts, Daily view navigation working, 4) New Shift Addition: Successfully added 10:00-18:00 shift to Monday August 25, 2025 - appears correctly in Monthly view on the exact date, 5) Timezone Fix Verification: No more off-by-one date errors - shifts appear on exact dates they were assigned to. The core toISOString() timezone conversion issue has been resolved. All calendar views show consistent date alignment."
+        - working: false
+          agent: "testing"
+          comment: "🚨 CRITICAL RUNTIME ERRORS BLOCKING ENHANCED FEATURES: Comprehensive date placement testing attempted but blocked by Select component errors. ✅ WORKING: 1) Monday-first calendar alignment confirmed (Mon-Tue-Wed-Thu-Fri-Sat-Sun), 2) Existing shift date placement correct (Aug 18: 12:00-20:00, Aug 20: 09:00-17:00, 15:00-23:00, 16:00-22:00), 3) Time-based sorting working (chronological order on Aug 20th), 4) Cross-view consistency (Daily/Weekly/Monthly switching functional), 5) Backend APIs working (12 staff members). ❌ CRITICAL ISSUES: 1) Add Shift dialog completely non-functional due to React Select runtime error: 'A <Select.Item /> must have a value prop that is not an empty string', 2) Cannot test enhanced Add Shift dialog (date field, staff dropdown, sleepover/overlap options), 3) Cannot add shifts to Monday Aug 25th or Sunday Aug 24th for date placement testing, 4) Staff not alphabetically sorted in backend. REQUIRES IMMEDIATE FIX: Select component value props must be corrected before enhanced Add Shift dialog testing can proceed."
 
   - task: "Calendar and Shift Display"
     implemented: true
