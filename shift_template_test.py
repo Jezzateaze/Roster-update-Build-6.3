@@ -706,14 +706,20 @@ class ShiftTemplateEditTester:
         return False
 
 def main():
-    print("🚀 Starting Shift Template Editing Tests")
+    print("🚀 Starting Enhanced Shift Template Editing Tests")
     print("=" * 60)
     
     tester = ShiftTemplateEditTester()
     
-    # Run template editing tests
+    # Run enhanced template editing tests
     tests = [
         tester.test_get_shift_templates,
+        tester.test_get_shift_templates_with_enhanced_fields,
+        tester.test_update_template_name,
+        tester.test_set_manual_shift_type_override,
+        tester.test_set_manual_hourly_rate_override,
+        tester.test_update_both_manual_fields_simultaneously,
+        tester.test_backward_compatibility,
         tester.test_update_shift_template,
         tester.test_sleepover_toggle,
         tester.test_individual_shift_time_editing,
@@ -727,13 +733,13 @@ def main():
     
     # Print final results
     print("\n" + "=" * 60)
-    print(f"📊 Template Editing Tests: {tester.tests_passed}/{tester.tests_run} tests passed")
+    print(f"📊 Enhanced Shift Template Tests: {tester.tests_passed}/{tester.tests_run} tests passed")
     
     if tester.tests_passed == tester.tests_run:
-        print("🎉 All template editing tests passed!")
+        print("🎉 All enhanced shift template tests passed!")
         return 0
     else:
-        print("⚠️  Some template editing tests failed.")
+        print("⚠️  Some enhanced shift template tests failed.")
         return 1
 
 if __name__ == "__main__":
