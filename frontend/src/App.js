@@ -71,15 +71,17 @@ function App() {
 
   const fetchInitialData = async () => {
     try {
-      const [staffRes, templatesRes, settingsRes] = await Promise.all([
+      const [staffRes, templatesRes, settingsRes, rosterTemplatesRes] = await Promise.all([
         axios.get(`${API_BASE_URL}/api/staff`),
         axios.get(`${API_BASE_URL}/api/shift-templates`),
-        axios.get(`${API_BASE_URL}/api/settings`)
+        axios.get(`${API_BASE_URL}/api/settings`),
+        axios.get(`${API_BASE_URL}/api/roster-templates`)
       ]);
       
       setStaff(staffRes.data);
       setShiftTemplates(templatesRes.data);
       setSettings(settingsRes.data);
+      setRosterTemplates(rosterTemplatesRes.data);
     } catch (error) {
       console.error('Error fetching initial data:', error);
     }
