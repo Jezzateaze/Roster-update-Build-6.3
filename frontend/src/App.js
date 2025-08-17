@@ -1676,7 +1676,7 @@ function App() {
                           }
                         }}
                       >
-                        <div className="font-medium">{entry.start_time}-{entry.end_time}</div>
+                        <div className="font-medium">{formatTime(entry.start_time, settings.time_format === '24hr')}-{formatTime(entry.end_time, settings.time_format === '24hr')}</div>
                         <div className="text-slate-600 truncate">{entry.staff_name || 'Unassigned'}</div>
                         <div className="font-medium text-emerald-600">{formatCurrency(entry.total_pay)}</div>
                       </div>
