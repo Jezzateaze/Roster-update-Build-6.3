@@ -219,6 +219,36 @@ backend:
           agent: "testing"
           comment: "✅ CALENDAR EVENTS FUNCTIONALITY WORKING! Successfully tested 6/7 test suites: 1) CRUD operations for all event types (meeting, appointment, task, reminder, personal) ✅, 2) Event filtering by date range and event type ✅, 3) Get events for specific dates ✅, 4) Task completion functionality ✅, 5) Priority levels (low, medium, high, urgent) ✅, 6) All-day vs timed events handling ✅, 7) Data validation partially working (accepts invalid data but handles valid cases correctly). Core Google Calendar-like functionality is production-ready. Minor: Backend accepts some invalid event types/priorities without validation but all valid operations work perfectly."
 
+  - task: "Enhanced Roster Generation from Shift Templates"
+    implemented: true
+    working: true
+    file: "server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "Implemented new POST /api/generate-roster-from-shift-templates/{month} endpoint for generating roster using shift templates with manual overrides"
+        - working: true
+          agent: "testing"
+          comment: "✅ NEW ROSTER GENERATION FUNCTIONALITY FULLY WORKING! Comprehensive testing completed: 1) POST /api/generate-roster-from-shift-templates/{month} successfully generates roster entries using shift templates, 2) Manual shift type overrides preserved correctly (weekday_evening, weekday_night), 3) Manual hourly rate overrides preserved correctly ($45.00, $50.25, $60.00), 4) Day-of-week based placement working perfectly (Monday/Tuesday/Wednesday templates placed on correct days), 5) Overlap detection and prevention working (4 overlaps detected and skipped), 6) Pay calculations accurate with manual overrides (8h × $45.00 = $360.00), 7) Generated 12 roster entries for August 2025 with all manual overrides intact. All 3/3 new roster generation tests passed."
+
+  - task: "Enhanced Roster Template Management"
+    implemented: true
+    working: true
+    file: "server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "Enhanced roster template management with PUT /api/roster-templates/{template_id} for editing and DELETE /api/roster-templates/{template_id} for deletion"
+        - working: true
+          agent: "testing"
+          comment: "✅ ENHANCED ROSTER TEMPLATE MANAGEMENT FULLY WORKING! Successfully tested: 1) PUT /api/roster-templates/{template_id} updates template name, description, and template_data correctly, 2) DELETE /api/roster-templates/{template_id} removes template from active list, 3) Template update verification working (name and description changes confirmed), 4) Template deletion verification working (template no longer in active list), 5) All CRUD operations for roster templates functional. Minor: Error handling for deleted templates could be improved (currently allows operations on deleted templates). Core functionality is production-ready."
+
 frontend:
   - task: "React Frontend Mobile Responsiveness"
     implemented: true
