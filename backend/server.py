@@ -598,6 +598,13 @@ async def create_roster_entry(entry: RosterEntry):
 
 @app.put("/api/roster/{entry_id}")
 async def update_roster_entry(entry_id: str, entry: RosterEntry):
+    # Check for overlaps (excluding current entry)
+    if check_shift_overlap(entry.date, entry.start_time, entry.end_time, exclude_id=entry_id):
+        raise HTTPException(
+            status_code=409, 
+            detail=f"Updated shift would overlap with existing shift on {entry.date}"
+        )
+    
     # Get current settings for pay calculation
     settings_doc = db.settings.find_one()
     settings = Settings(**settings_doc) if settings_doc else Settings()
