@@ -1369,11 +1369,7 @@ function App() {
               </h2>
               <Button
                 variant="outline"
-                onClick={() => {
-                  const newDate = new Date(selectedDate);
-                  newDate.setDate(newDate.getDate() + 1);
-                  setSelectedSingleDate(newDate);
-                }}
+                onClick={() => navigateDate(1)}
               >
                 Next Day
               </Button>
