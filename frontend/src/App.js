@@ -1610,37 +1610,97 @@ function App() {
                     </Button>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <Button 
-                      variant="outline"
-                      onClick={() => {
-                        setNewShift({
-                          ...newShift,
-                          date: currentDate.toISOString().split('T')[0]
-                        });
-                        setShowAddShiftDialog(true);
-                      }}
+                    <Button
+                      variant={bulkSelectionMode ? "default" : "outline"}
+                      onClick={toggleBulkSelectionMode}
+                      className={bulkSelectionMode ? "bg-blue-600 text-white" : ""}
                     >
-                      <Plus className="w-4 h-4 mr-2" />
-                      Add Shift
+                      {bulkSelectionMode ? (
+                        <>
+                          <Check className="w-4 h-4 mr-2" />
+                          Exit Selection
+                        </>
+                      ) : (
+                        <>
+                          <CheckSquare className="w-4 h-4 mr-2" />
+                          Select Multiple
+                        </>
+                      )}
                     </Button>
-                    <Button 
-                      variant="outline" 
-                      onClick={() => setShowSaveTemplateDialog(true)}
-                    >
-                      Save Template
-                    </Button>
-                    <Button 
-                      variant="outline" 
-                      onClick={() => setShowGenerateFromTemplateDialog(true)}
-                    >
-                      Load Template
-                    </Button>
-                    <Button variant="outline" onClick={clearMonthlyRoster}>
-                      Clear Roster
-                    </Button>
-                    <Button onClick={generateMonthlyRoster}>
-                      Generate Roster
-                    </Button>
+
+                    {!bulkSelectionMode && (
+                      <>
+                        <Button 
+                          variant="outline"
+                          onClick={() => {
+                            setNewShift({
+                              ...newShift,
+                              date: currentDate.toISOString().split('T')[0]
+                            });
+                            setShowAddShiftDialog(true);
+                          }}
+                        >
+                          <Plus className="w-4 h-4 mr-2" />
+                          Add Shift
+                        </Button>
+                        <Button 
+                          variant="outline" 
+                          onClick={() => setShowSaveTemplateDialog(true)}
+                        >
+                          Save Template
+                        </Button>
+                        <Button 
+                          variant="outline" 
+                          onClick={() => setShowGenerateFromTemplateDialog(true)}
+                        >
+                          Load Template
+                        </Button>
+                        <Button variant="outline" onClick={clearMonthlyRoster}>
+                          Clear Roster
+                        </Button>
+                        <Button onClick={generateMonthlyRoster}>
+                          Generate Roster
+                        </Button>
+                      </>
+                    )}
+
+                    {bulkSelectionMode && (
+                      <>
+                        <div className="text-sm text-slate-600">
+                          {selectedShifts.size} selected
+                        </div>
+                        <Button 
+                          variant="outline" 
+                          onClick={selectAllVisibleShifts}
+                          disabled={selectedShifts.size === getVisibleShifts().length}
+                        >
+                          Select All
+                        </Button>
+                        <Button 
+                          variant="outline" 
+                          onClick={clearSelection}
+                          disabled={selectedShifts.size === 0}
+                        >
+                          Clear Selection
+                        </Button>
+                        <Button 
+                          variant="destructive" 
+                          onClick={bulkDeleteShifts}
+                          disabled={selectedShifts.size === 0}
+                        >
+                          <Trash2 className="w-4 h-4 mr-2" />
+                          Delete Selected ({selectedShifts.size})
+                        </Button>
+                        <Button 
+                          variant="outline" 
+                          onClick={() => setShowBulkActionsDialog(true)}
+                          disabled={selectedShifts.size === 0}
+                        >
+                          <Edit className="w-4 h-4 mr-2" />
+                          Edit Selected
+                        </Button>
+                      </>
+                    )}
                   </div>
                 </div>
               </CardContent>
