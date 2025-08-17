@@ -182,6 +182,47 @@ class Session(BaseModel):
     expires_at: datetime
     is_active: bool = True
 
+# Authentication helper functions
+def hash_pin(pin: str) -> str:
+    """Hash a PIN using SHA-256"""
+    return hashlib.sha256(pin.encode()).hexdigest()
+
+def verify_pin(pin: str, pin_hash: str) -> bool:
+    """Verify a PIN against its hash"""
+    return hash_pin(pin) == pin_hash
+
+def generate_token() -> str:
+    """Generate a secure random token"""
+    return secrets.token_urlsafe(32)
+
+def create_admin_user():
+    """Create the default admin user if it doesn't exist"""
+    admin_user = db.users.find_one({"username": "Admin"})
+    if not admin_user:
+        admin_data = {
+            "id": str(uuid.uuid4()),
+            "username": "Admin",
+            "pin_hash": hash_pin("0000"),  # Default PIN: 0000
+            "role": "admin",
+            "email": "jeremy.tomlinson88@gmail.com",
+            "first_name": "Administrator",
+            "is_first_login": True,
+            "is_active": True,
+            "created_at": datetime.utcnow()
+        }
+        db.users.insert_one(admin_data)
+        print("✅ Admin user created with default PIN: 0000")
+
+def send_reset_email(email: str, temp_pin: str):
+    """Send password reset email (simplified version)"""
+    # In a production environment, you would configure proper SMTP settings
+    # For now, we'll just print the reset PIN to console
+    print(f"🔐 RESET PIN for {email}: {temp_pin}")
+    print("📧 In production, this would be sent via email")
+
+# Initialize admin user on startup
+create_admin_user()
+
 # Pay calculation functions
 def determine_shift_type(date_str: str, start_time: str, end_time: str, is_public_holiday: bool) -> ShiftType:
     """Determine the shift type based on date and time - SIMPLIFIED LOGIC"""
