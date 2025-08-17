@@ -2253,7 +2253,7 @@ function App() {
                     <SelectContent>
                       <SelectItem value="unassigned">Unassigned</SelectItem>
                       {staff
-                        .filter(member => member.is_active)
+                        .filter(member => member.active)
                         .sort((a, b) => a.name.localeCompare(b.name))
                         .map(member => (
                         <SelectItem key={member.id} value={member.id}>
