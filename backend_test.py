@@ -694,12 +694,23 @@ class ShiftRosterAPITester:
         
         # Test 3: Add a non-overlapping shift (should succeed)
         non_overlapping_shift = {
+            "id": "",  # Will be auto-generated
             "date": test_date,
             "shift_template_id": "test-overlap-3",
+            "staff_id": None,
+            "staff_name": None,
             "start_time": "18:00",  # After first shift ends
             "end_time": "22:00",
             "is_sleepover": False,
-            "is_public_holiday": False
+            "is_public_holiday": False,
+            "manual_shift_type": None,
+            "manual_hourly_rate": None,
+            "manual_sleepover": None,
+            "wake_hours": None,
+            "hours_worked": 0.0,
+            "base_pay": 0.0,
+            "sleepover_allowance": 0.0,
+            "total_pay": 0.0
         }
         
         success, created_shift2 = self.run_test(
