@@ -1146,8 +1146,10 @@ function App() {
               </CardContent>
             </Card>
 
-            {/* Calendar */}
-            {renderMonthlyCalendar()}
+            {/* Calendar Display - Different Views */}
+            {viewMode === 'monthly' && renderMonthlyCalendar()}
+            {viewMode === 'weekly' && renderWeeklyView()}
+            {viewMode === 'daily' && renderDailyView()}
           </TabsContent>
 
           <TabsContent value="shifts" className="space-y-6">
