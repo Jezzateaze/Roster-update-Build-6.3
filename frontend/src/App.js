@@ -1116,7 +1116,7 @@ function App() {
                     e.stopPropagation();
                     openDayTemplateDialog(date, 'load');
                   }}
-                  title={`Load template to ${['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][date.getDay()]}`}
+                  title={`Load template to ${['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'][(date.getDay() + 6) % 7]}`}
                   style={{ fontSize: '8px' }}
                 >
                   L
