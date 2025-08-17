@@ -917,6 +917,298 @@ function App() {
     );
   };
 
+  const renderDailyView = () => {
+    const selectedDate = selectedSingleDate || currentDate;
+    const dayEntries = getDayEntries(selectedDate);
+    const dayEvents = getDayEvents(selectedDate);
+    const dayTotal = dayEntries.reduce((sum, entry) => sum + entry.total_pay, 0);
+    
+    return (
+      <div className="bg-white rounded-lg border border-slate-200 overflow-hidden">
+        {/* Daily View Header */}
+        <div className="bg-slate-50 p-4 border-b border-slate-200">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-4">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  const newDate = new Date(selectedDate);
+                  newDate.setDate(newDate.getDate() - 1);
+                  setSelectedSingleDate(newDate);
+                }}
+              >
+                Previous Day
+              </Button>
+              <h2 className="text-2xl font-bold text-slate-800">
+                {selectedDate.toLocaleDateString('en-US', { 
+                  weekday: 'long', 
+                  year: 'numeric', 
+                  month: 'long', 
+                  day: 'numeric' 
+                })}
+              </h2>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  const newDate = new Date(selectedDate);
+                  newDate.setDate(newDate.getDate() + 1);
+                  setSelectedSingleDate(newDate);
+                }}
+              >
+                Next Day
+              </Button>
+            </div>
+            <Button
+              variant="outline"
+              onClick={() => setSelectedSingleDate(new Date())}
+            >
+              Today
+            </Button>
+          </div>
+        </div>
+
+        {/* Daily Content */}
+        <div className="p-6 space-y-6">
+          {/* Events Section */}
+          {dayEvents.length > 0 && (
+            <div>
+              <h3 className="text-lg font-semibold mb-3">Events & Appointments</h3>
+              <div className="space-y-2">
+                {dayEvents.map(event => (
+                  <div
+                    key={event.id}
+                    className={`p-3 rounded-lg border cursor-pointer hover:bg-opacity-80 transition-colors ${getEventPriorityColor(event.priority)} ${event.is_completed ? 'line-through opacity-60' : ''}`}
+                    onClick={() => {
+                      setSelectedEvent(event);
+                      setShowEventDialog(true);
+                    }}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-3">
+                        <span className="text-lg">{getEventTypeIcon(event.event_type)}</span>
+                        <div>
+                          <div className="font-medium">{event.title}</div>
+                          {!event.is_all_day && event.start_time && (
+                            <div className="text-sm opacity-75">
+                              {event.start_time}{event.end_time && ` - ${event.end_time}`}
+                            </div>
+                          )}
+                          {event.location && (
+                            <div className="text-sm opacity-75">📍 {event.location}</div>
+                          )}
+                        </div>
+                      </div>
+                      {event.event_type === 'task' && !event.is_completed && (
+                        <button
+                          className="px-2 py-1 text-green-600 hover:text-green-800 border border-green-300 rounded"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            completeTask(event.id);
+                          }}
+                        >
+                          Mark Done
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Shifts Section */}
+          {dayEntries.length > 0 && (
+            <div>
+              <h3 className="text-lg font-semibold mb-3">Work Shifts</h3>
+              <div className="space-y-3">
+                {dayEntries.map(entry => (
+                  <div
+                    key={entry.id}
+                    className="p-4 border rounded-lg cursor-pointer hover:bg-slate-50 transition-colors"
+                    onClick={() => {
+                      setSelectedShift(entry);
+                      setShowShiftDialog(true);
+                    }}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-4">
+                        <div className="text-xl font-bold text-slate-700">
+                          {entry.start_time} - {entry.end_time}
+                        </div>
+                        <div>
+                          {getShiftTypeBadge(entry)}
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-lg font-bold text-emerald-600">
+                          {formatCurrency(entry.total_pay)}
+                        </div>
+                        <div className="text-sm text-slate-600">
+                          {entry.staff_name || 'Unassigned'}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <div className="mt-4 p-3 bg-emerald-50 border border-emerald-200 rounded-lg">
+                <div className="text-lg font-bold text-emerald-700">
+                  Daily Total: {formatCurrency(dayTotal)}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {dayEntries.length === 0 && dayEvents.length === 0 && (
+            <div className="text-center py-12 text-slate-500">
+              <div className="text-4xl mb-4">📅</div>
+              <div className="text-lg">No shifts or events scheduled for this day</div>
+              <div className="mt-4 space-x-2">
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setNewShift({
+                      ...newShift,
+                      date: selectedDate.toISOString().split('T')[0]
+                    });
+                    setShowAddShiftDialog(true);
+                  }}
+                >
+                  Add Shift
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setNewEvent({
+                      ...newEvent,
+                      date: selectedDate.toISOString().split('T')[0]
+                    });
+                    setShowEventDialog(true);
+                  }}
+                >
+                  Add Event
+                </Button>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  };
+
+  const renderWeeklyView = () => {
+    const startOfWeek = new Date(currentDate);
+    const day = startOfWeek.getDay();
+    const diff = startOfWeek.getDate() - day + (day === 0 ? -6 : 1); // Adjust for Monday start
+    startOfWeek.setDate(diff);
+
+    const weekDays = [];
+    for (let i = 0; i < 7; i++) {
+      const day = new Date(startOfWeek);
+      day.setDate(startOfWeek.getDate() + i);
+      weekDays.push(day);
+    }
+
+    return (
+      <div className="bg-white rounded-lg border border-slate-200 overflow-hidden">
+        {/* Weekly View Header */}
+        <div className="bg-slate-50 p-4 border-b border-slate-200">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-4">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  const newDate = new Date(currentDate);
+                  newDate.setDate(newDate.getDate() - 7);
+                  setCurrentDate(newDate);
+                }}
+              >
+                Previous Week
+              </Button>
+              <h2 className="text-2xl font-bold text-slate-800">
+                {startOfWeek.toLocaleDateString('en-US', { month: 'long', day: 'numeric' })} - {weekDays[6].toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+              </h2>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  const newDate = new Date(currentDate);
+                  newDate.setDate(newDate.getDate() + 7);
+                  setCurrentDate(newDate);
+                }}
+              >
+                Next Week
+              </Button>
+            </div>
+          </div>
+        </div>
+
+        {/* Weekly Grid */}
+        <div className="grid grid-cols-7 divide-x divide-slate-200">
+          {weekDays.map((date, index) => {
+            const dayEntries = getDayEntries(date);
+            const dayEvents = getDayEvents(date);
+            const dayTotal = dayEntries.reduce((sum, entry) => sum + entry.total_pay, 0);
+            const isToday = date.toDateString() === new Date().toDateString();
+
+            return (
+              <div key={index} className={`min-h-[400px] p-3 ${isToday ? 'bg-blue-50' : ''}`}>
+                <div className={`text-center mb-3 ${isToday ? 'font-bold text-blue-600' : 'font-medium text-slate-700'}`}>
+                  <div className="text-sm">
+                    {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'][index]}
+                  </div>
+                  <div className={`text-lg ${isToday ? 'bg-blue-600 text-white rounded-full w-8 h-8 flex items-center justify-center mx-auto' : ''}`}>
+                    {date.getDate()}
+                  </div>
+                </div>
+
+                <div className="space-y-1">
+                  {/* Events */}
+                  {dayEvents.map(event => (
+                    <div
+                      key={event.id}
+                      className={`text-xs p-1 rounded cursor-pointer border ${getEventPriorityColor(event.priority)} ${event.is_completed ? 'line-through opacity-60' : ''}`}
+                      onClick={() => {
+                        setSelectedEvent(event);
+                        setShowEventDialog(true);
+                      }}
+                    >
+                      <div className="font-medium truncate">{getEventTypeIcon(event.event_type)} {event.title}</div>
+                      {!event.is_all_day && event.start_time && (
+                        <div className="opacity-75">{event.start_time}</div>
+                      )}
+                    </div>
+                  ))}
+
+                  {/* Shifts */}
+                  {dayEntries.map(entry => (
+                    <div
+                      key={entry.id}
+                      className="text-xs p-1 rounded cursor-pointer hover:bg-slate-200 transition-colors border border-slate-200"
+                      onClick={() => {
+                        setSelectedShift(entry);
+                        setShowShiftDialog(true);
+                      }}
+                    >
+                      <div className="font-medium">{entry.start_time}-{entry.end_time}</div>
+                      <div className="text-slate-600 truncate">{entry.staff_name || 'Unassigned'}</div>
+                      <div className="font-medium text-emerald-600">{formatCurrency(entry.total_pay)}</div>
+                    </div>
+                  ))}
+                </div>
+
+                {dayTotal > 0 && (
+                  <div className="mt-2 pt-1 border-t border-slate-200 text-xs font-bold text-emerald-700">
+                    ${dayTotal.toFixed(0)}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    );
+  };
+
   const renderMonthlyCalendar = () => {
     const year = currentDate.getFullYear();
     const month = currentDate.getMonth();
