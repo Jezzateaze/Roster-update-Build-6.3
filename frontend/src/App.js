@@ -130,6 +130,19 @@ function App() {
   const [showShiftDialog, setShowShiftDialog] = useState(false);
   const [showStaffDialog, setShowStaffDialog] = useState(false);
   const [showSettingsDialog, setShowSettingsDialog] = useState(false);
+  
+  // Bulk editing states for Shift Times panel
+  const [bulkEditMode, setBulkEditMode] = useState(false);
+  const [selectedTemplates, setSelectedTemplates] = useState(new Set());
+  const [showBulkEditDialog, setShowBulkEditDialog] = useState(false);
+  const [bulkEditData, setBulkEditData] = useState({
+    start_time: '',
+    end_time: '',
+    is_sleepover: false,
+    shift_type_override: '',
+    day_of_week: '',
+    apply_to: 'selected' // 'selected' or 'all'
+  });
   const [showTemplateDialog, setShowTemplateDialog] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState(null);
   const [showBreakWarning, setShowBreakWarning] = useState(false);
