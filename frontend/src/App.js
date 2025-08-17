@@ -1658,9 +1658,9 @@ function App() {
       
       console.log(`Week ${weekNum} contains last day of month (${lastDayOfTargetMonth.getDate()}): ${weekContainsLastDay}`);
       
-      // If this week contains the last day of the month, we can stop after this week
-      if (weekContainsLastDay && weekNum > 0) {
-        console.log(`Completed calendar after week ${weekNum}`);
+      // If this week contains the last day of the month, we can stop after this iteration
+      if (weekContainsLastDay) {
+        console.log(`Completed calendar after week ${weekNum} - this week contains the last day`);
         break;
       }
     }
