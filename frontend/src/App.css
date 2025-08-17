@@ -1,3 +1,102 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Custom scrollbar styles */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 2px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 2px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Mobile touch interactions */
+.touch-action-pan-x {
+  touch-action: pan-x;
+}
+
+.touch-action-pan-y {
+  touch-action: pan-y;
+}
+
+/* Improved calendar cells for mobile */
+.calendar-cell {
+  min-height: 180px;
+  position: relative;
+}
+
+.calendar-cell-content {
+  max-height: 130px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 #f1f5f9;
+}
+
+/* Enhanced delete button visibility on mobile */
+@media (max-width: 768px) {
+  .mobile-delete-visible {
+    opacity: 1 !important;
+  }
+  
+  .group:hover .mobile-delete-hover,
+  .group:active .mobile-delete-hover {
+    opacity: 1 !important;
+  }
+}
+
+/* Swipe gesture indicator */
+.swipe-indicator {
+  background: linear-gradient(90deg, transparent, rgba(239, 68, 68, 0.1), rgba(239, 68, 68, 0.3), rgba(239, 68, 68, 0.1), transparent);
+  transition: all 0.3s ease;
+}
+
+/* Improved shift entry styling */
+.shift-entry {
+  transition: all 0.2s ease;
+}
+
+.shift-entry:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* Calendar event styling improvements */
+.calendar-event {
+  border-left: 3px solid;
+  transition: all 0.2s ease;
+}
+
+.calendar-event:hover {
+  transform: translateX(2px);
+}
+
+.priority-urgent {
+  border-left-color: #dc2626;
+}
+
+.priority-high {
+  border-left-color: #ea580c;
+}
+
+.priority-medium {
+  border-left-color: #2563eb;
+}
+
+.priority-low {
+  border-left-color: #6b7280;
+}
+
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
 * {
