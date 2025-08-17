@@ -3073,15 +3073,22 @@ def main():
     # Print final results
     print("\n" + "=" * 60)
     print(f"📊 Overall Results: {tester.tests_passed}/{tester.tests_run} API tests passed")
+    print(f"🔄 2:1 Shift Overlap Tests: {two_to_one_tests_passed}/{len(two_to_one_overlap_tests)} 2:1 overlap tests passed")
     print(f"🚀 NEW Roster Generation Tests: {new_roster_generation_tests_passed}/{len(new_roster_generation_tests)} new roster generation tests passed")
     print(f"📅 Calendar Events Tests: {calendar_events_tests_passed}/{len(calendar_events_tests)} calendar events tests passed")
     print(f"🌟 Day Template Tests: {day_template_tests_passed}/{len(day_template_tests)} day template tests passed")
     print(f"🎯 Roster Template Tests: {roster_template_tests_passed}/{len(roster_template_tests)} roster template tests passed")
     
+    two_to_one_success = two_to_one_tests_passed == len(two_to_one_overlap_tests)
     new_roster_generation_success = new_roster_generation_tests_passed == len(new_roster_generation_tests)
     calendar_events_success = calendar_events_tests_passed == len(calendar_events_tests)
     day_template_success = day_template_tests_passed == len(day_template_tests)
     roster_template_success = roster_template_tests_passed == len(roster_template_tests)
+    
+    if two_to_one_success:
+        print("🎉 All 2:1 shift overlap tests passed!")
+    else:
+        print("⚠️  Some 2:1 shift overlap tests failed.")
     
     if new_roster_generation_success:
         print("🎉 All NEW roster generation tests passed!")
@@ -3103,7 +3110,7 @@ def main():
     else:
         print("⚠️  Some roster template tests failed.")
     
-    if (new_roster_generation_success and calendar_events_success and 
+    if (two_to_one_success and new_roster_generation_success and calendar_events_success and 
         day_template_success and roster_template_success and 
         tester.tests_passed == tester.tests_run):
         print("🎉 All tests passed!")
