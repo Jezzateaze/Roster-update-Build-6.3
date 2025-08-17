@@ -313,7 +313,9 @@ function App() {
     
     if (action === 'save') {
       // Suggest template name based on date
-      const dayName = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'][date.getDay()];
+      const dayOfWeek = date.getDay(); // 0=Sunday, 1=Monday, etc.
+      const mondayBasedDayIndex = (dayOfWeek + 6) % 7; // Convert to Monday=0 system
+      const dayName = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'][mondayBasedDayIndex];
       setNewDayTemplateName(`${dayName} Template`);
     }
   };
