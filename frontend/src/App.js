@@ -1620,11 +1620,16 @@ function App() {
     const firstDay = new Date(year, month, 1);
     const lastDay = new Date(year, month + 1, 0);
     
+    console.log(`First day of month: ${firstDay.toISOString().split('T')[0]} (${firstDay.getDay()})`);
+    console.log(`Last day of month: ${lastDay.toISOString().split('T')[0]} (${lastDay.getDay()})`);
+    
     // Start from Monday of the week containing the first day
     const startDate = new Date(firstDay);
     const firstDayOfWeek = firstDay.getDay(); // 0 = Sunday, 1 = Monday, etc.
     const daysToSubtract = (firstDayOfWeek + 6) % 7; // Convert to Monday = 0 system
     startDate.setDate(startDate.getDate() - daysToSubtract);
+    
+    console.log(`Calendar start date: ${startDate.toISOString().split('T')[0]}, days subtracted: ${daysToSubtract}`);
 
     const weeks = [];
     const currentWeekDate = new Date(startDate);
