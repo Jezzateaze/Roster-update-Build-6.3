@@ -238,6 +238,47 @@ function App() {
     }
   };
 
+  const deleteRosterTemplate = async (templateId) => {
+    if (!window.confirm('Are you sure you want to delete this roster template? This action cannot be undone.')) {
+      return;
+    }
+    
+    try {
+      await axios.delete(`${API_BASE_URL}/api/roster-templates/${templateId}`);
+      setSelectedRosterTemplate(null);
+      fetchInitialData(); // Reload templates
+      alert('Roster template deleted successfully');
+    } catch (error) {
+      console.error('Error deleting roster template:', error);
+      alert(`Error deleting template: ${error.response?.data?.detail || error.message}`);
+    }
+  };
+
+  const editRosterTemplate = async (templateId) => {
+    const template = rosterTemplates.find(t => t.id === templateId);
+    if (!template) return;
+    
+    const newName = prompt('Enter new template name:', template.name);
+    if (!newName || newName.trim() === '') return;
+    
+    const newDescription = prompt('Enter new description (optional):', template.description || '');
+    
+    try {
+      const updatedTemplate = {
+        ...template,
+        name: newName.trim(),
+        description: newDescription?.trim() || template.description
+      };
+      
+      await axios.put(`${API_BASE_URL}/api/roster-templates/${templateId}`, updatedTemplate);
+      fetchInitialData(); // Reload templates
+      alert('Template updated successfully');
+    } catch (error) {
+      console.error('Error updating roster template:', error);
+      alert(`Error updating template: ${error.response?.data?.detail || error.message}`);
+    }
+  };
+
   const openDayTemplateDialog = (date, action) => {
     setSelectedDateForTemplate(date);
     setDayTemplateAction(action);
