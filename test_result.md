@@ -377,6 +377,7 @@ test_plan:
     - "Allow Overlap Manual Override - Manual allow_overlap field enables users to add overlapping shifts through Add Shift dialog working perfectly"
     - "Enhanced Add Shift Dialog with Date Placement Testing - All critical fixes verified and working perfectly"
     - "React Frontend Mobile Responsiveness - All date alignment and Select component issues resolved"
+    - "Staff Alphabetical Sorting Fix - Verified working correctly across all staff dropdowns and management tab"
 
 agent_communication:
   - agent: "main"
