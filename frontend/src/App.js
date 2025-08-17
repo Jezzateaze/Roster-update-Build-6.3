@@ -1389,12 +1389,26 @@ function App() {
                 Next Day
               </Button>
             </div>
-            <Button
-              variant="outline"
-              onClick={() => setSelectedSingleDate(new Date())}
-            >
-              Today
-            </Button>
+            <div className="flex items-center space-x-2">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setNewShift({
+                    ...newShift,
+                    date: formatDateString(selectedDate)
+                  });
+                  setShowAddShiftDialog(true);
+                }}
+              >
+                Add Shift
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => setSelectedSingleDate(new Date())}
+              >
+                Today
+              </Button>
+            </div>
           </div>
         </div>
 
