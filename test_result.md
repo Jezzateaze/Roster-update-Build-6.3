@@ -274,6 +274,18 @@ backend:
           comment: "✅ ALLOW OVERLAP FUNCTIONALITY FULLY WORKING! Comprehensive testing completed: 1) POST /api/roster/add-shift endpoint accepts new allow_overlap field, 2) When allow_overlap=False (default), normal overlap prevention works correctly (409 Conflict returned), 3) When allow_overlap=True, shifts can be added even if they overlap successfully, 4) Enhanced error message mentions 'Use Allow Overlap option for 2:1 shifts' when overlap detected, 5) Multiple overlapping shifts can be added with allow_overlap=True, 6) Default behavior (no allow_overlap field) correctly prevents overlaps, 7) RosterEntry model properly accepts and stores allow_overlap field, 8) Pay calculations work correctly for overlapping shifts (verified rates: $42.00/hr weekday day, $44.50/hr weekday evening), 9) All overlapping shifts properly saved to database with correct allow_overlap values. All 10/10 allow overlap tests passed. Manual override functionality is production-ready for 2:1 shift management."
 
 frontend:
+  - task: "Enhanced Add Shift Dialog with Date Placement Testing"
+    implemented: false
+    working: false
+    file: "App.js"
+    stuck_count: 1
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: false
+          agent: "testing"
+          comment: "❌ IMPLEMENTATION BLOCKED: Enhanced Add Shift Dialog testing could not be completed due to critical React Select component runtime errors. REQUIRED FEATURES NOT TESTABLE: 1) Date field functionality, 2) Staff assignment dropdown (alphabetically sorted), 3) Start/End time fields, 4) Sleepover option checkbox, 5) Allow Overlap option checkbox, 6) Adding shift to Monday August 25th, 2025, 7) Adding shift to Sunday August 24th, 2025, 8) Verifying shifts appear on exact intended dates, 9) Time-based shift sorting within same day. ROOT CAUSE: Select components missing required value props causing runtime error: 'A <Select.Item /> must have a value prop that is not an empty string'. IMMEDIATE ACTION REQUIRED: Fix Select component value prop issues in Add Shift dialog before comprehensive date placement and enhancement testing can proceed."
+
   - task: "React Frontend Mobile Responsiveness"
     implemented: true
     working: false
