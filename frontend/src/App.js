@@ -1651,6 +1651,24 @@ function App() {
                   </div>
                 </div>
 
+                {/* Quick Add Shift Button */}
+                <div className="mb-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="w-full text-xs"
+                    onClick={() => {
+                      setNewShift({
+                        ...newShift,
+                        date: formatDateString(date)
+                      });
+                      setShowAddShiftDialog(true);
+                    }}
+                  >
+                    + Add Shift
+                  </Button>
+                </div>
+
                 <div className="space-y-1">
                   {/* Events */}
                   {dayEvents.map(event => (
