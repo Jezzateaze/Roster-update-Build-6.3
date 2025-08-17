@@ -1164,6 +1164,130 @@ async def add_individual_shift(entry: RosterEntry):
     db.roster.insert_one(entry.dict())
     return entry
 
+# Authentication endpoints
+@app.post("/api/auth/login")
+async def login(request: LoginRequest):
+    """Authenticate user with username and PIN"""
+    user = db.users.find_one({"username": request.username, "is_active": True})
+    if not user or not verify_pin(request.pin, user["pin_hash"]):
+        raise HTTPException(status_code=401, detail="Invalid username or PIN")
+    
+    # Create session
+    token = generate_token()
+    session = Session(
+        id=str(uuid.uuid4()),
+        user_id=user["id"],
+        token=token,
+        created_at=datetime.utcnow(),
+        expires_at=datetime.utcnow() + timedelta(hours=8)  # 8-hour session
+    )
+    
+    db.sessions.insert_one(session.dict())
+    
+    # Update last login
+    db.users.update_one(
+        {"id": user["id"]},
+        {"$set": {"last_login": datetime.utcnow()}}
+    )
+    
+    # Remove sensitive data from response
+    user_data = {k: v for k, v in user.items() if k not in ["pin_hash", "_id"]}
+    
+    return {
+        "user": user_data,
+        "token": token,
+        "expires_at": session.expires_at
+    }
+
+@app.post("/api/auth/change-pin")
+async def change_pin(request: ChangePinRequest, user: dict = Depends(get_current_user)):
+    """Change user PIN"""
+    if not verify_pin(request.current_pin, user["pin_hash"]):
+        raise HTTPException(status_code=400, detail="Current PIN is incorrect")
+    
+    # Validate new PIN (4 or 6 digits)
+    if not request.new_pin.isdigit() or len(request.new_pin) not in [4, 6]:
+        raise HTTPException(status_code=400, detail="PIN must be 4 or 6 digits")
+    
+    new_pin_hash = hash_pin(request.new_pin)
+    db.users.update_one(
+        {"id": user["id"]},
+        {"$set": {"pin_hash": new_pin_hash, "is_first_login": False}}
+    )
+    
+    return {"message": "PIN changed successfully"}
+
+@app.post("/api/auth/reset-pin")
+async def reset_pin(request: ResetPinRequest):
+    """Request PIN reset via email"""
+    user = db.users.find_one({"username": request.username, "email": request.email, "is_active": True})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found with provided username and email")
+    
+    # Generate temporary PIN
+    temp_pin = str(secrets.randbelow(1000000)).zfill(6)  # 6-digit temp PIN
+    temp_pin_hash = hash_pin(temp_pin)
+    
+    # Update user with temporary PIN
+    db.users.update_one(
+        {"id": user["id"]},
+        {"$set": {"pin_hash": temp_pin_hash, "is_first_login": True}}
+    )
+    
+    # Send reset email
+    send_reset_email(request.email, temp_pin)
+    
+    return {"message": "Temporary PIN sent to email address"}
+
+@app.get("/api/auth/logout")
+async def logout(token: str):
+    """Logout user and invalidate session"""
+    db.sessions.update_one(
+        {"token": token},
+        {"$set": {"is_active": False}}
+    )
+    return {"message": "Logged out successfully"}
+
+# User management endpoints (Admin only)
+@app.get("/api/users")
+async def get_users(current_user: dict = Depends(get_current_user)):
+    """Get all users (Admin only)"""
+    if current_user["role"] != "admin":
+        raise HTTPException(status_code=403, detail="Admin access required")
+    
+    users = list(db.users.find({"is_active": True}, {"_id": 0, "pin_hash": 0}))
+    return users
+
+@app.post("/api/users")
+async def create_user(user_data: dict, current_user: dict = Depends(get_current_user)):
+    """Create new user (Admin only)"""
+    if current_user["role"] != "admin":
+        raise HTTPException(status_code=403, detail="Admin access required")
+    
+    # Check if username already exists
+    existing_user = db.users.find_one({"username": user_data["username"]})
+    if existing_user:
+        raise HTTPException(status_code=400, detail="Username already exists")
+    
+    # Create new user with default PIN 888888
+    new_user = User(
+        id=str(uuid.uuid4()),
+        username=user_data["username"],
+        pin_hash=hash_pin("888888"),  # Default PIN
+        role=user_data.get("role", "staff"),
+        email=user_data.get("email"),
+        first_name=user_data.get("first_name"),
+        last_name=user_data.get("last_name"),
+        staff_id=user_data.get("staff_id"),
+        created_at=datetime.utcnow()
+    )
+    
+    db.users.insert_one(new_user.dict())
+    
+    # Remove sensitive data from response
+    user_response = {k: v for k, v in new_user.dict().items() if k != "pin_hash"}
+    return user_response
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8001)
