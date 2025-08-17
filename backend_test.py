@@ -2525,29 +2525,9 @@ class ShiftRosterAPITester:
             return False
         
         # Test 3: Create a "2:1 Evening Shift" that overlaps (should succeed)
-        two_to_one_shift = {
-            "id": "",
-            "date": test_date,
-            "shift_template_id": "2to1-evening-test",
-            "staff_id": None,
-            "staff_name": None,
-            "start_time": "15:00",  # Overlaps with regular shift
-            "end_time": "23:00",
-            "is_sleepover": False,
-            "is_public_holiday": False,
-            "manual_shift_type": None,
-            "manual_hourly_rate": None,
-            "manual_sleepover": None,
-            "wake_hours": None,
-            "hours_worked": 0.0,
-            "base_pay": 0.0,
-            "sleepover_allowance": 0.0,
-            "total_pay": 0.0
-        }
-        
         # First create a shift template with "2:1" in the name
         two_to_one_template = {
-            "id": "2to1-evening-test",
+            "id": "",  # Let backend auto-generate
             "name": "2:1 Evening Shift",
             "start_time": "15:00",
             "end_time": "23:00",
@@ -2563,8 +2543,32 @@ class ShiftRosterAPITester:
             data=two_to_one_template
         )
         
-        if success:
-            print(f"   ✅ Created 2:1 shift template: {two_to_one_template['name']}")
+        if not success or 'id' not in created_template:
+            print("   ❌ Could not create 2:1 shift template")
+            return False
+        
+        template_id = created_template['id']
+        print(f"   ✅ Created 2:1 shift template: {two_to_one_template['name']} (ID: {template_id})")
+        
+        two_to_one_shift = {
+            "id": "",
+            "date": test_date,
+            "shift_template_id": template_id,  # Use the actual template ID
+            "staff_id": None,
+            "staff_name": None,
+            "start_time": "15:00",  # Overlaps with regular shift
+            "end_time": "23:00",
+            "is_sleepover": False,
+            "is_public_holiday": False,
+            "manual_shift_type": None,
+            "manual_hourly_rate": None,
+            "manual_sleepover": None,
+            "wake_hours": None,
+            "hours_worked": 0.0,
+            "base_pay": 0.0,
+            "sleepover_allowance": 0.0,
+            "total_pay": 0.0
+        }
         
         success, created_2to1_shift = self.run_test(
             "Create 2:1 Evening Shift (Should Succeed Despite Overlap)",
