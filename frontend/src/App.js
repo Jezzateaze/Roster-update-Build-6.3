@@ -811,6 +811,18 @@ function App() {
                       <Plus className="w-4 h-4 mr-2" />
                       Add Shift
                     </Button>
+                    <Button 
+                      variant="outline" 
+                      onClick={() => setShowSaveTemplateDialog(true)}
+                    >
+                      Save Template
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      onClick={() => setShowGenerateFromTemplateDialog(true)}
+                    >
+                      Load Template
+                    </Button>
                     <Button variant="outline" onClick={clearMonthlyRoster}>
                       Clear Roster
                     </Button>
