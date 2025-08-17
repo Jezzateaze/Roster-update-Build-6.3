@@ -179,8 +179,19 @@ def calculate_hours_worked(start_time: str, end_time: str) -> float:
     total_minutes = end_minutes - start_minutes
     return total_minutes / 60.0
 
-def check_shift_overlap(date_str: str, start_time: str, end_time: str, exclude_id: Optional[str] = None) -> bool:
-    """Check if a shift overlaps with existing shifts on the same date"""
+def check_shift_overlap(date_str: str, start_time: str, end_time: str, exclude_id: Optional[str] = None, shift_name: Optional[str] = None) -> bool:
+    """Check if a shift overlaps with existing shifts on the same date
+    
+    Args:
+        date_str: Date in YYYY-MM-DD format
+        start_time: Start time in HH:MM format
+        end_time: End time in HH:MM format
+        exclude_id: ID of shift to exclude from overlap check (for updates)
+        shift_name: Name of the shift being checked (to allow 2:1 overlaps)
+    
+    Returns:
+        True if overlap detected and should be prevented, False if overlap is allowed
+    """
     existing_shifts = list(db.roster.find({"date": date_str}))
     
     if exclude_id:
@@ -211,7 +222,28 @@ def check_shift_overlap(date_str: str, start_time: str, end_time: str, exclude_i
         
         # Check for overlap
         if (new_start < existing_end and new_end > existing_start):
-            return True
+            # Check if either shift has "2:1" in the name - if so, allow overlap
+            existing_shift_name = ""
+            
+            # Try to get shift name from template or roster entry
+            if shift.get("shift_template_id"):
+                template = db.shift_templates.find_one({"id": shift["shift_template_id"]})
+                if template:
+                    existing_shift_name = template.get("name", "")
+            
+            # Also check if the shift itself has a name field
+            if not existing_shift_name and shift.get("name"):
+                existing_shift_name = shift.get("name", "")
+            
+            # Check both current shift name and existing shift name for "2:1"
+            current_has_2to1 = shift_name and "2:1" in shift_name.lower()
+            existing_has_2to1 = "2:1" in existing_shift_name.lower()
+            
+            if current_has_2to1 or existing_has_2to1:
+                print(f"Allowing overlap for 2:1 shift - Current: {shift_name}, Existing: {existing_shift_name}")
+                continue  # Allow this overlap
+            else:
+                return True  # Prevent overlap
     
     return False
 
