@@ -3181,7 +3181,7 @@ def main():
     else:
         print("⚠️  Some roster template tests failed.")
     
-    if (two_to_one_success and new_roster_generation_success and calendar_events_success and 
+    if (two_to_one_success and allow_overlap_success and new_roster_generation_success and calendar_events_success and 
         day_template_success and roster_template_success and 
         tester.tests_passed == tester.tests_run):
         print("🎉 All tests passed!")
