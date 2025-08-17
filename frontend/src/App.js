@@ -82,6 +82,11 @@ function App() {
     attendees: [],
     reminder_minutes: 15
   });
+  
+  // Touch/swipe handling for mobile
+  const [touchStart, setTouchStart] = useState(null);
+  const [touchEnd, setTouchEnd] = useState(null);
+  const [swipingShiftId, setSwipingShiftId] = useState(null);
 
   useEffect(() => {
     fetchInitialData();
