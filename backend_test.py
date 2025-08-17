@@ -624,12 +624,23 @@ class ShiftRosterAPITester:
         
         # First, add a shift
         shift1 = {
+            "id": "",  # Will be auto-generated
             "date": test_date,
             "shift_template_id": "test-overlap-1",
+            "staff_id": None,
+            "staff_name": None,
             "start_time": "09:00",
             "end_time": "17:00",
             "is_sleepover": False,
-            "is_public_holiday": False
+            "is_public_holiday": False,
+            "manual_shift_type": None,
+            "manual_hourly_rate": None,
+            "manual_sleepover": None,
+            "wake_hours": None,
+            "hours_worked": 0.0,
+            "base_pay": 0.0,
+            "sleepover_allowance": 0.0,
+            "total_pay": 0.0
         }
         
         success, created_shift = self.run_test(
