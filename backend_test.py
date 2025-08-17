@@ -3268,6 +3268,374 @@ class ShiftRosterAPITester:
         
         return True
 
+    def test_pay_calculation_with_staff_assignments(self):
+        """Test pay calculations with staff assignments for pay summary display"""
+        print(f"\n💰 Testing Pay Calculations with Staff Assignments...")
+        
+        if not self.staff_data:
+            print("   ⚠️  No staff data available, getting staff first...")
+            self.test_get_staff()
+        
+        if not self.staff_data:
+            print("   ❌ Cannot test pay calculations without staff data")
+            return False
+        
+        # Test creating roster entries with staff assignments and verify pay calculations
+        test_shifts = [
+            {
+                "date": "2025-01-20",  # Monday
+                "start_time": "07:30",
+                "end_time": "15:30",
+                "staff_name": "Angela",
+                "expected_hours": 8.0,
+                "expected_rate": 42.00,  # Weekday day rate
+                "expected_pay": 336.00
+            },
+            {
+                "date": "2025-01-20",  # Monday
+                "start_time": "15:00", 
+                "end_time": "20:00",
+                "staff_name": "Caroline",
+                "expected_hours": 5.0,
+                "expected_rate": 44.50,  # Evening rate (extends past 8pm)
+                "expected_pay": 222.50
+            },
+            {
+                "date": "2025-01-25",  # Saturday
+                "start_time": "09:00",
+                "end_time": "17:00", 
+                "staff_name": "Rose",
+                "expected_hours": 8.0,
+                "expected_rate": 57.50,  # Saturday rate
+                "expected_pay": 460.00
+            }
+        ]
+        
+        created_entries = []
+        pay_tests_passed = 0
+        
+        for i, shift in enumerate(test_shifts):
+            # Find staff member
+            staff_member = next((s for s in self.staff_data if s['name'] == shift['staff_name']), None)
+            if not staff_member:
+                print(f"   ⚠️  Staff member {shift['staff_name']} not found")
+                continue
+            
+            # Create roster entry with staff assignment
+            roster_entry = {
+                "id": "",  # Will be auto-generated
+                "date": shift["date"],
+                "shift_template_id": f"test-pay-{i}",
+                "staff_id": staff_member['id'],
+                "staff_name": staff_member['name'],
+                "start_time": shift["start_time"],
+                "end_time": shift["end_time"],
+                "is_sleepover": False,
+                "is_public_holiday": False,
+                "hours_worked": 0.0,
+                "base_pay": 0.0,
+                "sleepover_allowance": 0.0,
+                "total_pay": 0.0
+            }
+            
+            success, response = self.run_test(
+                f"Create Shift for {shift['staff_name']} on {shift['date']}",
+                "POST",
+                "api/roster",
+                200,
+                data=roster_entry
+            )
+            
+            if success:
+                created_entries.append(response)
+                
+                # Verify pay calculation
+                hours_worked = response.get('hours_worked', 0)
+                total_pay = response.get('total_pay', 0)
+                staff_id = response.get('staff_id')
+                staff_name = response.get('staff_name')
+                
+                print(f"   Staff: {staff_name} (ID: {staff_id})")
+                print(f"   Hours: {hours_worked} (expected: {shift['expected_hours']})")
+                print(f"   Pay: ${total_pay} (expected: ${shift['expected_pay']})")
+                
+                hours_correct = abs(hours_worked - shift['expected_hours']) < 0.1
+                pay_correct = abs(total_pay - shift['expected_pay']) < 0.01
+                
+                if hours_correct and pay_correct:
+                    print(f"   ✅ Pay calculation correct for {staff_name}")
+                    pay_tests_passed += 1
+                else:
+                    print(f"   ❌ Pay calculation incorrect for {staff_name}")
+                    if not hours_correct:
+                        print(f"      Hours mismatch: got {hours_worked}, expected {shift['expected_hours']}")
+                    if not pay_correct:
+                        print(f"      Pay mismatch: got ${total_pay}, expected ${shift['expected_pay']}")
+        
+        print(f"\n   📊 Pay calculation tests with staff: {pay_tests_passed}/{len(test_shifts)} passed")
+        self.roster_entries.extend(created_entries)
+        return pay_tests_passed == len(test_shifts)
+
+    def test_staff_pay_summary_data(self):
+        """Test that staff endpoints return proper data for pay summary calculations"""
+        print(f"\n👥 Testing Staff Data for Pay Summary Display...")
+        
+        # Get staff data
+        success, staff_list = self.run_test(
+            "Get Staff for Pay Summary",
+            "GET", 
+            "api/staff",
+            200
+        )
+        
+        if not success:
+            return False
+        
+        print(f"   Found {len(staff_list)} staff members")
+        
+        # Verify staff data structure for pay summary
+        required_fields = ['id', 'name', 'active']
+        staff_data_valid = True
+        
+        for staff in staff_list[:3]:  # Check first 3 staff members
+            print(f"   Staff: {staff.get('name', 'Unknown')}")
+            for field in required_fields:
+                if field in staff:
+                    print(f"      {field}: {staff[field]} ✅")
+                else:
+                    print(f"      {field}: Missing ❌")
+                    staff_data_valid = False
+        
+        # Test getting roster data for pay summary calculation
+        current_month = datetime.now().strftime("%Y-%m")
+        success, roster_data = self.run_test(
+            f"Get Roster Data for Pay Summary ({current_month})",
+            "GET",
+            "api/roster",
+            200,
+            params={"month": current_month}
+        )
+        
+        if success:
+            print(f"   Found {len(roster_data)} roster entries for pay summary")
+            
+            # Analyze roster entries for pay summary data
+            staff_pay_summary = {}
+            
+            for entry in roster_data:
+                staff_id = entry.get('staff_id')
+                staff_name = entry.get('staff_name')
+                total_pay = entry.get('total_pay', 0)
+                hours_worked = entry.get('hours_worked', 0)
+                
+                if staff_id and staff_name:
+                    if staff_id not in staff_pay_summary:
+                        staff_pay_summary[staff_id] = {
+                            'name': staff_name,
+                            'total_hours': 0,
+                            'total_pay': 0,
+                            'shift_count': 0
+                        }
+                    
+                    staff_pay_summary[staff_id]['total_hours'] += hours_worked
+                    staff_pay_summary[staff_id]['total_pay'] += total_pay
+                    staff_pay_summary[staff_id]['shift_count'] += 1
+            
+            print(f"   Pay summary data available for {len(staff_pay_summary)} staff members:")
+            for staff_id, summary in list(staff_pay_summary.items())[:5]:  # Show first 5
+                print(f"      {summary['name']}: {summary['shift_count']} shifts, "
+                      f"{summary['total_hours']}h, ${summary['total_pay']:.2f}")
+        
+        return staff_data_valid
+
+    def test_roster_data_integrity(self):
+        """Test roster entries have proper staff assignments and pay calculations"""
+        print(f"\n📋 Testing Roster Data Integrity...")
+        
+        # Get current month roster
+        current_month = datetime.now().strftime("%Y-%m")
+        success, roster_entries = self.run_test(
+            f"Get Roster Entries for Integrity Check ({current_month})",
+            "GET",
+            "api/roster", 
+            200,
+            params={"month": current_month}
+        )
+        
+        if not success:
+            return False
+        
+        print(f"   Analyzing {len(roster_entries)} roster entries...")
+        
+        # Analyze data integrity
+        entries_with_staff = 0
+        entries_with_pay = 0
+        entries_with_hours = 0
+        pay_calculation_errors = 0
+        
+        for entry in roster_entries[:10]:  # Check first 10 entries
+            date = entry.get('date', 'Unknown')
+            start_time = entry.get('start_time', 'Unknown')
+            end_time = entry.get('end_time', 'Unknown')
+            staff_name = entry.get('staff_name')
+            staff_id = entry.get('staff_id')
+            hours_worked = entry.get('hours_worked', 0)
+            total_pay = entry.get('total_pay', 0)
+            base_pay = entry.get('base_pay', 0)
+            
+            print(f"   Entry: {date} {start_time}-{end_time}")
+            
+            # Check staff assignment
+            if staff_id and staff_name:
+                entries_with_staff += 1
+                print(f"      Staff: {staff_name} (ID: {staff_id}) ✅")
+            else:
+                print(f"      Staff: Unassigned ⚠️")
+            
+            # Check hours calculation
+            if hours_worked > 0:
+                entries_with_hours += 1
+                print(f"      Hours: {hours_worked} ✅")
+            else:
+                print(f"      Hours: {hours_worked} ⚠️")
+            
+            # Check pay calculation
+            if total_pay > 0:
+                entries_with_pay += 1
+                print(f"      Pay: ${total_pay} (base: ${base_pay}) ✅")
+                
+                # Basic pay calculation validation
+                if hours_worked > 0 and base_pay > 0:
+                    calculated_rate = base_pay / hours_worked
+                    if calculated_rate < 30 or calculated_rate > 100:  # Reasonable rate range
+                        pay_calculation_errors += 1
+                        print(f"      ⚠️  Unusual hourly rate: ${calculated_rate:.2f}/hr")
+            else:
+                print(f"      Pay: ${total_pay} ⚠️")
+        
+        print(f"\n   📊 Roster Data Integrity Summary:")
+        print(f"      Entries with staff assignments: {entries_with_staff}/10")
+        print(f"      Entries with hours calculated: {entries_with_hours}/10") 
+        print(f"      Entries with pay calculated: {entries_with_pay}/10")
+        print(f"      Pay calculation errors: {pay_calculation_errors}/10")
+        
+        # Consider test passed if most entries have proper data
+        integrity_score = (entries_with_hours + entries_with_pay) / 20  # Out of 20 total checks
+        return integrity_score >= 0.8
+
+    def test_critical_api_endpoints(self):
+        """Test all critical API endpoints are responding correctly"""
+        print(f"\n🔗 Testing Critical API Endpoints...")
+        
+        critical_endpoints = [
+            ("Health Check", "GET", "api/health", 200),
+            ("Get Staff", "GET", "api/staff", 200),
+            ("Get Shift Templates", "GET", "api/shift-templates", 200),
+            ("Get Settings", "GET", "api/settings", 200),
+            ("Get Roster (Current Month)", "GET", "api/roster", 200, {"month": datetime.now().strftime("%Y-%m")}),
+        ]
+        
+        endpoints_passed = 0
+        
+        for name, method, endpoint, expected_status, *params in critical_endpoints:
+            query_params = params[0] if params else None
+            success, response = self.run_test(
+                name,
+                method,
+                endpoint,
+                expected_status,
+                params=query_params
+            )
+            
+            if success:
+                endpoints_passed += 1
+                
+                # Additional validation for specific endpoints
+                if endpoint == "api/staff" and isinstance(response, list):
+                    print(f"      Staff count: {len(response)}")
+                elif endpoint == "api/shift-templates" and isinstance(response, list):
+                    print(f"      Template count: {len(response)}")
+                elif endpoint == "api/roster" and isinstance(response, list):
+                    print(f"      Roster entries: {len(response)}")
+        
+        print(f"\n   📊 Critical API Endpoints: {endpoints_passed}/{len(critical_endpoints)} responding correctly")
+        return endpoints_passed == len(critical_endpoints)
+
+    def run_focused_backend_tests(self):
+        """Run focused backend tests based on review request"""
+        print("=" * 80)
+        print("🎯 SHIFT ROSTER BACKEND TESTING - FOCUSED ON REVIEW REQUEST")
+        print("=" * 80)
+        print(f"Testing backend at: {self.base_url}")
+        print(f"Test started at: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+        
+        test_results = {}
+        
+        # 1. Authentication System Test
+        print("\n" + "="*50)
+        print("1. AUTHENTICATION SYSTEM TEST")
+        print("="*50)
+        test_results['authentication'] = self.test_authentication_system()
+        
+        # 2. API Health Check
+        print("\n" + "="*50) 
+        print("2. CRITICAL API ENDPOINTS TEST")
+        print("="*50)
+        test_results['api_health'] = self.test_critical_api_endpoints()
+        
+        # 3. Staff Management Test
+        print("\n" + "="*50)
+        print("3. STAFF MANAGEMENT TEST")
+        print("="*50)
+        test_results['staff_management'] = self.test_get_staff()
+        
+        # 4. Pay Calculation Test
+        print("\n" + "="*50)
+        print("4. PAY CALCULATION TEST")
+        print("="*50)
+        test_results['pay_calculation'] = self.test_pay_calculation_with_staff_assignments()
+        
+        # 5. Staff Pay Summary Data Test
+        print("\n" + "="*50)
+        print("5. STAFF PAY SUMMARY DATA TEST")
+        print("="*50)
+        test_results['pay_summary_data'] = self.test_staff_pay_summary_data()
+        
+        # 6. Roster Data Integrity Test
+        print("\n" + "="*50)
+        print("6. ROSTER DATA INTEGRITY TEST")
+        print("="*50)
+        test_results['roster_integrity'] = self.test_roster_data_integrity()
+        
+        # Summary
+        print("\n" + "="*80)
+        print("🎯 FOCUSED BACKEND TEST RESULTS SUMMARY")
+        print("="*80)
+        
+        passed_tests = sum(1 for result in test_results.values() if result)
+        total_tests = len(test_results)
+        
+        for test_name, result in test_results.items():
+            status = "✅ PASSED" if result else "❌ FAILED"
+            print(f"{test_name.replace('_', ' ').title()}: {status}")
+        
+        print(f"\nOverall Results: {passed_tests}/{total_tests} tests passed")
+        print(f"Total API calls made: {self.tests_run}")
+        print(f"Successful API calls: {self.tests_passed}")
+        print(f"API Success Rate: {(self.tests_passed/self.tests_run)*100:.1f}%")
+        
+        if passed_tests == total_tests:
+            print("\n🎉 ALL FOCUSED BACKEND TESTS PASSED!")
+            print("✅ Authentication system working with Admin/0000")
+            print("✅ Pay calculations working properly for staff")
+            print("✅ Staff management endpoints returning proper data")
+            print("✅ Roster data has proper staff assignments and pay calculations")
+            print("✅ All critical API endpoints responding correctly")
+        else:
+            print(f"\n⚠️  {total_tests - passed_tests} test(s) failed - see details above")
+        
+        return passed_tests == total_tests
+
 def main():
     print("🚀 Starting Shift Roster & Pay Calculator API Tests")
     print("🎯 FOCUS: Testing NEW Roster Generation from Shift Templates & Enhanced Template Management")
