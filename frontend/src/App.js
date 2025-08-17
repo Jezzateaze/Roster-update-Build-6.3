@@ -412,6 +412,92 @@ function App() {
     setTouchEnd(null);
   };
 
+  // Bulk selection functions
+  const toggleShiftSelection = (shiftId) => {
+    const newSelected = new Set(selectedShifts);
+    if (newSelected.has(shiftId)) {
+      newSelected.delete(shiftId);
+    } else {
+      newSelected.add(shiftId);
+    }
+    setSelectedShifts(newSelected);
+  };
+
+  const selectAllShifts = () => {
+    const allShiftIds = new Set(rosterEntries.map(entry => entry.id));
+    setSelectedShifts(allShiftIds);
+  };
+
+  const clearSelection = () => {
+    setSelectedShifts(new Set());
+  };
+
+  const getVisibleShifts = () => {
+    if (viewMode === 'daily') {
+      return getDayEntries(selectedSingleDate || currentDate);
+    } else if (viewMode === 'weekly') {
+      const startOfWeek = new Date(currentDate);
+      const day = startOfWeek.getDay();
+      const diff = startOfWeek.getDate() - day + (day === 0 ? -6 : 1);
+      startOfWeek.setDate(diff);
+      
+      const weekShifts = [];
+      for (let i = 0; i < 7; i++) {
+        const day = new Date(startOfWeek);
+        day.setDate(startOfWeek.getDate() + i);
+        weekShifts.push(...getDayEntries(day));
+      }
+      return weekShifts;
+    } else {
+      // Monthly view - get current month shifts
+      const monthStart = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
+      const monthEnd = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
+      
+      return rosterEntries.filter(entry => {
+        const entryDate = new Date(entry.date);
+        return entryDate >= monthStart && entryDate <= monthEnd;
+      });
+    }
+  };
+
+  const selectAllVisibleShifts = () => {
+    const visibleShifts = getVisibleShifts();
+    const visibleShiftIds = new Set(visibleShifts.map(shift => shift.id));
+    setSelectedShifts(visibleShiftIds);
+  };
+
+  const bulkDeleteShifts = async () => {
+    if (selectedShifts.size === 0) {
+      alert('No shifts selected');
+      return;
+    }
+
+    if (!window.confirm(`Are you sure you want to delete ${selectedShifts.size} selected shifts?`)) {
+      return;
+    }
+
+    try {
+      const deletePromises = Array.from(selectedShifts).map(shiftId => 
+        axios.delete(`${API_BASE_URL}/api/roster/${shiftId}`)
+      );
+      
+      await Promise.all(deletePromises);
+      
+      setSelectedShifts(new Set());
+      setBulkSelectionMode(false);
+      fetchRosterData();
+      alert(`Successfully deleted ${selectedShifts.size} shifts`);
+    } catch (error) {
+      console.error('Error deleting shifts:', error);
+      alert(`Error deleting shifts: ${error.response?.data?.detail || error.message}`);
+    }
+  };
+
+  const toggleBulkSelectionMode = () => {
+    setBulkSelectionMode(!bulkSelectionMode);
+    setSelectedShifts(new Set());
+  };
+
   const updateRosterEntry = async (entryId, updates) => {
     try {
       const entry = rosterEntries.find(e => e.id === entryId);
