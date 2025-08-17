@@ -1615,26 +1615,19 @@ function App() {
     const year = currentDate.getFullYear();
     const month = currentDate.getMonth();
     
-    console.log(`Rendering calendar for ${year}-${month + 1}`);
-    
     const firstDay = new Date(year, month, 1);
     const lastDay = new Date(year, month + 1, 0);
-    
-    console.log(`First day of month: ${firstDay.toISOString().split('T')[0]} (${firstDay.getDay()})`);
-    console.log(`Last day of month: ${lastDay.toISOString().split('T')[0]} (${lastDay.getDay()})`);
     
     // Start from Monday of the week containing the first day
     const startDate = new Date(firstDay);
     const firstDayOfWeek = firstDay.getDay(); // 0 = Sunday, 1 = Monday, etc.
     const daysToSubtract = (firstDayOfWeek + 6) % 7; // Convert to Monday = 0 system
     startDate.setDate(startDate.getDate() - daysToSubtract);
-    
-    console.log(`Calendar start date: ${startDate.toISOString().split('T')[0]}, days subtracted: ${daysToSubtract}`);
 
     const weeks = [];
     const currentWeekDate = new Date(startDate);
 
-    // Generate weeks until we've covered all days of the target month
+    // Always generate exactly 6 weeks for a complete calendar view
     for (let weekNum = 0; weekNum < 6; weekNum++) {
       const week = [];
       for (let dayNum = 0; dayNum < 7; dayNum++) {
@@ -1644,11 +1637,6 @@ function App() {
         currentWeekDate.setDate(currentWeekDate.getDate() + 1);
       }
       weeks.push(week);
-      
-      console.log(`Week ${weekNum}: ${week[0].toISOString().split('T')[0]} to ${week[6].toISOString().split('T')[0]}`);
-      
-      // Continue generating weeks until we have shown the complete month
-      // For most months, 5-6 weeks is sufficient
     }
 
     return (
