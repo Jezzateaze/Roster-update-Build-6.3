@@ -1199,20 +1199,36 @@ function App() {
                   return (
                     <div
                       key={entry.id}
-                      className={`p-4 border rounded-lg hover:bg-slate-50 transition-all duration-200 group relative shift-entry ${isSwipingThis ? 'swipe-indicator' : ''}`}
+                      className={`p-4 border rounded-lg hover:bg-slate-50 transition-all duration-200 group relative shift-entry ${isSwipingThis ? 'swipe-indicator' : ''} ${selectedShifts.has(entry.id) ? 'ring-2 ring-blue-500 bg-blue-50' : ''}`}
                       style={{
                         transform: isSwipingThis ? `translateX(-${swipeProgress * 0.5}px)` : 'none',
                         opacity: isSwipingThis ? Math.max(0.7, 1 - (swipeProgress / 100)) : 1
                       }}
-                      onTouchStart={(e) => handleTouchStart(e, entry.id)}
-                      onTouchMove={(e) => handleTouchMove(e, entry.id)}
-                      onTouchEnd={(e) => handleTouchEnd(e, entry.id)}
+                      onTouchStart={(e) => !bulkSelectionMode && handleTouchStart(e, entry.id)}
+                      onTouchMove={(e) => !bulkSelectionMode && handleTouchMove(e, entry.id)}
+                      onTouchEnd={(e) => !bulkSelectionMode && handleTouchEnd(e, entry.id)}
                     >
+                      {bulkSelectionMode && (
+                        <div className="absolute top-2 left-2 z-30">
+                          <input
+                            type="checkbox"
+                            checked={selectedShifts.has(entry.id)}
+                            onChange={() => toggleShiftSelection(entry.id)}
+                            className="w-4 h-4 rounded border-gray-300"
+                            onClick={(e) => e.stopPropagation()}
+                          />
+                        </div>
+                      )}
+                      
                       <div 
-                        className="flex-1 cursor-pointer"
+                        className={`flex-1 cursor-pointer ${bulkSelectionMode ? 'ml-6' : ''}`}
                         onClick={() => {
-                          setSelectedShift(entry);
-                          setShowShiftDialog(true);
+                          if (bulkSelectionMode) {
+                            toggleShiftSelection(entry.id);
+                          } else {
+                            setSelectedShift(entry);
+                            setShowShiftDialog(true);
+                          }
                         }}
                       >
                         <div className="flex items-center justify-between">
@@ -1245,19 +1261,21 @@ function App() {
                       )}
                       
                       {/* Delete button */}
-                      <button
-                        className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full text-sm opacity-0 group-hover:opacity-100 mobile-delete-hover flex items-center justify-center hover:bg-red-600 transition-all z-20 shadow-sm border border-white"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          if (window.confirm('Are you sure you want to delete this shift?')) {
-                            deleteShift(entry.id);
-                          }
-                        }}
-                        title="Delete shift"
-                        style={{ fontSize: '12px', lineHeight: '1' }}
-                      >
-                        ×
-                      </button>
+                      {!bulkSelectionMode && (
+                        <button
+                          className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full text-sm opacity-0 group-hover:opacity-100 mobile-delete-hover flex items-center justify-center hover:bg-red-600 transition-all z-20 shadow-sm border border-white"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (window.confirm('Are you sure you want to delete this shift?')) {
+                              deleteShift(entry.id);
+                            }
+                          }}
+                          title="Delete shift"
+                          style={{ fontSize: '12px', lineHeight: '1' }}
+                        >
+                          ×
+                        </button>
+                      )}
                     </div>
                   );
                 })}
