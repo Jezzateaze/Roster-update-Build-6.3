@@ -228,6 +228,12 @@ test_plan:
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
+  completed_features:
+    - "Roster Template Management - All CRUD operations working"
+    - "Save Current Roster as Template - Functional with day-of-week grouping"
+    - "Generate Roster from Template - Working with overlap detection"
+    - "Shift Overlap Detection - Prevents conflicts on add/update operations"
+    - "Day-of-Week Based Placement - Correctly places shifts on matching weekdays"
 
 agent_communication:
   - agent: "main"
