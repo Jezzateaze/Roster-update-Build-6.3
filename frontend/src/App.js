@@ -1560,7 +1560,7 @@ function App() {
               </h2>
               <Button
                 variant="outline"
-                onClick={() => navigateDate(1)}
+                onClick={() => navigateDailyDate(1)}
               >
                 Next Day
               </Button>
