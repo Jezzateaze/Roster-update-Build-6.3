@@ -896,6 +896,8 @@ function App() {
         date: '',
         start_time: '09:00',
         end_time: '17:00',
+        staff_id: null,
+        staff_name: null,
         is_sleepover: false,
         allow_overlap: false
       });
