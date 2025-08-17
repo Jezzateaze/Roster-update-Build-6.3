@@ -373,6 +373,40 @@ function App() {
     }
   };
 
+  // Touch/swipe handling functions
+  const handleTouchStart = (e, shiftId) => {
+    setTouchEnd(null);
+    setTouchStart(e.targetTouches[0].clientX);
+    setSwipingShiftId(shiftId);
+  };
+
+  const handleTouchMove = (e, shiftId) => {
+    if (swipingShiftId !== shiftId) return;
+    setTouchEnd(e.targetTouches[0].clientX);
+  };
+
+  const handleTouchEnd = (e, shiftId) => {
+    if (!touchStart || !touchEnd || swipingShiftId !== shiftId) {
+      setSwipingShiftId(null);
+      return;
+    }
+    
+    const distance = touchStart - touchEnd;
+    const isLeftSwipe = distance > 50;
+    const isRightSwipe = distance < -50;
+
+    if (isLeftSwipe) {
+      // Swipe left to delete
+      if (window.confirm('Are you sure you want to delete this shift?')) {
+        deleteShift(shiftId);
+      }
+    }
+    
+    setSwipingShiftId(null);
+    setTouchStart(null);
+    setTouchEnd(null);
+  };
+
   const updateRosterEntry = async (entryId, updates) => {
     try {
       const entry = rosterEntries.find(e => e.id === entryId);
