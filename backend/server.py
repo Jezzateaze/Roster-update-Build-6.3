@@ -475,7 +475,7 @@ async def save_current_roster_as_template(template_name: str, month: str):
     
     for entry in roster_entries:
         date_obj = datetime.strptime(entry["date"], "%Y-%m-%d")
-        day_of_week = date_obj.weekday()  # 0=Monday, 6=Sunday
+        day_of_week = str(date_obj.weekday())  # Convert to string for MongoDB compatibility
         
         if day_of_week not in template_data:
             template_data[day_of_week] = []
