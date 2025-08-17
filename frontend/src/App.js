@@ -87,6 +87,11 @@ function App() {
   const [touchStart, setTouchStart] = useState(null);
   const [touchEnd, setTouchEnd] = useState(null);
   const [swipingShiftId, setSwipingShiftId] = useState(null);
+  
+  // Bulk selection functionality
+  const [selectedShifts, setSelectedShifts] = useState(new Set());
+  const [bulkSelectionMode, setBulkSelectionMode] = useState(false);
+  const [showBulkActionsDialog, setShowBulkActionsDialog] = useState(false);
 
   useEffect(() => {
     fetchInitialData();
