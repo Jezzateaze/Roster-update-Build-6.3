@@ -3024,6 +3024,11 @@ def main():
         tester.test_2to1_shift_template_generation,
         tester.test_2to1_day_template_overlap,
     ]
+    
+    # NEW: Allow Overlap Functionality Tests
+    allow_overlap_tests = [
+        tester.test_allow_overlap_functionality,
+    ]
     additional_tests = [
         tester.test_generate_roster,
         tester.test_get_roster,
