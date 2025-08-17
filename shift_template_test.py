@@ -9,6 +9,7 @@ class ShiftTemplateEditTester:
         self.tests_run = 0
         self.tests_passed = 0
         self.shift_templates = []
+        self.created_template_ids = []
 
     def run_test(self, name, method, endpoint, expected_status, data=None):
         """Run a single API test"""
