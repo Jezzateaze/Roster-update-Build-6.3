@@ -683,10 +683,16 @@ async def clear_monthly_roster(month: str):
     result = db.roster.delete_many({"date": {"$regex": f"^{month}"}})
     return {"message": f"Deleted {result.deleted_count} roster entries for {month}"}
 
-# Add individual shift to roster
 @app.post("/api/roster/add-shift")
 async def add_individual_shift(entry: RosterEntry):
-    """Add a single shift to the roster"""
+    """Add a single shift to the roster with overlap detection"""
+    # Check for overlaps first
+    if check_shift_overlap(entry.date, entry.start_time, entry.end_time):
+        raise HTTPException(
+            status_code=409, 
+            detail=f"Shift overlaps with existing shift on {entry.date} from {entry.start_time} to {entry.end_time}"
+        )
+    
     # Get current settings for pay calculation
     settings_doc = db.settings.find_one()
     settings = Settings(**settings_doc) if settings_doc else Settings()
