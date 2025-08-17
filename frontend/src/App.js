@@ -1355,11 +1355,7 @@ function App() {
             <div className="flex items-center space-x-4">
               <Button
                 variant="outline"
-                onClick={() => {
-                  const newDate = new Date(selectedDate);
-                  newDate.setDate(newDate.getDate() - 1);
-                  setSelectedSingleDate(newDate);
-                }}
+                onClick={() => navigateDate(-1)}
               >
                 Previous Day
               </Button>
