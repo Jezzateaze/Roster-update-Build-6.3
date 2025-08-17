@@ -79,7 +79,7 @@ const convertTo24Hour = (timeString) => {
 };
 
 function App() {
-  const [currentDate, setCurrentDate] = useState(new Date());
+  const [currentDate, setCurrentDate] = useState(getBrisbaneDate());
   const [staff, setStaff] = useState([]);
   const [shiftTemplates, setShiftTemplates] = useState([]);
   const [rosterEntries, setRosterEntries] = useState([]);
