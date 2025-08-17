@@ -2570,16 +2570,23 @@ def main():
     # Print final results
     print("\n" + "=" * 60)
     print(f"📊 Overall Results: {tester.tests_passed}/{tester.tests_run} API tests passed")
+    print(f"🚀 NEW Roster Generation Tests: {new_roster_generation_tests_passed}/{len(new_roster_generation_tests)} new roster generation tests passed")
     print(f"📅 Calendar Events Tests: {calendar_events_tests_passed}/{len(calendar_events_tests)} calendar events tests passed")
     print(f"🌟 Day Template Tests: {day_template_tests_passed}/{len(day_template_tests)} day template tests passed")
     print(f"🎯 Roster Template Tests: {roster_template_tests_passed}/{len(roster_template_tests)} roster template tests passed")
     
+    new_roster_generation_success = new_roster_generation_tests_passed == len(new_roster_generation_tests)
     calendar_events_success = calendar_events_tests_passed == len(calendar_events_tests)
     day_template_success = day_template_tests_passed == len(day_template_tests)
     roster_template_success = roster_template_tests_passed == len(roster_template_tests)
     
+    if new_roster_generation_success:
+        print("🎉 All NEW roster generation tests passed!")
+    else:
+        print("⚠️  Some NEW roster generation tests failed.")
+    
     if calendar_events_success:
-        print("🎉 All NEW calendar events tests passed!")
+        print("🎉 All calendar events tests passed!")
     else:
         print("⚠️  Some calendar events tests failed.")
     
@@ -2588,7 +2595,14 @@ def main():
     else:
         print("⚠️  Some day template tests failed.")
     
-    if calendar_events_success and day_template_success and roster_template_success and tester.tests_passed == tester.tests_run:
+    if roster_template_success:
+        print("🎉 All roster template tests passed!")
+    else:
+        print("⚠️  Some roster template tests failed.")
+    
+    if (new_roster_generation_success and calendar_events_success and 
+        day_template_success and roster_template_success and 
+        tester.tests_passed == tester.tests_run):
         print("🎉 All tests passed!")
         return 0
     else:
