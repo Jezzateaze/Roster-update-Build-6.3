@@ -1865,6 +1865,13 @@ function App() {
                       >
                         Monthly
                       </Button>
+                      <Button
+                        variant={viewMode === 'calendar' ? 'default' : 'outline'}
+                        size="sm"
+                        onClick={() => setViewMode('calendar')}
+                      >
+                        Calendar
+                      </Button>
                     </div>
                   </div>
                   <Button
