@@ -1081,52 +1081,76 @@ function App() {
             <div>
               <h3 className="text-lg font-semibold mb-3">Work Shifts</h3>
               <div className="space-y-3">
-                {dayEntries.map(entry => (
-                  <div
-                    key={entry.id}
-                    className="p-4 border rounded-lg hover:bg-slate-50 transition-colors group relative"
-                  >
-                    <div 
-                      className="flex-1 cursor-pointer"
-                      onClick={() => {
-                        setSelectedShift(entry);
-                        setShowShiftDialog(true);
+                {dayEntries.map(entry => {
+                  const isSwipingThis = swipingShiftId === entry.id;
+                  const swipeProgress = isSwipingThis && touchStart && touchEnd ? 
+                    Math.max(0, Math.min(100, ((touchStart - touchEnd) / 100) * 100)) : 0;
+                  
+                  return (
+                    <div
+                      key={entry.id}
+                      className={`p-4 border rounded-lg hover:bg-slate-50 transition-all duration-200 group relative shift-entry ${isSwipingThis ? 'swipe-indicator' : ''}`}
+                      style={{
+                        transform: isSwipingThis ? `translateX(-${swipeProgress * 0.5}px)` : 'none',
+                        opacity: isSwipingThis ? Math.max(0.7, 1 - (swipeProgress / 100)) : 1
                       }}
+                      onTouchStart={(e) => handleTouchStart(e, entry.id)}
+                      onTouchMove={(e) => handleTouchMove(e, entry.id)}
+                      onTouchEnd={(e) => handleTouchEnd(e, entry.id)}
                     >
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-4">
-                          <div className="text-xl font-bold text-slate-700">
-                            {entry.start_time} - {entry.end_time}
+                      <div 
+                        className="flex-1 cursor-pointer"
+                        onClick={() => {
+                          setSelectedShift(entry);
+                          setShowShiftDialog(true);
+                        }}
+                      >
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center space-x-4">
+                            <div className="text-xl font-bold text-slate-700">
+                              {entry.start_time} - {entry.end_time}
+                            </div>
+                            <div>
+                              {getShiftTypeBadge(entry)}
+                            </div>
                           </div>
-                          <div>
-                            {getShiftTypeBadge(entry)}
-                          </div>
-                        </div>
-                        <div className="text-right">
-                          <div className="text-lg font-bold text-emerald-600">
-                            {formatCurrency(entry.total_pay)}
-                          </div>
-                          <div className="text-sm text-slate-600">
-                            {entry.staff_name || 'Unassigned'}
+                          <div className="text-right">
+                            <div className="text-lg font-bold text-emerald-600">
+                              {formatCurrency(entry.total_pay)}
+                            </div>
+                            <div className="text-sm text-slate-600">
+                              {entry.staff_name || 'Unassigned'}
+                            </div>
                           </div>
                         </div>
                       </div>
+                      
+                      {/* Swipe indicator */}
+                      {isSwipingThis && swipeProgress > 20 && (
+                        <div className="absolute inset-0 flex items-center justify-center bg-red-100 border-2 border-red-300 rounded-lg">
+                          <div className="text-red-600 font-bold">
+                            Swipe left to delete
+                          </div>
+                        </div>
+                      )}
+                      
+                      {/* Delete button */}
+                      <button
+                        className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full text-sm opacity-0 group-hover:opacity-100 mobile-delete-hover flex items-center justify-center hover:bg-red-600 transition-all z-20 shadow-sm border border-white"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (window.confirm('Are you sure you want to delete this shift?')) {
+                            deleteShift(entry.id);
+                          }
+                        }}
+                        title="Delete shift"
+                        style={{ fontSize: '12px', lineHeight: '1' }}
+                      >
+                        ×
+                      </button>
                     </div>
-                    <button
-                      className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full text-sm opacity-0 group-hover:opacity-100 flex items-center justify-center hover:bg-red-600 transition-all z-10 shadow-sm border border-white"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        if (window.confirm('Are you sure you want to delete this shift?')) {
-                          deleteShift(entry.id);
-                        }
-                      }}
-                      title="Delete shift"
-                      style={{ fontSize: '12px', lineHeight: '1' }}
-                    >
-                      ×
-                    </button>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
               <div className="mt-4 p-3 bg-emerald-50 border border-emerald-200 rounded-lg">
                 <div className="text-lg font-bold text-emerald-700">
