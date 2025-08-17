@@ -2706,23 +2706,50 @@ class ShiftRosterAPITester:
         
         # Test 6: Test updating a regular shift to overlap with 2:1 shift (should fail)
         if regular_shift_id:
-            updated_regular_shift = {
-                **created_regular_shift,
-                "end_time": "18:00"  # Would overlap with 2:1 shifts
-            }
-            
-            success, response = self.run_test(
-                "Update Regular Shift to Overlap with 2:1 (Should Fail)",
-                "PUT",
-                f"api/roster/{regular_shift_id}",
-                409,  # Expect conflict status
-                data=updated_regular_shift
+            # First get the current state of the regular shift
+            success, current_roster = self.run_test(
+                "Get Current Roster to Check Regular Shift State",
+                "GET",
+                "api/roster",
+                200,
+                params={"month": "2025-08"}
             )
             
-            if success:  # Success here means we got the expected 409 status
-                print(f"   ✅ Regular shift update overlap correctly prevented")
+            if success:
+                # Find the regular shift
+                regular_shift_current = None
+                for entry in current_roster:
+                    if entry.get('id') == regular_shift_id:
+                        regular_shift_current = entry
+                        break
+                
+                if regular_shift_current:
+                    print(f"   Current regular shift: {regular_shift_current['start_time']}-{regular_shift_current['end_time']}")
+                    
+                    # Try to extend it to overlap with 2:1 shifts
+                    updated_regular_shift = {
+                        **regular_shift_current,
+                        "end_time": "19:00"  # Extend to overlap with 2:1 shifts
+                    }
+                    
+                    success, response = self.run_test(
+                        "Update Regular Shift to Overlap with 2:1 (Should Fail)",
+                        "PUT",
+                        f"api/roster/{regular_shift_id}",
+                        409,  # Expect conflict status
+                        data=updated_regular_shift
+                    )
+                    
+                    if success:  # Success here means we got the expected 409 status
+                        print(f"   ✅ Regular shift update overlap correctly prevented")
+                    else:
+                        print(f"   ❌ Regular shift update overlap detection failed")
+                        return False
+                else:
+                    print(f"   ⚠️  Could not find regular shift for update test")
+                    return False
             else:
-                print(f"   ❌ Regular shift update overlap detection failed")
+                print(f"   ⚠️  Could not get current roster for update test")
                 return False
         
         # Test 7: Test updating a 2:1 shift to overlap with regular shift (should succeed)
