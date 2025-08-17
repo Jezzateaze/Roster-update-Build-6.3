@@ -2586,10 +2586,35 @@ class ShiftRosterAPITester:
             return False
         
         # Test 4: Create another "2:1 Support Shift" that overlaps with both (should succeed)
+        # Create another 2:1 template
+        another_2to1_template = {
+            "id": "",  # Let backend auto-generate
+            "name": "2:1 Support Shift",
+            "start_time": "16:00",
+            "end_time": "22:00",
+            "is_sleepover": False,
+            "day_of_week": 4  # Friday
+        }
+        
+        success, created_template2 = self.run_test(
+            "Create Another 2:1 Shift Template",
+            "POST",
+            "api/shift-templates",
+            200,
+            data=another_2to1_template
+        )
+        
+        if not success or 'id' not in created_template2:
+            print("   ❌ Could not create second 2:1 shift template")
+            return False
+        
+        template_id2 = created_template2['id']
+        print(f"   ✅ Created second 2:1 shift template: {another_2to1_template['name']} (ID: {template_id2})")
+        
         another_2to1_shift = {
             "id": "",
             "date": test_date,
-            "shift_template_id": "2to1-support-test",
+            "shift_template_id": template_id2,  # Use the actual template ID
             "staff_id": None,
             "staff_name": None,
             "start_time": "16:00",  # Overlaps with both previous shifts
@@ -2605,24 +2630,6 @@ class ShiftRosterAPITester:
             "sleepover_allowance": 0.0,
             "total_pay": 0.0
         }
-        
-        # Create another 2:1 template
-        another_2to1_template = {
-            "id": "2to1-support-test",
-            "name": "2:1 Support Shift",
-            "start_time": "16:00",
-            "end_time": "22:00",
-            "is_sleepover": False,
-            "day_of_week": 4  # Friday
-        }
-        
-        success, created_template2 = self.run_test(
-            "Create Another 2:1 Shift Template",
-            "POST",
-            "api/shift-templates",
-            200,
-            data=another_2to1_template
-        )
         
         success, created_another_2to1 = self.run_test(
             "Create Another 2:1 Support Shift (Should Succeed Despite Multiple Overlaps)",
