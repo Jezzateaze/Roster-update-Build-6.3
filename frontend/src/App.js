@@ -2464,6 +2464,33 @@ function App() {
                 />
               </div>
               
+              <div>
+                <Label htmlFor="shift-staff">Assign Staff (Optional)</Label>
+                <Select
+                  value={newShift.staff_id || ''}
+                  onValueChange={(value) => {
+                    const selectedStaff = staff.find(member => member.id === value);
+                    setNewShift({
+                      ...newShift, 
+                      staff_id: value || null,
+                      staff_name: selectedStaff?.name || null
+                    });
+                  }}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select staff member (optional)" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">No staff assigned</SelectItem>
+                    {getSortedActiveStaff().map(member => (
+                      <SelectItem key={member.id} value={member.id}>
+                        {member.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="shift-start">Start Time</Label>
