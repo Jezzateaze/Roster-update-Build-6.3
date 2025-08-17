@@ -927,6 +927,13 @@ function App() {
     }
   };
 
+  // Helper function to get alphabetically sorted active staff
+  const getSortedActiveStaff = () => {
+    return staff
+      .filter(member => member.is_active)
+      .sort((a, b) => a.name.localeCompare(b.name));
+  };
+
   const getDayEntries = (date) => {
     // Ensure we're working with a proper date and format it consistently
     const targetDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
