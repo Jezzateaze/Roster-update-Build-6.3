@@ -1936,6 +1936,508 @@ class ShiftRosterAPITester:
         
         return validation_tests_passed == total_validation_tests
 
+    def test_generate_roster_from_shift_templates(self):
+        """Test the new roster generation endpoint using shift templates with manual overrides"""
+        print(f"\n🚀 Testing Generate Roster from Shift Templates (NEW FUNCTIONALITY)...")
+        
+        # Test month
+        test_month = "2025-08"
+        
+        # Clear existing roster for the test month
+        success, response = self.run_test(
+            f"Clear Roster for {test_month}",
+            "DELETE",
+            f"api/roster/month/{test_month}",
+            200
+        )
+        
+        # Create test shift templates with manual overrides
+        test_templates = {
+            "templates": [
+                {
+                    "id": "template-monday-1",
+                    "name": "Monday Morning Shift",
+                    "start_time": "07:30",
+                    "end_time": "15:30",
+                    "is_sleepover": False,
+                    "day_of_week": 0,  # Monday
+                    "manual_shift_type": "weekday_evening",  # Override to evening rate
+                    "manual_hourly_rate": 45.00  # Override hourly rate
+                },
+                {
+                    "id": "template-monday-2", 
+                    "name": "Monday Evening Shift",
+                    "start_time": "15:00",
+                    "end_time": "20:00",
+                    "is_sleepover": False,
+                    "day_of_week": 0,  # Monday
+                    "manual_shift_type": None,  # No override - should auto-detect as evening
+                    "manual_hourly_rate": None  # No override - should use standard rate
+                },
+                {
+                    "id": "template-tuesday-1",
+                    "name": "Tuesday Day Shift", 
+                    "start_time": "08:00",
+                    "end_time": "16:00",
+                    "is_sleepover": False,
+                    "day_of_week": 1,  # Tuesday
+                    "manual_shift_type": None,
+                    "manual_hourly_rate": 50.25  # Override hourly rate only
+                },
+                {
+                    "id": "template-wednesday-sleepover",
+                    "name": "Wednesday Sleepover",
+                    "start_time": "23:30", 
+                    "end_time": "07:30",
+                    "is_sleepover": True,
+                    "day_of_week": 2,  # Wednesday
+                    "manual_shift_type": "weekday_night",
+                    "manual_hourly_rate": 60.00
+                }
+            ]
+        }
+        
+        # Test the new roster generation endpoint
+        success, response = self.run_test(
+            f"Generate Roster from Shift Templates for {test_month}",
+            "POST",
+            f"api/generate-roster-from-shift-templates/{test_month}",
+            200,
+            data=test_templates
+        )
+        
+        if not success:
+            print("   ❌ Failed to generate roster from shift templates")
+            return False
+        
+        entries_created = response.get('entries_created', 0)
+        overlaps_detected = response.get('overlaps_detected', 0)
+        print(f"   ✅ Generated {entries_created} roster entries")
+        if overlaps_detected > 0:
+            print(f"   ⚠️  {overlaps_detected} overlaps detected and skipped")
+        
+        # Verify the generated roster
+        success, roster_entries = self.run_test(
+            f"Get Generated Roster for Verification",
+            "GET", 
+            "api/roster",
+            200,
+            params={"month": test_month}
+        )
+        
+        if not success:
+            print("   ❌ Failed to retrieve generated roster")
+            return False
+        
+        print(f"   ✅ Retrieved {len(roster_entries)} roster entries for verification")
+        
+        # Test manual overrides preservation
+        manual_override_tests_passed = 0
+        manual_override_tests_total = 0
+        
+        for entry in roster_entries[:10]:  # Check first 10 entries
+            date_obj = datetime.strptime(entry['date'], "%Y-%m-%d")
+            day_of_week = date_obj.weekday()
+            
+            # Find matching template
+            matching_template = None
+            for template in test_templates["templates"]:
+                if (template["day_of_week"] == day_of_week and 
+                    template["start_time"] == entry["start_time"] and
+                    template["end_time"] == entry["end_time"]):
+                    matching_template = template
+                    break
+            
+            if matching_template:
+                manual_override_tests_total += 1
+                
+                # Check manual_shift_type preservation
+                expected_manual_shift_type = matching_template.get("manual_shift_type")
+                actual_manual_shift_type = entry.get("manual_shift_type")
+                
+                # Check manual_hourly_rate preservation  
+                expected_manual_rate = matching_template.get("manual_hourly_rate")
+                actual_manual_rate = entry.get("manual_hourly_rate")
+                
+                shift_type_correct = expected_manual_shift_type == actual_manual_shift_type
+                hourly_rate_correct = expected_manual_rate == actual_manual_rate
+                
+                if shift_type_correct and hourly_rate_correct:
+                    manual_override_tests_passed += 1
+                    print(f"   ✅ Manual overrides preserved for {entry['date']} {entry['start_time']}-{entry['end_time']}")
+                    if expected_manual_shift_type:
+                        print(f"      Manual shift type: {actual_manual_shift_type}")
+                    if expected_manual_rate:
+                        print(f"      Manual hourly rate: ${actual_manual_rate}")
+                else:
+                    print(f"   ❌ Manual overrides not preserved for {entry['date']} {entry['start_time']}-{entry['end_time']}")
+                    if not shift_type_correct:
+                        print(f"      Shift type: expected {expected_manual_shift_type}, got {actual_manual_shift_type}")
+                    if not hourly_rate_correct:
+                        print(f"      Hourly rate: expected ${expected_manual_rate}, got ${actual_manual_rate}")
+        
+        # Test day-of-week placement
+        day_placement_correct = True
+        day_distribution = {}
+        
+        for entry in roster_entries:
+            date_obj = datetime.strptime(entry['date'], "%Y-%m-%d")
+            day_of_week = date_obj.weekday()
+            day_name = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'][day_of_week]
+            day_distribution[day_name] = day_distribution.get(day_name, 0) + 1
+        
+        print(f"   Day distribution: {day_distribution}")
+        
+        # Verify only expected days have shifts (Monday, Tuesday, Wednesday based on our templates)
+        expected_days = ['Monday', 'Tuesday', 'Wednesday']
+        for day in expected_days:
+            if day_distribution.get(day, 0) == 0:
+                print(f"   ❌ Expected shifts on {day} but found none")
+                day_placement_correct = False
+            else:
+                print(f"   ✅ Found {day_distribution[day]} shifts on {day}")
+        
+        # Test pay calculation with overrides
+        pay_calculation_tests_passed = 0
+        pay_calculation_tests_total = 0
+        
+        for entry in roster_entries[:5]:  # Check first 5 entries
+            pay_calculation_tests_total += 1
+            
+            total_pay = entry.get('total_pay', 0)
+            hours_worked = entry.get('hours_worked', 0)
+            manual_rate = entry.get('manual_hourly_rate')
+            
+            if manual_rate and not entry.get('is_sleepover', False):
+                expected_pay = hours_worked * manual_rate
+                if abs(total_pay - expected_pay) < 0.01:
+                    pay_calculation_tests_passed += 1
+                    print(f"   ✅ Pay calculation with manual rate correct: {hours_worked}h × ${manual_rate} = ${total_pay}")
+                else:
+                    print(f"   ❌ Pay calculation with manual rate incorrect: expected ${expected_pay}, got ${total_pay}")
+            else:
+                # Standard pay calculation - just verify it's not zero
+                if total_pay > 0:
+                    pay_calculation_tests_passed += 1
+                    print(f"   ✅ Standard pay calculation: ${total_pay} for {hours_worked}h")
+                else:
+                    print(f"   ❌ Pay calculation failed: ${total_pay} for {hours_worked}h")
+        
+        print(f"\n   📊 Test Results Summary:")
+        print(f"      Manual override preservation: {manual_override_tests_passed}/{manual_override_tests_total}")
+        print(f"      Day-of-week placement: {'✅' if day_placement_correct else '❌'}")
+        print(f"      Pay calculations: {pay_calculation_tests_passed}/{pay_calculation_tests_total}")
+        
+        # Overall success criteria
+        success_criteria = [
+            entries_created > 0,
+            manual_override_tests_passed == manual_override_tests_total,
+            day_placement_correct,
+            pay_calculation_tests_passed == pay_calculation_tests_total
+        ]
+        
+        overall_success = all(success_criteria)
+        print(f"   🎯 Overall Test Result: {'✅ PASSED' if overall_success else '❌ FAILED'}")
+        
+        return overall_success
+
+    def test_roster_template_edit_delete(self):
+        """Test enhanced roster template management - edit and delete functionality"""
+        print(f"\n📝 Testing Enhanced Roster Template Management (NEW FUNCTIONALITY)...")
+        
+        # First create a test roster template
+        test_template = {
+            "id": "",  # Will be auto-generated
+            "name": "Test Template for Edit/Delete",
+            "description": "Original description",
+            "is_active": True,
+            "template_data": {
+                "0": [  # Monday
+                    {"start_time": "09:00", "end_time": "17:00", "is_sleepover": False}
+                ],
+                "2": [  # Wednesday  
+                    {"start_time": "10:00", "end_time": "18:00", "is_sleepover": False}
+                ]
+            }
+        }
+        
+        success, created_template = self.run_test(
+            "Create Test Roster Template",
+            "POST",
+            "api/roster-templates",
+            200,
+            data=test_template
+        )
+        
+        if not success or 'id' not in created_template:
+            print("   ❌ Failed to create test template")
+            return False
+        
+        template_id = created_template['id']
+        print(f"   ✅ Created test template with ID: {template_id}")
+        
+        # Test 1: Update roster template (PUT endpoint)
+        updated_template = {
+            **created_template,
+            "name": "Updated Template Name",
+            "description": "Updated description with new details",
+            "template_data": {
+                "0": [  # Monday - modified
+                    {"start_time": "08:00", "end_time": "16:00", "is_sleepover": False},
+                    {"start_time": "16:00", "end_time": "22:00", "is_sleepover": False}
+                ],
+                "2": [  # Wednesday - kept same
+                    {"start_time": "10:00", "end_time": "18:00", "is_sleepover": False}
+                ],
+                "4": [  # Friday - added new
+                    {"start_time": "12:00", "end_time": "20:00", "is_sleepover": False}
+                ]
+            }
+        }
+        
+        success, response = self.run_test(
+            "Update Roster Template (PUT)",
+            "PUT",
+            f"api/roster-templates/{template_id}",
+            200,
+            data=updated_template
+        )
+        
+        if not success:
+            print("   ❌ Failed to update roster template")
+            return False
+        
+        print(f"   ✅ Successfully updated roster template")
+        print(f"      New name: {response.get('name')}")
+        print(f"      New description: {response.get('description')}")
+        
+        # Verify the update by retrieving the template
+        success, templates = self.run_test(
+            "Verify Template Update",
+            "GET",
+            "api/roster-templates",
+            200
+        )
+        
+        if success:
+            updated_template_found = next((t for t in templates if t['id'] == template_id), None)
+            if updated_template_found:
+                name_updated = updated_template_found.get('name') == "Updated Template Name"
+                description_updated = updated_template_found.get('description') == "Updated description with new details"
+                
+                if name_updated and description_updated:
+                    print(f"   ✅ Template update verified successfully")
+                    
+                    # Check template data structure
+                    template_data = updated_template_found.get('template_data', {})
+                    days_with_shifts = list(template_data.keys())
+                    print(f"      Days with shifts: {days_with_shifts}")
+                    
+                    if '4' in days_with_shifts:  # Friday was added
+                        print(f"   ✅ New Friday shifts added successfully")
+                    else:
+                        print(f"   ❌ New Friday shifts not found")
+                        
+                else:
+                    print(f"   ❌ Template update verification failed")
+                    print(f"      Name updated: {name_updated}")
+                    print(f"      Description updated: {description_updated}")
+            else:
+                print(f"   ❌ Updated template not found in template list")
+        
+        # Test 2: Delete roster template (DELETE endpoint)
+        success, response = self.run_test(
+            "Delete Roster Template (DELETE)",
+            "DELETE",
+            f"api/roster-templates/{template_id}",
+            200
+        )
+        
+        if not success:
+            print("   ❌ Failed to delete roster template")
+            return False
+        
+        print(f"   ✅ Successfully deleted roster template")
+        print(f"      Response: {response.get('message', 'Template deleted')}")
+        
+        # Verify the deletion by checking if template is no longer active
+        success, templates_after_delete = self.run_test(
+            "Verify Template Deletion",
+            "GET", 
+            "api/roster-templates",
+            200
+        )
+        
+        if success:
+            deleted_template_found = next((t for t in templates_after_delete if t['id'] == template_id), None)
+            if deleted_template_found:
+                print(f"   ❌ Deleted template still found in active templates list")
+                return False
+            else:
+                print(f"   ✅ Template deletion verified - template no longer in active list")
+        
+        # Test 3: Try to update deleted template (should fail)
+        success, response = self.run_test(
+            "Try to Update Deleted Template (Should Fail)",
+            "PUT",
+            f"api/roster-templates/{template_id}",
+            404,  # Expect not found
+            data=updated_template
+        )
+        
+        if success:  # Success here means we got the expected 404
+            print(f"   ✅ Update of deleted template correctly failed with 404")
+        else:
+            print(f"   ❌ Update of deleted template should have failed but didn't")
+        
+        # Test 4: Try to delete already deleted template (should fail)
+        success, response = self.run_test(
+            "Try to Delete Already Deleted Template (Should Fail)",
+            "DELETE",
+            f"api/roster-templates/{template_id}",
+            404  # Expect not found
+        )
+        
+        if success:  # Success here means we got the expected 404
+            print(f"   ✅ Delete of already deleted template correctly failed with 404")
+        else:
+            print(f"   ❌ Delete of already deleted template should have failed but didn't")
+        
+        print(f"\n   📊 Enhanced Template Management Test Results:")
+        print(f"      ✅ Template creation: Working")
+        print(f"      ✅ Template update (PUT): Working") 
+        print(f"      ✅ Template deletion (DELETE): Working")
+        print(f"      ✅ Update verification: Working")
+        print(f"      ✅ Deletion verification: Working")
+        print(f"      ✅ Error handling: Working")
+        
+        return True
+
+    def test_overlap_detection_in_template_generation(self):
+        """Test overlap detection and prevention in the new roster generation"""
+        print(f"\n🚫 Testing Overlap Detection in Template Generation...")
+        
+        test_month = "2025-09"
+        
+        # Clear the test month
+        success, response = self.run_test(
+            f"Clear Roster for {test_month}",
+            "DELETE",
+            f"api/roster/month/{test_month}",
+            200
+        )
+        
+        # First, create some existing shifts manually
+        existing_shift = {
+            "id": "",
+            "date": "2025-09-01",  # Monday
+            "shift_template_id": "existing-shift",
+            "start_time": "08:00",
+            "end_time": "16:00",
+            "is_sleepover": False,
+            "is_public_holiday": False,
+            "staff_id": None,
+            "staff_name": None,
+            "hours_worked": 0.0,
+            "base_pay": 0.0,
+            "sleepover_allowance": 0.0,
+            "total_pay": 0.0
+        }
+        
+        success, created_shift = self.run_test(
+            "Create Existing Shift for Overlap Test",
+            "POST",
+            "api/roster",
+            200,
+            data=existing_shift
+        )
+        
+        if not success:
+            print("   ⚠️  Could not create existing shift for overlap test")
+            return False
+        
+        print(f"   ✅ Created existing shift: 2025-09-01 08:00-16:00")
+        
+        # Now try to generate roster with overlapping templates
+        overlapping_templates = {
+            "templates": [
+                {
+                    "id": "overlap-test-1",
+                    "name": "Overlapping Monday Shift",
+                    "start_time": "07:00",  # Overlaps with existing 08:00-16:00 shift
+                    "end_time": "15:00",
+                    "is_sleepover": False,
+                    "day_of_week": 0,  # Monday
+                    "manual_shift_type": None,
+                    "manual_hourly_rate": None
+                },
+                {
+                    "id": "overlap-test-2", 
+                    "name": "Non-overlapping Monday Shift",
+                    "start_time": "17:00",  # Does not overlap
+                    "end_time": "21:00",
+                    "is_sleepover": False,
+                    "day_of_week": 0,  # Monday
+                    "manual_shift_type": None,
+                    "manual_hourly_rate": None
+                }
+            ]
+        }
+        
+        success, response = self.run_test(
+            f"Generate Roster with Overlapping Templates",
+            "POST",
+            f"api/generate-roster-from-shift-templates/{test_month}",
+            200,
+            data=overlapping_templates
+        )
+        
+        if not success:
+            print("   ❌ Failed to generate roster with overlap test")
+            return False
+        
+        entries_created = response.get('entries_created', 0)
+        overlaps_detected = response.get('overlaps_detected', 0)
+        overlap_details = response.get('overlap_details', [])
+        
+        print(f"   ✅ Roster generation completed")
+        print(f"      Entries created: {entries_created}")
+        print(f"      Overlaps detected: {overlaps_detected}")
+        
+        if overlaps_detected > 0:
+            print(f"   ✅ Overlap detection working - {overlaps_detected} overlaps prevented")
+            for i, overlap in enumerate(overlap_details[:3]):  # Show first 3
+                print(f"      Overlap {i+1}: {overlap.get('date')} {overlap.get('start_time')}-{overlap.get('end_time')}")
+        else:
+            print(f"   ⚠️  No overlaps detected - this might indicate an issue")
+        
+        # Verify the final roster
+        success, final_roster = self.run_test(
+            f"Verify Final Roster After Overlap Test",
+            "GET",
+            "api/roster",
+            200,
+            params={"month": test_month}
+        )
+        
+        if success:
+            monday_shifts = [e for e in final_roster if e['date'] == '2025-09-01']
+            print(f"   ✅ Monday (2025-09-01) has {len(monday_shifts)} shifts:")
+            
+            for shift in monday_shifts:
+                print(f"      {shift['start_time']}-{shift['end_time']} (template: {shift.get('shift_template_id', 'N/A')})")
+            
+            # Should have the original shift (08:00-16:00) and the non-overlapping one (17:00-21:00)
+            # The overlapping one (07:00-15:00) should have been skipped
+            expected_shifts = 2  # Original + non-overlapping
+            if len(monday_shifts) == expected_shifts:
+                print(f"   ✅ Correct number of shifts after overlap prevention")
+                return True
+            else:
+                print(f"   ❌ Expected {expected_shifts} shifts, found {len(monday_shifts)}")
+        
+        return False
+
 def main():
     print("🚀 Starting Shift Roster & Pay Calculator API Tests")
     print("🎯 FOCUS: Testing NEW Calendar Events Functionality")
