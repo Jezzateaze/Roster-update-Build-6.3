@@ -1033,6 +1033,37 @@ function App() {
       .sort((a, b) => a.name.localeCompare(b.name));
   };
 
+  // Quick toggle functions for header controls
+  const toggleFirstDayOfWeek = () => {
+    const newSettings = {
+      ...settings,
+      first_day_of_week: settings.first_day_of_week === 'monday' ? 'sunday' : 'monday'
+    };
+    setSettings(newSettings);
+  };
+
+  const toggleTimeFormat = () => {
+    const newSettings = {
+      ...settings,
+      time_format: settings.time_format === '24hr' ? '12hr' : '24hr'
+    };
+    setSettings(newSettings);
+  };
+
+  const toggleDarkMode = () => {
+    const newSettings = {
+      ...settings,
+      dark_mode: !settings.dark_mode
+    };
+    setSettings(newSettings);
+    // Apply dark mode to document root
+    if (newSettings.dark_mode) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  };
+
   const getDayEntries = (date) => {
     // Ensure we're working with a proper date and format it consistently
     const targetDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
