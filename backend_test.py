@@ -452,6 +452,380 @@ class ShiftRosterAPITester:
         
         return success
 
+    def test_roster_templates_crud(self):
+        """Test roster template CRUD operations"""
+        print(f"\n📋 Testing Roster Template CRUD Operations...")
+        
+        # Test 1: Get all roster templates (should be empty initially)
+        success, templates = self.run_test(
+            "Get All Roster Templates",
+            "GET",
+            "api/roster-templates",
+            200
+        )
+        if success:
+            print(f"   Found {len(templates)} existing roster templates")
+        
+        # Test 2: Create a new roster template
+        test_template = {
+            "name": "Test Template",
+            "description": "A test roster template",
+            "is_active": True,
+            "template_data": {
+                "0": [  # Monday
+                    {"start_time": "07:30", "end_time": "15:30", "is_sleepover": False},
+                    {"start_time": "15:30", "end_time": "23:30", "is_sleepover": False}
+                ],
+                "1": [  # Tuesday
+                    {"start_time": "07:30", "end_time": "15:30", "is_sleepover": False}
+                ]
+            }
+        }
+        
+        success, created_template = self.run_test(
+            "Create Roster Template",
+            "POST",
+            "api/roster-templates",
+            200,
+            data=test_template
+        )
+        
+        template_id = None
+        if success and 'id' in created_template:
+            template_id = created_template['id']
+            print(f"   Created template with ID: {template_id}")
+        
+        # Test 3: Update the template
+        if template_id:
+            updated_template = {
+                **created_template,
+                "description": "Updated test template description"
+            }
+            success, response = self.run_test(
+                "Update Roster Template",
+                "PUT",
+                f"api/roster-templates/{template_id}",
+                200,
+                data=updated_template
+            )
+        
+        # Test 4: Delete the template
+        if template_id:
+            success, response = self.run_test(
+                "Delete Roster Template",
+                "DELETE",
+                f"api/roster-templates/{template_id}",
+                200
+            )
+        
+        return True
+
+    def test_save_current_roster_as_template(self):
+        """Test saving current roster as a template"""
+        print(f"\n💾 Testing Save Current Roster as Template...")
+        
+        # First ensure we have roster entries for August 2025
+        month = "2025-08"
+        success, response = self.run_test(
+            f"Generate Roster for {month}",
+            "POST",
+            f"api/generate-roster/{month}",
+            200
+        )
+        
+        if not success:
+            print("   ⚠️  Could not generate roster for testing")
+            return False
+        
+        # Now save the current roster as a template
+        template_name = "August 2025 Template"
+        success, template = self.run_test(
+            "Save Current Roster as Template",
+            "POST",
+            f"api/roster-templates/save-current/{template_name}",
+            200,
+            params={"month": month}
+        )
+        
+        if success:
+            print(f"   ✅ Successfully saved roster as template: {template.get('name')}")
+            print(f"   Template ID: {template.get('id')}")
+            print(f"   Days with shifts: {list(template.get('template_data', {}).keys())}")
+            return template.get('id')
+        
+        return None
+
+    def test_generate_roster_from_template(self):
+        """Test generating roster from a saved template"""
+        print(f"\n🔄 Testing Generate Roster from Template...")
+        
+        # First save a template
+        template_id = self.test_save_current_roster_as_template()
+        if not template_id:
+            print("   ⚠️  Could not create template for testing")
+            return False
+        
+        # Clear roster for September 2025 to test generation
+        target_month = "2025-09"
+        success, response = self.run_test(
+            f"Clear Roster for {target_month}",
+            "DELETE",
+            f"api/roster/month/{target_month}",
+            200
+        )
+        
+        # Generate roster from template for September 2025
+        success, response = self.run_test(
+            f"Generate Roster from Template for {target_month}",
+            "POST",
+            f"api/generate-roster-from-template/{template_id}/{target_month}",
+            200
+        )
+        
+        if success:
+            entries_created = response.get('entries_created', 0)
+            overlaps_detected = response.get('overlaps_detected', 0)
+            print(f"   ✅ Generated {entries_created} roster entries")
+            if overlaps_detected > 0:
+                print(f"   ⚠️  {overlaps_detected} overlaps detected and skipped")
+            
+            # Verify the generated roster
+            success, roster_entries = self.run_test(
+                f"Verify Generated Roster for {target_month}",
+                "GET",
+                "api/roster",
+                200,
+                params={"month": target_month}
+            )
+            
+            if success:
+                print(f"   ✅ Verified: {len(roster_entries)} entries in generated roster")
+                
+                # Check day-of-week placement
+                day_distribution = {}
+                for entry in roster_entries[:10]:  # Check first 10 entries
+                    date_obj = datetime.strptime(entry['date'], "%Y-%m-%d")
+                    day_of_week = date_obj.weekday()
+                    day_name = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'][day_of_week]
+                    day_distribution[day_name] = day_distribution.get(day_name, 0) + 1
+                
+                print(f"   Day distribution (first 10): {day_distribution}")
+                return True
+        
+        return False
+
+    def test_overlap_detection(self):
+        """Test overlap detection for shift additions and updates"""
+        print(f"\n🚫 Testing Overlap Detection...")
+        
+        # Test date for overlap testing
+        test_date = "2025-08-15"
+        
+        # First, add a shift
+        shift1 = {
+            "date": test_date,
+            "shift_template_id": "test-overlap-1",
+            "start_time": "09:00",
+            "end_time": "17:00",
+            "is_sleepover": False,
+            "is_public_holiday": False
+        }
+        
+        success, created_shift = self.run_test(
+            "Add First Shift (No Overlap)",
+            "POST",
+            "api/roster/add-shift",
+            200,
+            data=shift1
+        )
+        
+        if not success:
+            print("   ⚠️  Could not create first shift for overlap testing")
+            return False
+        
+        shift1_id = created_shift.get('id')
+        print(f"   ✅ Created first shift: {shift1['start_time']}-{shift1['end_time']}")
+        
+        # Test 2: Try to add an overlapping shift (should fail)
+        overlapping_shift = {
+            "date": test_date,
+            "shift_template_id": "test-overlap-2",
+            "start_time": "15:00",  # Overlaps with first shift
+            "end_time": "20:00",
+            "is_sleepover": False,
+            "is_public_holiday": False
+        }
+        
+        success, response = self.run_test(
+            "Add Overlapping Shift (Should Fail)",
+            "POST",
+            "api/roster/add-shift",
+            409,  # Expect conflict status
+            data=overlapping_shift
+        )
+        
+        if success:  # Success here means we got the expected 409 status
+            print(f"   ✅ Overlap correctly detected and prevented")
+        else:
+            print(f"   ❌ Overlap detection failed - overlapping shift was allowed")
+        
+        # Test 3: Add a non-overlapping shift (should succeed)
+        non_overlapping_shift = {
+            "date": test_date,
+            "shift_template_id": "test-overlap-3",
+            "start_time": "18:00",  # After first shift ends
+            "end_time": "22:00",
+            "is_sleepover": False,
+            "is_public_holiday": False
+        }
+        
+        success, created_shift2 = self.run_test(
+            "Add Non-Overlapping Shift (Should Succeed)",
+            "POST",
+            "api/roster/add-shift",
+            200,
+            data=non_overlapping_shift
+        )
+        
+        if success:
+            print(f"   ✅ Non-overlapping shift added successfully")
+        
+        # Test 4: Try to update first shift to overlap with second (should fail)
+        if shift1_id:
+            updated_shift1 = {
+                **created_shift,
+                "end_time": "19:00"  # Would overlap with second shift
+            }
+            
+            success, response = self.run_test(
+                "Update Shift to Create Overlap (Should Fail)",
+                "PUT",
+                f"api/roster/{shift1_id}",
+                409,  # Expect conflict status
+                data=updated_shift1
+            )
+            
+            if success:  # Success here means we got the expected 409 status
+                print(f"   ✅ Update overlap correctly detected and prevented")
+            else:
+                print(f"   ❌ Update overlap detection failed")
+        
+        return True
+
+    def test_day_of_week_placement(self):
+        """Test that template generation places shifts on correct days of week"""
+        print(f"\n📅 Testing Day-of-Week Based Placement...")
+        
+        # Create a template with specific day-of-week patterns
+        test_template = {
+            "name": "Day-of-Week Test Template",
+            "description": "Template for testing day-of-week placement",
+            "is_active": True,
+            "template_data": {
+                "0": [  # Monday only
+                    {"start_time": "08:00", "end_time": "16:00", "is_sleepover": False}
+                ],
+                "2": [  # Wednesday only
+                    {"start_time": "10:00", "end_time": "18:00", "is_sleepover": False}
+                ],
+                "4": [  # Friday only
+                    {"start_time": "12:00", "end_time": "20:00", "is_sleepover": False}
+                ]
+            }
+        }
+        
+        success, created_template = self.run_test(
+            "Create Day-of-Week Test Template",
+            "POST",
+            "api/roster-templates",
+            200,
+            data=test_template
+        )
+        
+        if not success or 'id' not in created_template:
+            print("   ⚠️  Could not create test template")
+            return False
+        
+        template_id = created_template['id']
+        
+        # Clear and generate roster for October 2025
+        test_month = "2025-10"
+        success, response = self.run_test(
+            f"Clear Roster for {test_month}",
+            "DELETE",
+            f"api/roster/month/{test_month}",
+            200
+        )
+        
+        success, response = self.run_test(
+            f"Generate Roster from Day-of-Week Template",
+            "POST",
+            f"api/generate-roster-from-template/{template_id}/{test_month}",
+            200
+        )
+        
+        if not success:
+            print("   ⚠️  Could not generate roster from template")
+            return False
+        
+        # Verify the placement
+        success, roster_entries = self.run_test(
+            f"Get Generated Roster for Verification",
+            "GET",
+            "api/roster",
+            200,
+            params={"month": test_month}
+        )
+        
+        if success:
+            # Analyze day-of-week distribution
+            day_analysis = {
+                'Monday': {'count': 0, 'times': []},
+                'Tuesday': {'count': 0, 'times': []},
+                'Wednesday': {'count': 0, 'times': []},
+                'Thursday': {'count': 0, 'times': []},
+                'Friday': {'count': 0, 'times': []},
+                'Saturday': {'count': 0, 'times': []},
+                'Sunday': {'count': 0, 'times': []}
+            }
+            
+            day_names = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+            
+            for entry in roster_entries:
+                date_obj = datetime.strptime(entry['date'], "%Y-%m-%d")
+                day_of_week = date_obj.weekday()
+                day_name = day_names[day_of_week]
+                
+                day_analysis[day_name]['count'] += 1
+                day_analysis[day_name]['times'].append(f"{entry['start_time']}-{entry['end_time']}")
+            
+            print(f"   Day-of-week analysis:")
+            for day, data in day_analysis.items():
+                if data['count'] > 0:
+                    print(f"      {day}: {data['count']} shifts - {set(data['times'])}")
+            
+            # Verify expected pattern: only Monday, Wednesday, Friday should have shifts
+            expected_days = ['Monday', 'Wednesday', 'Friday']
+            unexpected_days = ['Tuesday', 'Thursday', 'Saturday', 'Sunday']
+            
+            placement_correct = True
+            for day in expected_days:
+                if day_analysis[day]['count'] == 0:
+                    print(f"   ❌ Expected shifts on {day} but found none")
+                    placement_correct = False
+            
+            for day in unexpected_days:
+                if day_analysis[day]['count'] > 0:
+                    print(f"   ❌ Unexpected shifts found on {day}")
+                    placement_correct = False
+            
+            if placement_correct:
+                print(f"   ✅ Day-of-week placement is correct")
+            
+            return placement_correct
+        
+        return False
+
 def main():
     print("🚀 Starting Shift Roster & Pay Calculator API Tests")
     print("=" * 60)
