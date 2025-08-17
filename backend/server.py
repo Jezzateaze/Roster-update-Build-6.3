@@ -95,6 +95,15 @@ class RosterTemplate(BaseModel):
     is_active: bool = True
     template_data: Dict[str, List[Dict]] = {}  # day_of_week (as string) -> list of shift templates
 
+class DayTemplate(BaseModel):
+    id: str
+    name: str
+    description: Optional[str] = None
+    day_of_week: int  # 0=Monday, 6=Sunday
+    shifts: List[Dict] = []  # List of shift data (times, sleepover status)
+    created_at: datetime = None
+    is_active: bool = True
+
 # Pay calculation functions
 def determine_shift_type(date_str: str, start_time: str, end_time: str, is_public_holiday: bool) -> ShiftType:
     """Determine the shift type based on date and time - SIMPLIFIED LOGIC"""
