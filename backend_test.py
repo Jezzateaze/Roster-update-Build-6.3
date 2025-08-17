@@ -2973,7 +2973,12 @@ def main():
         tester.test_day_of_week_placement,
     ]
     
-    # Additional tests
+    # NEW: 2:1 Shift Overlap Functionality Tests
+    two_to_one_overlap_tests = [
+        tester.test_2to1_shift_overlap_functionality,
+        tester.test_2to1_shift_template_generation,
+        tester.test_2to1_day_template_overlap,
+    ]
     additional_tests = [
         tester.test_generate_roster,
         tester.test_get_roster,
