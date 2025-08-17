@@ -641,6 +641,78 @@ async def delete_day_template(template_id: str):
         raise HTTPException(status_code=404, detail="Day template not found")
     return {"message": "Day template deleted"}
 
+@app.post("/api/generate-roster-from-shift-templates/{month}")
+async def generate_roster_from_shift_templates(month: str, templates_data: dict):
+    """Generate roster for a month using the shift templates from Shift Times section"""
+    year, month_num = map(int, month.split("-"))
+    templates = templates_data.get("templates", [])
+    
+    if not templates:
+        raise HTTPException(status_code=400, detail="No shift templates provided")
+    
+    # Generate entries for each day of the month using shift templates
+    from calendar import monthrange
+    _, days_in_month = monthrange(year, month_num)
+    
+    entries_created = 0
+    overlaps_detected = []
+    
+    for day in range(1, days_in_month + 1):
+        date_obj = datetime(year, month_num, day)
+        date_str = date_obj.strftime("%Y-%m-%d")
+        day_of_week = date_obj.weekday()  # 0=Monday, 6=Sunday
+        
+        # Get shift templates for this day of week
+        day_templates = [t for t in templates if t.get("day_of_week") == day_of_week]
+        
+        for template in day_templates:
+            # Check for overlaps before creating
+            if check_shift_overlap(date_str, template["start_time"], template["end_time"]):
+                overlaps_detected.append({
+                    "date": date_str,
+                    "start_time": template["start_time"],
+                    "end_time": template["end_time"]
+                })
+                continue  # Skip overlapping shifts
+            
+            # Check if entry already exists
+            existing = db.roster.find_one({
+                "date": date_str,
+                "start_time": template["start_time"],
+                "end_time": template["end_time"]
+            })
+            
+            if not existing:
+                entry = RosterEntry(
+                    id=str(uuid.uuid4()),
+                    date=date_str,
+                    shift_template_id=template.get("id", f"template-{day_of_week}"),
+                    start_time=template["start_time"],
+                    end_time=template["end_time"],
+                    is_sleepover=template.get("is_sleepover", False),
+                    manual_shift_type=template.get("manual_shift_type"),
+                    manual_hourly_rate=template.get("manual_hourly_rate")
+                )
+                
+                # Calculate pay using template overrides
+                settings_doc = db.settings.find_one()
+                settings = Settings(**settings_doc) if settings_doc else Settings()
+                entry = calculate_pay(entry, settings)
+                
+                db.roster.insert_one(entry.dict())
+                entries_created += 1
+    
+    result = {
+        "message": f"Generated {entries_created} roster entries for {month} using Shift Times templates",
+        "entries_created": entries_created
+    }
+    
+    if overlaps_detected:
+        result["overlaps_detected"] = len(overlaps_detected)
+        result["overlap_details"] = overlaps_detected[:5]  # Show first 5 overlaps
+    
+    return result
+
 # Roster template endpoints
 @app.get("/api/roster-templates")
 async def get_roster_templates():
