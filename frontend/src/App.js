@@ -918,7 +918,11 @@ function App() {
   const getDayEntries = (date) => {
     // Ensure we're working with a proper date and format it consistently
     const targetDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
-    const dateString = targetDate.toISOString().split('T')[0];
+    // Use timezone-safe date formatting instead of toISOString()
+    const year = targetDate.getFullYear();
+    const month = String(targetDate.getMonth() + 1).padStart(2, '0');
+    const day = String(targetDate.getDate()).padStart(2, '0');
+    const dateString = `${year}-${month}-${day}`;
     
     console.log(`Getting entries for date: ${dateString} (from ${date})`);
     
