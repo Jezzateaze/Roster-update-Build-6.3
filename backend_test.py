@@ -544,9 +544,8 @@ class ShiftRosterAPITester:
         success, template = self.run_test(
             "Save Current Roster as Template",
             "POST",
-            f"api/roster-templates/save-current/{template_name}",
-            200,
-            params={"month": month}
+            f"api/roster-templates/save-current/{template_name}?month={month}",
+            200
         )
         
         if success:
