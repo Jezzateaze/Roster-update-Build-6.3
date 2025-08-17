@@ -13,10 +13,14 @@ class ShiftRosterAPITester:
         self.roster_entries = []
         self.auth_token = None
 
-    def run_test(self, name, method, endpoint, expected_status, data=None, params=None):
+    def run_test(self, name, method, endpoint, expected_status, data=None, params=None, use_auth=False):
         """Run a single API test"""
         url = f"{self.base_url}/{endpoint}"
         headers = {'Content-Type': 'application/json'}
+        
+        # Add authentication header if required and available
+        if use_auth and self.auth_token:
+            headers['Authorization'] = f'Bearer {self.auth_token}'
 
         self.tests_run += 1
         print(f"\n🔍 Testing {name}...")
@@ -53,6 +57,45 @@ class ShiftRosterAPITester:
         except Exception as e:
             print(f"❌ Failed - Error: {str(e)}")
             return False, {}
+
+    def test_authentication_system(self):
+        """Test authentication with Admin/0000 credentials"""
+        print(f"\n🔐 Testing Authentication System...")
+        
+        # Test login with Admin/0000 credentials
+        login_data = {
+            "username": "Admin",
+            "pin": "0000"
+        }
+        
+        success, response = self.run_test(
+            "Admin Login with PIN 0000",
+            "POST",
+            "api/auth/login",
+            200,
+            data=login_data
+        )
+        
+        if success:
+            self.auth_token = response.get('token')
+            user_data = response.get('user', {})
+            expires_at = response.get('expires_at')
+            
+            print(f"   ✅ Login successful")
+            print(f"   User: {user_data.get('username')} ({user_data.get('role')})")
+            print(f"   Token received: {self.auth_token[:20]}..." if self.auth_token else "No token")
+            print(f"   Session expires: {expires_at}")
+            
+            # Verify user role is admin
+            if user_data.get('role') == 'admin':
+                print(f"   ✅ Admin role confirmed")
+            else:
+                print(f"   ❌ Expected admin role, got: {user_data.get('role')}")
+                
+            return True
+        else:
+            print(f"   ❌ Authentication failed")
+            return False
 
     def test_health_check(self):
         """Test health endpoint"""
