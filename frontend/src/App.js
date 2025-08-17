@@ -208,6 +208,73 @@ function App() {
     }
   };
 
+  const openDayTemplateDialog = (date, action) => {
+    setSelectedDateForTemplate(date);
+    setDayTemplateAction(action);
+    setShowDayTemplateDialog(true);
+    
+    if (action === 'save') {
+      // Suggest template name based on date
+      const dayName = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'][date.getDay()];
+      setNewDayTemplateName(`${dayName} Template`);
+    }
+  };
+
+  const saveDayAsTemplate = async () => {
+    if (!newDayTemplateName.trim()) {
+      alert('Please enter a template name');
+      return;
+    }
+    
+    if (!selectedDateForTemplate) {
+      alert('No date selected');
+      return;
+    }
+    
+    try {
+      const dateString = selectedDateForTemplate.toISOString().split('T')[0];
+      await axios.post(`${API_BASE_URL}/api/day-templates/save-day/${encodeURIComponent(newDayTemplateName)}?date=${dateString}`);
+      
+      setNewDayTemplateName('');
+      setShowDayTemplateDialog(false);
+      fetchInitialData(); // Reload templates
+      alert(`Day template "${newDayTemplateName}" saved successfully!`);
+    } catch (error) {
+      console.error('Error saving day template:', error);
+      alert(`Error saving day template: ${error.response?.data?.detail || error.message}`);
+    }
+  };
+
+  const applyDayTemplate = async () => {
+    if (!selectedDayTemplate) {
+      alert('Please select a day template');
+      return;
+    }
+    
+    if (!selectedDateForTemplate) {
+      alert('No date selected');
+      return;
+    }
+    
+    try {
+      const dateString = selectedDateForTemplate.toISOString().split('T')[0];
+      const response = await axios.post(`${API_BASE_URL}/api/day-templates/apply-to-date/${selectedDayTemplate}?target_date=${dateString}`);
+      
+      setShowDayTemplateDialog(false);
+      setSelectedDayTemplate(null);
+      fetchRosterData();
+      
+      alert(`${response.data.message}\nAdded ${response.data.entries_created} shifts to ${dateString}`);
+    } catch (error) {
+      console.error('Error applying day template:', error);
+      if (error.response?.status === 409) {
+        alert(`Cannot apply template: ${error.response.data.detail}`);
+      } else {
+        alert(`Error applying template: ${error.response?.data?.detail || error.message}`);
+      }
+    }
+  };
+
   const updateRosterEntry = async (entryId, updates) => {
     try {
       const entry = rosterEntries.find(e => e.id === entryId);
