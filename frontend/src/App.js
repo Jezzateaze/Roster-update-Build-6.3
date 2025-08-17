@@ -1024,30 +1024,47 @@ function App() {
                 {dayEntries.map(entry => (
                   <div
                     key={entry.id}
-                    className="p-4 border rounded-lg cursor-pointer hover:bg-slate-50 transition-colors"
-                    onClick={() => {
-                      setSelectedShift(entry);
-                      setShowShiftDialog(true);
-                    }}
+                    className="p-4 border rounded-lg hover:bg-slate-50 transition-colors group relative"
                   >
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-4">
-                        <div className="text-xl font-bold text-slate-700">
-                          {entry.start_time} - {entry.end_time}
+                    <div 
+                      className="flex-1 cursor-pointer"
+                      onClick={() => {
+                        setSelectedShift(entry);
+                        setShowShiftDialog(true);
+                      }}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-4">
+                          <div className="text-xl font-bold text-slate-700">
+                            {entry.start_time} - {entry.end_time}
+                          </div>
+                          <div>
+                            {getShiftTypeBadge(entry)}
+                          </div>
                         </div>
-                        <div>
-                          {getShiftTypeBadge(entry)}
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <div className="text-lg font-bold text-emerald-600">
-                          {formatCurrency(entry.total_pay)}
-                        </div>
-                        <div className="text-sm text-slate-600">
-                          {entry.staff_name || 'Unassigned'}
+                        <div className="text-right">
+                          <div className="text-lg font-bold text-emerald-600">
+                            {formatCurrency(entry.total_pay)}
+                          </div>
+                          <div className="text-sm text-slate-600">
+                            {entry.staff_name || 'Unassigned'}
+                          </div>
                         </div>
                       </div>
                     </div>
+                    <button
+                      className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full text-sm opacity-0 group-hover:opacity-100 flex items-center justify-center hover:bg-red-600 transition-all z-10 shadow-sm border border-white"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (window.confirm('Are you sure you want to delete this shift?')) {
+                          deleteShift(entry.id);
+                        }
+                      }}
+                      title="Delete shift"
+                      style={{ fontSize: '12px', lineHeight: '1' }}
+                    >
+                      ×
+                    </button>
                   </div>
                 ))}
               </div>
