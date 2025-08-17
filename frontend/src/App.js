@@ -963,6 +963,53 @@ function App() {
           </TabsList>
 
           <TabsContent value="roster" className="space-y-6">
+            {/* View Mode Selector */}
+            <Card>
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-4">
+                    <Label className="font-medium">View:</Label>
+                    <div className="flex space-x-1">
+                      <Button
+                        variant={viewMode === 'daily' ? 'default' : 'outline'}
+                        size="sm"
+                        onClick={() => setViewMode('daily')}
+                      >
+                        Daily
+                      </Button>
+                      <Button
+                        variant={viewMode === 'weekly' ? 'default' : 'outline'}
+                        size="sm"
+                        onClick={() => setViewMode('weekly')}
+                      >
+                        Weekly
+                      </Button>
+                      <Button
+                        variant={viewMode === 'monthly' ? 'default' : 'outline'}
+                        size="sm"
+                        onClick={() => setViewMode('monthly')}
+                      >
+                        Monthly
+                      </Button>
+                    </div>
+                  </div>
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      setNewEvent({
+                        ...newEvent,
+                        date: currentDate.toISOString().split('T')[0]
+                      });
+                      setShowEventDialog(true);
+                    }}
+                  >
+                    <Plus className="w-4 h-4 mr-2" />
+                    Add Event
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+
             {/* Month Navigation */}
             <Card>
               <CardContent className="p-6">
