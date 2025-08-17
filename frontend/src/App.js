@@ -916,8 +916,22 @@ function App() {
   };
 
   const getDayEntries = (date) => {
-    const dateString = date.toISOString().split('T')[0];
-    return rosterEntries.filter(entry => entry.date === dateString);
+    // Ensure we're working with a proper date and format it consistently
+    const targetDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+    const dateString = targetDate.toISOString().split('T')[0];
+    
+    console.log(`Getting entries for date: ${dateString} (from ${date})`);
+    
+    // Filter entries that match this exact date
+    const matchingEntries = rosterEntries.filter(entry => {
+      const entryMatches = entry.date === dateString;
+      if (entryMatches) {
+        console.log(`  Found entry: ${entry.date} ${entry.start_time}-${entry.end_time}`);
+      }
+      return entryMatches;
+    });
+    
+    return matchingEntries;
   };
 
   const getDayEvents = (date) => {
