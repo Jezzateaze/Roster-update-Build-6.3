@@ -339,6 +339,8 @@ test_plan:
     - "Enhanced Shift Template Editing - Name editing, manual shift type override, manual hourly rate override, simultaneous updates, null value handling, backward compatibility all working"
     - "Enhanced Roster Generation from Shift Templates - Generate roster using shift templates with manual overrides working perfectly"
     - "Enhanced Roster Template Management - Template edit (PUT) and delete (DELETE) functionality working"
+    - "2:1 Shift Overlap Functionality - Automatic overlap detection for shifts with '2:1' in name working perfectly"
+    - "Allow Overlap Manual Override - Manual allow_overlap field enables users to add overlapping shifts through Add Shift dialog working perfectly"
 
 agent_communication:
   - agent: "main"
