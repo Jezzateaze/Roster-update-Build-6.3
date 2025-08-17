@@ -156,7 +156,7 @@ function App() {
   const [dayTemplateAction, setDayTemplateAction] = useState(''); // 'save' or 'load'
   const [selectedDayTemplate, setSelectedDayTemplate] = useState(null);
   const [newDayTemplateName, setNewDayTemplateName] = useState('');
-  const [viewMode, setViewMode] = useState('monthly'); // 'daily', 'weekly', 'monthly'
+  const [viewMode, setViewMode] = useState('calendar'); // 'daily', 'weekly', 'monthly', 'calendar'
   const [selectedSingleDate, setSelectedSingleDate] = useState(new Date());
   const [calendarEvents, setCalendarEvents] = useState([]);
   const [showEventDialog, setShowEventDialog] = useState(false);
