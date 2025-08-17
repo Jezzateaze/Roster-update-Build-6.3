@@ -102,7 +102,7 @@
 # Testing Data - Main Agent and testing sub agent both should log testing data below this section  
 #====================================================================================================
 
-user_problem_statement: "User wants to access their Shift Roster and Pay Calculator application from their iPhone with just one click, without any technical setup. They want the app deployed to a free hosting service with a simple name like 'Jeremy's Rostering' or 'Rosters and Scheduling'."
+user_problem_statement: "Fix critical bugs in the Shift Roster application: 1) Pay summary display not working for individual staff, 2) Badge logic fix - weekday shifts ending by 8:00 PM should show 'Day' badge, 3) Daily view navigation buttons not working, 4) Need ability to edit unassigned shifts to assign staff and edit any part of existing shifts, 5) Need clickable profile button on main page after login showing profile settings and account information, 6) Admin staff management interface when logged in as admin."
 
 backend:
   - task: "FastAPI Backend Deployment"
