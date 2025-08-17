@@ -2929,9 +2929,9 @@ function App() {
 
         {/* Generate from Template Dialog */}
         <Dialog open={showGenerateFromTemplateDialog} onOpenChange={setShowGenerateFromTemplateDialog}>
-          <DialogContent className="max-w-md">
+          <DialogContent className="max-w-lg">
             <DialogHeader>
-              <DialogTitle>Generate Roster from Template</DialogTitle>
+              <DialogTitle>Manage Roster Templates</DialogTitle>
             </DialogHeader>
             <div className="space-y-4">
               <div>
@@ -2964,12 +2964,11 @@ function App() {
               )}
               
               <div className="text-sm text-slate-600 p-3 bg-slate-50 rounded-lg">
-                <p><strong>This will generate:</strong></p>
+                <p><strong>Template Actions:</strong></p>
                 <ul className="list-disc list-inside mt-1 space-y-1">
-                  <li>Shifts for {currentDate.toLocaleString('default', { month: 'long', year: 'numeric' })}</li>
-                  <li>Day-of-week based placement (template Monday → all Mondays)</li>
-                  <li>Automatic overlap detection and prevention</li>
-                  <li>Unassigned shifts (you assign staff manually)</li>
+                  <li><strong>Load:</strong> Generate roster for {currentDate.toLocaleString('default', { month: 'long', year: 'numeric' })}</li>
+                  <li><strong>Edit:</strong> Modify template name and description</li>
+                  <li><strong>Delete:</strong> Permanently remove template</li>
                 </ul>
               </div>
               
@@ -2977,11 +2976,27 @@ function App() {
                 <Button variant="outline" onClick={() => setShowGenerateFromTemplateDialog(false)}>
                   Cancel
                 </Button>
+                {selectedRosterTemplate && (
+                  <>
+                    <Button 
+                      variant="destructive" 
+                      onClick={() => deleteRosterTemplate(selectedRosterTemplate)}
+                    >
+                      Delete Template
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      onClick={() => editRosterTemplate(selectedRosterTemplate)}
+                    >
+                      Edit Template
+                    </Button>
+                  </>
+                )}
                 <Button 
                   onClick={generateRosterFromTemplate}
                   disabled={!selectedRosterTemplate}
                 >
-                  Generate Roster
+                  Load Template
                 </Button>
               </div>
             </div>
