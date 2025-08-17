@@ -456,6 +456,66 @@ async def update_shift_template(template_id: str, template: ShiftTemplate):
         raise HTTPException(status_code=404, detail="Shift template not found")
     return template
 
+# Calendar events endpoints
+@app.get("/api/calendar-events")
+async def get_calendar_events(start_date: Optional[str] = None, end_date: Optional[str] = None, event_type: Optional[str] = None):
+    """Get calendar events with optional filtering"""
+    query = {"is_active": True}
+    
+    if start_date and end_date:
+        query["date"] = {"$gte": start_date, "$lte": end_date}
+    elif start_date:
+        query["date"] = {"$gte": start_date}
+    elif end_date:
+        query["date"] = {"$lte": end_date}
+    
+    if event_type:
+        query["event_type"] = event_type
+    
+    events = list(db.calendar_events.find(query, {"_id": 0}))
+    return events
+
+@app.get("/api/calendar-events/{date}")
+async def get_events_for_date(date: str):
+    """Get all events for a specific date"""
+    events = list(db.calendar_events.find({"date": date, "is_active": True}, {"_id": 0}))
+    return events
+
+@app.post("/api/calendar-events")
+async def create_calendar_event(event: CalendarEvent):
+    """Create a new calendar event"""
+    event.id = str(uuid.uuid4())
+    event.created_at = datetime.now()
+    db.calendar_events.insert_one(event.dict())
+    return event
+
+@app.put("/api/calendar-events/{event_id}")
+async def update_calendar_event(event_id: str, event: CalendarEvent):
+    """Update an existing calendar event"""
+    result = db.calendar_events.update_one({"id": event_id}, {"$set": event.dict()})
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Calendar event not found")
+    return event
+
+@app.delete("/api/calendar-events/{event_id}")
+async def delete_calendar_event(event_id: str):
+    """Delete a calendar event"""
+    result = db.calendar_events.update_one({"id": event_id}, {"$set": {"is_active": False}})
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Calendar event not found")
+    return {"message": "Calendar event deleted"}
+
+@app.put("/api/calendar-events/{event_id}/complete")
+async def complete_task(event_id: str):
+    """Mark a task as completed"""
+    result = db.calendar_events.update_one(
+        {"id": event_id, "event_type": "task"}, 
+        {"$set": {"is_completed": True}}
+    )
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Task not found")
+    return {"message": "Task marked as completed"}
+
 # Day template endpoints
 @app.get("/api/day-templates")
 async def get_day_templates():
