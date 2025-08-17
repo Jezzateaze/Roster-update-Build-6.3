@@ -353,7 +353,7 @@ function App() {
     }
     
     try {
-      const dateString = selectedDateForTemplate.toISOString().split('T')[0];
+      const dateString = formatDateString(selectedDateForTemplate);
       const response = await axios.post(`${API_BASE_URL}/api/day-templates/apply-to-date/${selectedDayTemplate}?target_date=${dateString}`);
       
       setShowDayTemplateDialog(false);
