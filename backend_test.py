@@ -752,8 +752,10 @@ class ShiftRosterAPITester:
         
         # Create a template with specific day-of-week patterns
         test_template = {
+            "id": "",  # Will be auto-generated
             "name": "Day-of-Week Test Template",
             "description": "Template for testing day-of-week placement",
+            "created_at": None,  # Will be set by backend
             "is_active": True,
             "template_data": {
                 "0": [  # Monday only
