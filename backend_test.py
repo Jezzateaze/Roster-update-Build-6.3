@@ -4,7 +4,7 @@ import json
 from datetime import datetime, timedelta
 
 class ShiftRosterAPITester:
-    def __init__(self, base_url="https://rostersync.preview.emergentagent.com"):
+    def __init__(self, base_url="https://48922ab2-157d-4f4d-94c3-b5aa731425bc.preview.emergentagent.com"):
         self.base_url = base_url
         self.tests_run = 0
         self.tests_passed = 0
