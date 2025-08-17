@@ -618,8 +618,8 @@ class ShiftRosterAPITester:
         """Test overlap detection for shift additions and updates"""
         print(f"\n🚫 Testing Overlap Detection...")
         
-        # Test date for overlap testing
-        test_date = "2025-08-15"
+        # Test date for overlap testing (use December which we cleared)
+        test_date = "2025-12-15"
         
         # First, add a shift
         shift1 = {
