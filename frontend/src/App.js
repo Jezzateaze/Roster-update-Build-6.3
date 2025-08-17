@@ -1035,6 +1035,112 @@ function App() {
     }
   };
 
+  // Authentication Functions
+  const login = async () => {
+    try {
+      setAuthError('');
+      const response = await axios.post(`${API_BASE_URL}/api/auth/login`, loginData);
+      
+      const { user, token } = response.data;
+      
+      setCurrentUser(user);
+      setAuthToken(token);
+      setIsAuthenticated(true);
+      setShowLoginDialog(false);
+      
+      // Store token in localStorage for persistence
+      localStorage.setItem('authToken', token);
+      localStorage.setItem('currentUser', JSON.stringify(user));
+      
+      // Set default axios header
+      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+      
+      // Show PIN change dialog for first login
+      if (user.is_first_login) {
+        setShowChangePinDialog(true);
+      }
+      
+    } catch (error) {
+      setAuthError(error.response?.data?.detail || 'Login failed');
+    }
+  };
+
+  const changePin = async () => {
+    try {
+      setAuthError('');
+      
+      if (changePinData.new_pin !== changePinData.confirm_pin) {
+        setAuthError('New PIN and confirmation do not match');
+        return;
+      }
+      
+      if (!changePinData.new_pin.match(/^\d{4}$|^\d{6}$/)) {
+        setAuthError('PIN must be 4 or 6 digits');
+        return;
+      }
+      
+      await axios.post(`${API_BASE_URL}/api/auth/change-pin`, {
+        current_pin: changePinData.current_pin,
+        new_pin: changePinData.new_pin
+      });
+      
+      setShowChangePinDialog(false);
+      setChangePinData({ current_pin: '', new_pin: '', confirm_pin: '' });
+      
+      // Update user status
+      setCurrentUser(prev => ({ ...prev, is_first_login: false }));
+      
+      alert('✅ PIN changed successfully!');
+      
+    } catch (error) {
+      setAuthError(error.response?.data?.detail || 'Failed to change PIN');
+    }
+  };
+
+  const logout = async () => {
+    try {
+      if (authToken) {
+        await axios.get(`${API_BASE_URL}/api/auth/logout?token=${authToken}`);
+      }
+    } catch (error) {
+      console.error('Logout error:', error);
+    } finally {
+      // Clear local state
+      setIsAuthenticated(false);
+      setCurrentUser(null);
+      setAuthToken(null);
+      setShowLoginDialog(true);
+      
+      // Clear localStorage
+      localStorage.removeItem('authToken');
+      localStorage.removeItem('currentUser');
+      
+      // Clear axios header
+      delete axios.defaults.headers.common['Authorization'];
+    }
+  };
+
+  // Check for stored authentication on app load
+  useEffect(() => {
+    const storedToken = localStorage.getItem('authToken');
+    const storedUser = localStorage.getItem('currentUser');
+    
+    if (storedToken && storedUser) {
+      try {
+        const user = JSON.parse(storedUser);
+        setCurrentUser(user);
+        setAuthToken(storedToken);
+        setIsAuthenticated(true);
+        setShowLoginDialog(false);
+        axios.defaults.headers.common['Authorization'] = `Bearer ${storedToken}`;
+      } catch (error) {
+        // Clear invalid stored data
+        localStorage.removeItem('authToken');
+        localStorage.removeItem('currentUser');
+      }
+    }
+  }, []);
+
   // Helper to navigate dates with timezone awareness
   const navigateDate = (direction) => {
     const newDate = new Date(currentDate);
