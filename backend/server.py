@@ -104,6 +104,23 @@ class DayTemplate(BaseModel):
     created_at: datetime = None
     is_active: bool = True
 
+class CalendarEvent(BaseModel):
+    id: str
+    title: str
+    description: Optional[str] = None
+    date: str  # YYYY-MM-DD
+    start_time: Optional[str] = None  # HH:MM (optional for all-day events)
+    end_time: Optional[str] = None    # HH:MM (optional for all-day events)
+    is_all_day: bool = False
+    event_type: str = "appointment"  # appointment, meeting, task, reminder, personal
+    priority: str = "medium"  # low, medium, high, urgent
+    location: Optional[str] = None
+    attendees: List[str] = []  # List of attendee names
+    reminder_minutes: Optional[int] = None  # Minutes before event to remind
+    is_completed: bool = False  # For tasks
+    created_at: datetime = None
+    is_active: bool = True
+
 # Pay calculation functions
 def determine_shift_type(date_str: str, start_time: str, end_time: str, is_public_holiday: bool) -> ShiftType:
     """Determine the shift type based on date and time - SIMPLIFIED LOGIC"""
