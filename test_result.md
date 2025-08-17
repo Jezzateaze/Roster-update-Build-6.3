@@ -273,6 +273,78 @@ backend:
           agent: "testing"
           comment: "✅ ALLOW OVERLAP FUNCTIONALITY FULLY WORKING! Comprehensive testing completed: 1) POST /api/roster/add-shift endpoint accepts new allow_overlap field, 2) When allow_overlap=False (default), normal overlap prevention works correctly (409 Conflict returned), 3) When allow_overlap=True, shifts can be added even if they overlap successfully, 4) Enhanced error message mentions 'Use Allow Overlap option for 2:1 shifts' when overlap detected, 5) Multiple overlapping shifts can be added with allow_overlap=True, 6) Default behavior (no allow_overlap field) correctly prevents overlaps, 7) RosterEntry model properly accepts and stores allow_overlap field, 8) Pay calculations work correctly for overlapping shifts (verified rates: $42.00/hr weekday day, $44.50/hr weekday evening), 9) All overlapping shifts properly saved to database with correct allow_overlap values. All 10/10 allow overlap tests passed. Manual override functionality is production-ready for 2:1 shift management."
 
+  - task: "Pay Summary Display Fix"
+    implemented: false
+    working: false
+    file: "App.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: false
+          agent: "user"
+          comment: "User reports pay summary not working for individual staff"
+
+  - task: "Badge Logic Fix for Weekday Shifts"
+    implemented: false
+    working: false
+    file: "App.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: false
+          agent: "user"
+          comment: "Weekday shifts ending by 8:00 PM should show 'Day' badge instead of 'Evening'"
+
+  - task: "Daily View Navigation Fix"
+    implemented: false
+    working: false
+    file: "App.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: false
+          agent: "user"
+          comment: "Daily view navigation buttons not working"
+
+  - task: "Complete Authentication System"
+    implemented: true
+    working: "partial"
+    file: "server.py, App.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "partial"
+          agent: "main"
+          comment: "Authentication login working, PIN change dialog appears, but need profile button and admin features"
+
+  - task: "Enhanced Shift Editing Capabilities"
+    implemented: false
+    working: false
+    file: "App.js"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: true
+    status_history:
+        - working: false
+          agent: "user"
+          comment: "Need to edit unassigned shifts to assign staff and edit any part of existing shifts"
+
+  - task: "Profile Button and Admin Staff Management"
+    implemented: false
+    working: false
+    file: "App.js"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: true
+    status_history:
+        - working: false
+          agent: "user"
+          comment: "Need clickable profile button on main page showing profile settings and admin staff management interface"
+
 frontend:
   - task: "Enhanced Add Shift Dialog with Date Placement Testing"
     implemented: true
