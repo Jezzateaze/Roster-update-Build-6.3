@@ -1035,7 +1035,7 @@ function App() {
 
   // Helper to navigate dates with timezone awareness for daily view
   const navigateDailyDate = (direction) => {
-    const newDate = new Date(selectedDate);
+    const newDate = new Date(selectedSingleDate);
     newDate.setDate(newDate.getDate() + direction);
     // Ensure we're using Brisbane timezone
     setSelectedSingleDate(getBrisbaneDate(newDate));
