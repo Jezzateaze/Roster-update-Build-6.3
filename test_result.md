@@ -390,6 +390,7 @@ test_plan:
     - "Enhanced Add Shift Dialog with Date Placement Testing - All critical fixes verified and working perfectly"
     - "React Frontend Mobile Responsiveness - All date alignment and Select component issues resolved"
     - "Staff Alphabetical Sorting Fix - Verified working correctly across all staff dropdowns and management tab"
+    - "ISO 8601 Week System, Brisbane AEST Timezone & 12hr/24hr Time Format Implementation - Comprehensive professional workforce management timezone and time format features fully working"
 
 agent_communication:
   - agent: "main"
