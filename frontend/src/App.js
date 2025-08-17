@@ -1958,7 +1958,7 @@ function App() {
                   {/* Day header */}
                   <div className={`text-center mb-3 ${isToday ? 'font-bold text-blue-600' : 'font-medium text-slate-700'}`}>
                     <div className="text-sm">
-                      {dayNames[dayOfWeek]}
+                      {dayNames[adjustedDayOfWeek]}
                     </div>
                     <div className={`text-lg ${isToday ? 'bg-blue-600 text-white rounded-full w-8 h-8 flex items-center justify-center mx-auto' : ''}`}>
                       {date.getDate()}
