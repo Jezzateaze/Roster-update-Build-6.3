@@ -2194,6 +2194,7 @@ function App() {
             </Card>
 
             {/* Calendar Display - Different Views */}
+            {viewMode === 'calendar' && renderCalendarView()}
             {viewMode === 'monthly' && renderMonthlyCalendar()}
             {viewMode === 'weekly' && renderWeeklyView()}
             {viewMode === 'daily' && renderDailyView()}
