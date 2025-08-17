@@ -451,6 +451,8 @@ async def health_check():
 @app.get("/api/staff")
 async def get_staff():
     staff_list = list(db.staff.find({"active": True}, {"_id": 0}))
+    # Sort staff alphabetically by name
+    staff_list.sort(key=lambda staff: staff['name'].lower())
     return staff_list
 
 @app.post("/api/staff")
