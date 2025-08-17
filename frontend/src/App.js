@@ -2252,7 +2252,10 @@ function App() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="unassigned">Unassigned</SelectItem>
-                      {staff.map(member => (
+                      {staff
+                        .filter(member => member.is_active)
+                        .sort((a, b) => a.name.localeCompare(b.name))
+                        .map(member => (
                         <SelectItem key={member.id} value={member.id}>
                           {member.name}
                         </SelectItem>
