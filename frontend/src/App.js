@@ -944,7 +944,12 @@ function App() {
       return entry.date === dateString;
     });
     
-    return matchingEntries;
+    // Sort shifts by start time
+    return matchingEntries.sort((a, b) => {
+      const timeA = a.start_time.replace(':', '');
+      const timeB = b.start_time.replace(':', '');
+      return timeA.localeCompare(timeB);
+    });
   };
 
   const getDayEvents = (date) => {
