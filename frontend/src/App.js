@@ -1105,7 +1105,7 @@ function App() {
                     e.stopPropagation();
                     openDayTemplateDialog(date, 'save');
                   }}
-                  title={`Save ${['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][date.getDay()]} as template`}
+                  title={`Save ${['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'][(date.getDay() + 6) % 7]} as template`}
                   style={{ fontSize: '8px' }}
                 >
                   S
