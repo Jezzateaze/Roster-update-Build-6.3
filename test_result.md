@@ -404,6 +404,18 @@ test_plan:
     - "ISO 8601 Week System, Brisbane AEST Timezone & 12hr/24hr Time Format Implementation - Comprehensive professional workforce management timezone and time format features fully working"
     - "Comprehensive View System Enhancement with Calendar View, Redesigned Monthly View, and Add Shift Buttons - Complete 4-view system working perfectly with intuitive shift management"
 
+  - task: "Quick Settings Toggle Buttons Implementation Testing"
+    implemented: true
+    working: "NA"
+    file: "App.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "testing"
+          comment: "Starting comprehensive testing of quick settings toggle buttons: First Day of Week (📅 Mon First/Sun First), Time Format (🕐 24hr/12hr), and Dark Mode (🌙 Dark/☀️ Light) functionality across all 4 calendar views (Daily, Weekly, Monthly, Calendar)"
+
 agent_communication:
   - agent: "main"
     message: "Starting deployment process to Railway free hosting. Current app is working on preview.emergentagent.com but user needs independent deployment for iPhone access."
