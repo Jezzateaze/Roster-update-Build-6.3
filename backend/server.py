@@ -622,20 +622,17 @@ async def apply_day_template_to_date(template_id: str, target_date: str):
     
     template = DayTemplate(**template_doc)
     
-    # Check if target date already has shifts
-    existing_shifts = list(db.roster.find({"date": target_date}))
-    if existing_shifts:
-        # Check for overlaps
-        overlaps = []
-        for shift_data in template.shifts:
-            if check_shift_overlap(target_date, shift_data["start_time"], shift_data["end_time"]):
-                overlaps.append(f"{shift_data['start_time']}-{shift_data['end_time']}")
-        
-        if overlaps:
-            raise HTTPException(
-                status_code=409, 
-                detail=f"Cannot apply template: overlaps detected with existing shifts at times: {', '.join(overlaps)}"
-            )
+    # Check if target date already has shifts and look for overlaps
+    overlaps = []
+    for shift_data in template.shifts:
+        if check_shift_overlap(target_date, shift_data["start_time"], shift_data["end_time"], shift_name=template.name):
+            overlaps.append(f"{shift_data['start_time']}-{shift_data['end_time']}")
+    
+    if overlaps:
+        raise HTTPException(
+            status_code=409, 
+            detail=f"Cannot apply template: overlaps detected with existing shifts at times: {', '.join(overlaps)} (Note: 2:1 shifts are allowed to overlap)"
+        )
     
     # Apply the template shifts to the target date
     entries_created = 0
