@@ -44,6 +44,12 @@ function App() {
   const [showBreakWarning, setShowBreakWarning] = useState(false);
   const [breakWarningData, setBreakWarningData] = useState(null);
   const [showAddShiftDialog, setShowAddShiftDialog] = useState(false);
+  const [rosterTemplates, setRosterTemplates] = useState([]);
+  const [showRosterTemplateDialog, setShowRosterTemplateDialog] = useState(false);
+  const [showSaveTemplateDialog, setShowSaveTemplateDialog] = useState(false);
+  const [showGenerateFromTemplateDialog, setShowGenerateFromTemplateDialog] = useState(false);
+  const [newTemplateName, setNewTemplateName] = useState('');
+  const [selectedRosterTemplate, setSelectedRosterTemplate] = useState(null);
   const [newShift, setNewShift] = useState({
     date: '',
     start_time: '09:00',
