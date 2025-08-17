@@ -1274,12 +1274,12 @@ function App() {
                       onTouchEnd={(e) => !bulkSelectionMode && handleTouchEnd(e, entry.id)}
                     >
                       {bulkSelectionMode && (
-                        <div className="absolute top-2 left-2 z-30">
+                        <div className="absolute top-2 left-2 z-30 bg-white rounded-full p-1 shadow-sm border border-slate-300">
                           <input
                             type="checkbox"
                             checked={selectedShifts.has(entry.id)}
                             onChange={() => toggleShiftSelection(entry.id)}
-                            className="w-4 h-4 rounded border-gray-300"
+                            className="w-4 h-4 rounded border-gray-300 border-2 text-blue-600 focus:ring-blue-500"
                             onClick={(e) => e.stopPropagation()}
                           />
                         </div>
