@@ -2920,6 +2920,63 @@ function App() {
               <Separator />
 
               <div className="space-y-4">
+                <h3 className="text-lg font-semibold">Regional & Time Settings</h3>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label>Timezone</Label>
+                    <Select
+                      value={settings.timezone}
+                      onValueChange={(value) => {
+                        const newSettings = {
+                          ...settings,
+                          timezone: value
+                        };
+                        setSettings(newSettings);
+                      }}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Australia/Brisbane">Brisbane, Queensland (AEST UTC+10)</SelectItem>
+                        <SelectItem value="Australia/Sydney">Sydney (AEDT UTC+11)</SelectItem>
+                        <SelectItem value="Australia/Melbourne">Melbourne (AEDT UTC+11)</SelectItem>
+                        <SelectItem value="Australia/Perth">Perth (AWST UTC+8)</SelectItem>
+                        <SelectItem value="Australia/Adelaide">Adelaide (ACDT UTC+10:30)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <p className="text-xs text-slate-500 mt-1">Current: Brisbane, Queensland (AEST UTC+10)</p>
+                  </div>
+                  
+                  <div>
+                    <Label>Time Format</Label>
+                    <Select
+                      value={settings.time_format}
+                      onValueChange={(value) => {
+                        const newSettings = {
+                          ...settings,
+                          time_format: value
+                        };
+                        setSettings(newSettings);
+                      }}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="24hr">24 Hour (14:30)</SelectItem>
+                        <SelectItem value="12hr">12 Hour (2:30 PM)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <p className="text-xs text-slate-500 mt-1">Display format for all shift times</p>
+                  </div>
+                </div>
+              </div>
+
+              <Separator />
+
+              <div className="space-y-4">
                 <h3 className="text-lg font-semibold">Pay Rates (Per Hour)</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
