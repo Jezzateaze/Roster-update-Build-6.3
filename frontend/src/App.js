@@ -1191,7 +1191,7 @@ function App() {
                 {isPreviousMonth ? 'Prev' : 'Next'}
               </span>
             )}
-            {/* Day Template Buttons - Only show for current month */}
+            {/* Day Template Buttons and Add Shift - Only show for current month */}
             {isCurrentMonth && (
               <div className="opacity-0 group-hover:opacity-100 transition-opacity flex space-x-1">
                 <button
@@ -1215,6 +1215,21 @@ function App() {
                   style={{ fontSize: '8px' }}
                 >
                   L
+                </button>
+                <button
+                  className="w-4 h-4 bg-orange-500 text-white rounded text-xs hover:bg-orange-600 transition-colors flex items-center justify-center"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setNewShift({
+                      ...newShift,
+                      date: formatDateString(date)
+                    });
+                    setShowAddShiftDialog(true);
+                  }}
+                  title={`Add shift to ${['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'][(date.getDay() + 6) % 7]} ${date.getDate()}`}
+                  style={{ fontSize: '8px' }}
+                >
+                  +
                 </button>
               </div>
             )}
