@@ -1940,7 +1940,18 @@ function App() {
               const dayTotal = dayEntries.reduce((sum, entry) => sum + entry.total_pay, 0);
               const isToday = date.toDateString() === getBrisbaneDate().toDateString();
               const dayOfWeek = (date.getDay() + 6) % 7; // Convert to Monday = 0
-              const dayNames = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+              
+              // Get day names based on first day of week setting
+              let dayNames;
+              let adjustedDayOfWeek;
+              
+              if (settings.first_day_of_week === 'sunday') {
+                dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+                adjustedDayOfWeek = date.getDay(); // Sunday = 0
+              } else {
+                dayNames = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+                adjustedDayOfWeek = (date.getDay() + 6) % 7; // Monday = 0
+              }
 
               return (
                 <div key={index} className={`min-h-[400px] p-3 border-r border-slate-200 last:border-r-0 min-w-[180px] ${isToday ? 'bg-blue-50' : ''}`}>
