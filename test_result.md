@@ -177,6 +177,21 @@ backend:
           agent: "testing"
           comment: "✅ SHIFT PLACEMENT AND OVERLAP DETECTION FULLY FUNCTIONAL! Verified: 1) Day-of-week based placement working correctly (template shifts placed on matching weekdays across entire month), 2) Overlap detection prevents conflicting shifts on same date/time (409 Conflict returned as expected), 3) Both add-shift and update-shift endpoints properly validate overlaps, 4) Non-overlapping shifts added successfully, 5) Template generation respects existing shifts and skips overlaps. All placement logic working as specified."
 
+  - task: "Day Template Management"
+    implemented: true
+    working: true
+    file: "server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "Implemented new day template functionality with 6 endpoints for individual day template management: save specific days as templates, apply templates to dates, day-of-week filtering"
+        - working: true
+          agent: "testing"
+          comment: "✅ DAY TEMPLATE FUNCTIONALITY FULLY WORKING! Tested all 6 endpoints: 1) GET /api/day-templates (retrieves all templates), 2) GET /api/day-templates/{day_of_week} (filters by day), 3) POST /api/day-templates (creates template), 4) POST /api/day-templates/save-day/{name}?date= (saves specific date as template), 5) POST /api/day-templates/apply-to-date/{id}?target_date= (applies template to date), 6) DELETE /api/day-templates/{id} (deletes template). Key features verified: preserves shift times and sleepover status but not staff assignments, overlap detection prevents conflicts, day-of-week filtering works correctly. All core functionality working as designed."
+
 frontend:
   - task: "React Frontend Mobile Responsiveness"
     implemented: true
