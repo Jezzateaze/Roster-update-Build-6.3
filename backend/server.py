@@ -139,6 +139,49 @@ class CalendarEvent(BaseModel):
     created_at: datetime = None
     is_active: bool = True
 
+# Authentication Models
+class User(BaseModel):
+    id: str
+    username: str
+    pin_hash: str  # Hashed PIN
+    role: UserRole = UserRole.STAFF
+    staff_id: Optional[str] = None  # Link to staff record for staff users
+    email: Optional[str] = None
+    first_name: Optional[str] = None
+    last_name: Optional[str] = None
+    phone: Optional[str] = None
+    address: Optional[str] = None
+    emergency_contact_name: Optional[str] = None
+    emergency_contact_phone: Optional[str] = None
+    profile_photo_url: Optional[str] = None
+    date_of_birth: Optional[str] = None  # YYYY-MM-DD
+    hire_date: Optional[str] = None      # YYYY-MM-DD
+    hourly_rate: Optional[float] = None
+    is_first_login: bool = True
+    is_active: bool = True
+    created_at: datetime = None
+    last_login: Optional[datetime] = None
+
+class LoginRequest(BaseModel):
+    username: str
+    pin: str
+
+class ChangePinRequest(BaseModel):
+    current_pin: str
+    new_pin: str
+
+class ResetPinRequest(BaseModel):
+    username: str
+    email: str
+
+class Session(BaseModel):
+    id: str
+    user_id: str
+    token: str
+    created_at: datetime
+    expires_at: datetime
+    is_active: bool = True
+
 # Pay calculation functions
 def determine_shift_type(date_str: str, start_time: str, end_time: str, is_public_holiday: bool) -> ShiftType:
     """Determine the shift type based on date and time - SIMPLIFIED LOGIC"""
