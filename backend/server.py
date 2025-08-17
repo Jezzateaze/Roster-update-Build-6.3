@@ -439,6 +439,128 @@ async def update_shift_template(template_id: str, template: ShiftTemplate):
         raise HTTPException(status_code=404, detail="Shift template not found")
     return template
 
+# Day template endpoints
+@app.get("/api/day-templates")
+async def get_day_templates():
+    """Get all day templates"""
+    templates = list(db.day_templates.find({"is_active": True}, {"_id": 0}))
+    return templates
+
+@app.get("/api/day-templates/{day_of_week}")
+async def get_day_templates_for_day(day_of_week: int):
+    """Get day templates for a specific day of week"""
+    templates = list(db.day_templates.find({"day_of_week": day_of_week, "is_active": True}, {"_id": 0}))
+    return templates
+
+@app.post("/api/day-templates")
+async def create_day_template(template: DayTemplate):
+    """Create a new day template"""
+    template.id = str(uuid.uuid4())
+    template.created_at = datetime.now()
+    db.day_templates.insert_one(template.dict())
+    return template
+
+@app.post("/api/day-templates/save-day/{template_name}")
+async def save_day_as_template(template_name: str, date: str):
+    """Save all shifts from a specific date as a day template"""
+    # Get all roster entries for the specific date
+    roster_entries = list(db.roster.find({"date": date}, {"_id": 0}))
+    
+    if not roster_entries:
+        raise HTTPException(status_code=404, detail=f"No shifts found for date {date}")
+    
+    # Get day of week from the date
+    date_obj = datetime.strptime(date, "%Y-%m-%d")
+    day_of_week = date_obj.weekday()  # 0=Monday, 6=Sunday
+    day_name = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'][day_of_week]
+    
+    # Extract shift data (without staff assignments and date-specific info)
+    shifts = []
+    for entry in roster_entries:
+        shift_data = {
+            "start_time": entry["start_time"],
+            "end_time": entry["end_time"],
+            "is_sleepover": entry.get("is_sleepover", False)
+        }
+        shifts.append(shift_data)
+    
+    # Sort shifts by start time for consistency
+    shifts.sort(key=lambda x: x["start_time"])
+    
+    # Create the day template
+    day_template = DayTemplate(
+        id=str(uuid.uuid4()),
+        name=template_name,
+        description=f"{day_name} template with {len(shifts)} shifts (from {date})",
+        day_of_week=day_of_week,
+        shifts=shifts,
+        created_at=datetime.now()
+    )
+    
+    db.day_templates.insert_one(day_template.dict())
+    return day_template
+
+@app.post("/api/day-templates/apply-to-date/{template_id}")
+async def apply_day_template_to_date(template_id: str, target_date: str):
+    """Apply a day template to a specific date"""
+    # Get the day template
+    template_doc = db.day_templates.find_one({"id": template_id, "is_active": True})
+    if not template_doc:
+        raise HTTPException(status_code=404, detail="Day template not found")
+    
+    template = DayTemplate(**template_doc)
+    
+    # Check if target date already has shifts
+    existing_shifts = list(db.roster.find({"date": target_date}))
+    if existing_shifts:
+        # Check for overlaps
+        overlaps = []
+        for shift_data in template.shifts:
+            if check_shift_overlap(target_date, shift_data["start_time"], shift_data["end_time"]):
+                overlaps.append(f"{shift_data['start_time']}-{shift_data['end_time']}")
+        
+        if overlaps:
+            raise HTTPException(
+                status_code=409, 
+                detail=f"Cannot apply template: overlaps detected with existing shifts at times: {', '.join(overlaps)}"
+            )
+    
+    # Apply the template shifts to the target date
+    entries_created = 0
+    settings_doc = db.settings.find_one()
+    settings = Settings(**settings_doc) if settings_doc else Settings()
+    
+    for shift_data in template.shifts:
+        # Create roster entry
+        entry = RosterEntry(
+            id=str(uuid.uuid4()),
+            date=target_date,
+            shift_template_id=f"day-template-{template_id}",
+            start_time=shift_data["start_time"],
+            end_time=shift_data["end_time"],
+            is_sleepover=shift_data.get("is_sleepover", False)
+        )
+        
+        # Calculate pay
+        entry = calculate_pay(entry, settings)
+        
+        db.roster.insert_one(entry.dict())
+        entries_created += 1
+    
+    return {
+        "message": f"Applied '{template.name}' to {target_date}",
+        "entries_created": entries_created,
+        "template_name": template.name
+    }
+
+@app.delete("/api/day-templates/{template_id}")
+async def delete_day_template(template_id: str):
+    """Delete a day template"""
+    result = db.day_templates.update_one({"id": template_id}, {"$set": {"is_active": False}})
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Day template not found")
+    return {"message": "Day template deleted"}
+
 # Roster template endpoints
 @app.get("/api/roster-templates")
 async def get_roster_templates():
