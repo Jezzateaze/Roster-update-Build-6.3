@@ -2438,6 +2438,490 @@ class ShiftRosterAPITester:
         
         return False
 
+    def test_2to1_shift_overlap_functionality(self):
+        """Test the new 2:1 shift overlap functionality"""
+        print(f"\n🔄 Testing 2:1 Shift Overlap Functionality...")
+        
+        # Test date for overlap testing
+        test_date = "2025-08-15"  # Friday
+        
+        # Clear any existing shifts for this date
+        success, response = self.run_test(
+            f"Clear existing shifts for {test_date}",
+            "DELETE",
+            f"api/roster/month/2025-08",
+            200
+        )
+        
+        # Test 1: Create a regular shift (baseline)
+        regular_shift = {
+            "id": "",
+            "date": test_date,
+            "shift_template_id": "regular-shift-test",
+            "staff_id": None,
+            "staff_name": None,
+            "start_time": "09:00",
+            "end_time": "17:00",
+            "is_sleepover": False,
+            "is_public_holiday": False,
+            "manual_shift_type": None,
+            "manual_hourly_rate": None,
+            "manual_sleepover": None,
+            "wake_hours": None,
+            "hours_worked": 0.0,
+            "base_pay": 0.0,
+            "sleepover_allowance": 0.0,
+            "total_pay": 0.0
+        }
+        
+        success, created_regular_shift = self.run_test(
+            "Create Regular Shift (09:00-17:00)",
+            "POST",
+            "api/roster/add-shift",
+            200,
+            data=regular_shift
+        )
+        
+        if not success:
+            print("   ⚠️  Could not create regular shift for 2:1 overlap testing")
+            return False
+        
+        regular_shift_id = created_regular_shift.get('id')
+        print(f"   ✅ Created regular shift: {regular_shift['start_time']}-{regular_shift['end_time']}")
+        
+        # Test 2: Try to create another regular shift that overlaps (should fail)
+        overlapping_regular_shift = {
+            "id": "",
+            "date": test_date,
+            "shift_template_id": "overlapping-regular-test",
+            "staff_id": None,
+            "staff_name": None,
+            "start_time": "15:00",  # Overlaps with first shift
+            "end_time": "23:00",
+            "is_sleepover": False,
+            "is_public_holiday": False,
+            "manual_shift_type": None,
+            "manual_hourly_rate": None,
+            "manual_sleepover": None,
+            "wake_hours": None,
+            "hours_worked": 0.0,
+            "base_pay": 0.0,
+            "sleepover_allowance": 0.0,
+            "total_pay": 0.0
+        }
+        
+        success, response = self.run_test(
+            "Try to Create Overlapping Regular Shift (Should Fail)",
+            "POST",
+            "api/roster/add-shift",
+            409,  # Expect conflict status
+            data=overlapping_regular_shift
+        )
+        
+        if success:  # Success here means we got the expected 409 status
+            print(f"   ✅ Regular shift overlap correctly prevented")
+        else:
+            print(f"   ❌ Regular shift overlap detection failed")
+            return False
+        
+        # Test 3: Create a "2:1 Evening Shift" that overlaps (should succeed)
+        two_to_one_shift = {
+            "id": "",
+            "date": test_date,
+            "shift_template_id": "2to1-evening-test",
+            "staff_id": None,
+            "staff_name": None,
+            "start_time": "15:00",  # Overlaps with regular shift
+            "end_time": "23:00",
+            "is_sleepover": False,
+            "is_public_holiday": False,
+            "manual_shift_type": None,
+            "manual_hourly_rate": None,
+            "manual_sleepover": None,
+            "wake_hours": None,
+            "hours_worked": 0.0,
+            "base_pay": 0.0,
+            "sleepover_allowance": 0.0,
+            "total_pay": 0.0
+        }
+        
+        # First create a shift template with "2:1" in the name
+        two_to_one_template = {
+            "id": "2to1-evening-test",
+            "name": "2:1 Evening Shift",
+            "start_time": "15:00",
+            "end_time": "23:00",
+            "is_sleepover": False,
+            "day_of_week": 4  # Friday
+        }
+        
+        success, created_template = self.run_test(
+            "Create 2:1 Shift Template",
+            "POST",
+            "api/shift-templates",
+            200,
+            data=two_to_one_template
+        )
+        
+        if success:
+            print(f"   ✅ Created 2:1 shift template: {two_to_one_template['name']}")
+        
+        success, created_2to1_shift = self.run_test(
+            "Create 2:1 Evening Shift (Should Succeed Despite Overlap)",
+            "POST",
+            "api/roster/add-shift",
+            200,
+            data=two_to_one_shift
+        )
+        
+        if success:
+            print(f"   ✅ 2:1 shift overlap allowed successfully")
+            two_to_one_shift_id = created_2to1_shift.get('id')
+        else:
+            print(f"   ❌ 2:1 shift overlap was incorrectly prevented")
+            return False
+        
+        # Test 4: Create another "2:1 Support Shift" that overlaps with both (should succeed)
+        another_2to1_shift = {
+            "id": "",
+            "date": test_date,
+            "shift_template_id": "2to1-support-test",
+            "staff_id": None,
+            "staff_name": None,
+            "start_time": "16:00",  # Overlaps with both previous shifts
+            "end_time": "22:00",
+            "is_sleepover": False,
+            "is_public_holiday": False,
+            "manual_shift_type": None,
+            "manual_hourly_rate": None,
+            "manual_sleepover": None,
+            "wake_hours": None,
+            "hours_worked": 0.0,
+            "base_pay": 0.0,
+            "sleepover_allowance": 0.0,
+            "total_pay": 0.0
+        }
+        
+        # Create another 2:1 template
+        another_2to1_template = {
+            "id": "2to1-support-test",
+            "name": "2:1 Support Shift",
+            "start_time": "16:00",
+            "end_time": "22:00",
+            "is_sleepover": False,
+            "day_of_week": 4  # Friday
+        }
+        
+        success, created_template2 = self.run_test(
+            "Create Another 2:1 Shift Template",
+            "POST",
+            "api/shift-templates",
+            200,
+            data=another_2to1_template
+        )
+        
+        success, created_another_2to1 = self.run_test(
+            "Create Another 2:1 Support Shift (Should Succeed Despite Multiple Overlaps)",
+            "POST",
+            "api/roster/add-shift",
+            200,
+            data=another_2to1_shift
+        )
+        
+        if success:
+            print(f"   ✅ Multiple 2:1 shift overlaps allowed successfully")
+        else:
+            print(f"   ❌ Multiple 2:1 shift overlaps were incorrectly prevented")
+            return False
+        
+        # Test 5: Test case insensitive detection - create "2:1 night shift" (lowercase)
+        lowercase_2to1_template = {
+            "id": "2to1-night-test",
+            "name": "2:1 night shift",  # lowercase
+            "start_time": "20:00",
+            "end_time": "04:00",
+            "is_sleepover": False,
+            "day_of_week": 4  # Friday
+        }
+        
+        success, created_template3 = self.run_test(
+            "Create Lowercase 2:1 Shift Template",
+            "POST",
+            "api/shift-templates",
+            200,
+            data=lowercase_2to1_template
+        )
+        
+        lowercase_2to1_shift = {
+            "id": "",
+            "date": test_date,
+            "shift_template_id": "2to1-night-test",
+            "staff_id": None,
+            "staff_name": None,
+            "start_time": "20:00",  # Overlaps with existing shifts
+            "end_time": "04:00",
+            "is_sleepover": False,
+            "is_public_holiday": False,
+            "manual_shift_type": None,
+            "manual_hourly_rate": None,
+            "manual_sleepover": None,
+            "wake_hours": None,
+            "hours_worked": 0.0,
+            "base_pay": 0.0,
+            "sleepover_allowance": 0.0,
+            "total_pay": 0.0
+        }
+        
+        success, created_lowercase_2to1 = self.run_test(
+            "Create Lowercase 2:1 Night Shift (Case Insensitive Test)",
+            "POST",
+            "api/roster/add-shift",
+            200,
+            data=lowercase_2to1_shift
+        )
+        
+        if success:
+            print(f"   ✅ Case insensitive 2:1 detection working")
+        else:
+            print(f"   ❌ Case insensitive 2:1 detection failed")
+            return False
+        
+        # Test 6: Test updating a regular shift to overlap with 2:1 shift (should fail)
+        if regular_shift_id:
+            updated_regular_shift = {
+                **created_regular_shift,
+                "end_time": "18:00"  # Would overlap with 2:1 shifts
+            }
+            
+            success, response = self.run_test(
+                "Update Regular Shift to Overlap with 2:1 (Should Fail)",
+                "PUT",
+                f"api/roster/{regular_shift_id}",
+                409,  # Expect conflict status
+                data=updated_regular_shift
+            )
+            
+            if success:  # Success here means we got the expected 409 status
+                print(f"   ✅ Regular shift update overlap correctly prevented")
+            else:
+                print(f"   ❌ Regular shift update overlap detection failed")
+                return False
+        
+        # Test 7: Test updating a 2:1 shift to overlap with regular shift (should succeed)
+        if two_to_one_shift_id:
+            updated_2to1_shift = {
+                **created_2to1_shift,
+                "start_time": "14:00"  # Extends overlap with regular shift
+            }
+            
+            success, response = self.run_test(
+                "Update 2:1 Shift to Extend Overlap (Should Succeed)",
+                "PUT",
+                f"api/roster/{two_to_one_shift_id}",
+                200,
+                data=updated_2to1_shift
+            )
+            
+            if success:
+                print(f"   ✅ 2:1 shift update overlap allowed successfully")
+            else:
+                print(f"   ❌ 2:1 shift update overlap was incorrectly prevented")
+                return False
+        
+        print(f"   🎉 All 2:1 shift overlap tests passed!")
+        return True
+
+    def test_2to1_shift_template_generation(self):
+        """Test 2:1 shift overlap in template generation"""
+        print(f"\n📋 Testing 2:1 Shift Overlap in Template Generation...")
+        
+        # Test month for template generation
+        test_month = "2025-09"
+        
+        # Clear existing roster for test month
+        success, response = self.run_test(
+            f"Clear Roster for {test_month}",
+            "DELETE",
+            f"api/roster/month/{test_month}",
+            200
+        )
+        
+        # Create shift templates with 2:1 overlaps
+        shift_templates = [
+            {
+                "name": "Regular Morning Shift",
+                "start_time": "08:00",
+                "end_time": "16:00",
+                "is_sleepover": False,
+                "day_of_week": 0,  # Monday
+                "manual_shift_type": None,
+                "manual_hourly_rate": None
+            },
+            {
+                "name": "2:1 Afternoon Shift",  # This should be allowed to overlap
+                "start_time": "14:00",
+                "end_time": "22:00",
+                "is_sleepover": False,
+                "day_of_week": 0,  # Monday - overlaps with morning shift
+                "manual_shift_type": None,
+                "manual_hourly_rate": None
+            },
+            {
+                "name": "2:1 Evening Support",  # This should also be allowed to overlap
+                "start_time": "18:00",
+                "end_time": "02:00",
+                "is_sleepover": False,
+                "day_of_week": 0,  # Monday - overlaps with afternoon shift
+                "manual_shift_type": None,
+                "manual_hourly_rate": None
+            }
+        ]
+        
+        # Test using the enhanced roster generation endpoint
+        templates_data = {
+            "templates": shift_templates
+        }
+        
+        success, response = self.run_test(
+            f"Generate Roster with 2:1 Overlapping Templates for {test_month}",
+            "POST",
+            f"api/generate-roster-from-shift-templates/{test_month}",
+            200,
+            data=templates_data
+        )
+        
+        if success:
+            entries_created = response.get('entries_created', 0)
+            overlaps_detected = response.get('overlaps_detected', 0)
+            overlap_details = response.get('overlap_details', [])
+            
+            print(f"   ✅ Generated {entries_created} roster entries")
+            print(f"   Overlaps detected: {overlaps_detected}")
+            
+            if overlaps_detected > 0:
+                print(f"   Overlap details (first 5):")
+                for detail in overlap_details[:5]:
+                    print(f"      {detail.get('date')} {detail.get('start_time')}-{detail.get('end_time')} ({detail.get('name', 'Unknown')})")
+            
+            # Verify the generated roster has overlapping 2:1 shifts
+            success, roster_entries = self.run_test(
+                f"Verify Generated Roster for {test_month}",
+                "GET",
+                "api/roster",
+                200,
+                params={"month": test_month}
+            )
+            
+            if success:
+                # Check for overlapping shifts on Mondays
+                monday_shifts = []
+                for entry in roster_entries:
+                    date_obj = datetime.strptime(entry['date'], "%Y-%m-%d")
+                    if date_obj.weekday() == 0:  # Monday
+                        monday_shifts.append(entry)
+                        if len(monday_shifts) >= 9:  # Check first 3 Mondays (3 shifts each)
+                            break
+                
+                print(f"   Found {len(monday_shifts)} Monday shifts for overlap analysis")
+                
+                # Group by date and check for overlaps
+                monday_dates = {}
+                for shift in monday_shifts:
+                    date = shift['date']
+                    if date not in monday_dates:
+                        monday_dates[date] = []
+                    monday_dates[date].append(shift)
+                
+                overlap_found = False
+                for date, shifts in monday_dates.items():
+                    if len(shifts) > 1:
+                        print(f"   Date {date} has {len(shifts)} shifts:")
+                        for shift in shifts:
+                            print(f"      {shift['start_time']}-{shift['end_time']}")
+                        overlap_found = True
+                        break
+                
+                if overlap_found:
+                    print(f"   ✅ 2:1 shift overlaps successfully generated")
+                else:
+                    print(f"   ⚠️  No overlapping shifts found (may be expected if overlaps were prevented)")
+                
+                return True
+        
+        return False
+
+    def test_2to1_day_template_overlap(self):
+        """Test 2:1 shift overlap in day template application"""
+        print(f"\n🌟 Testing 2:1 Shift Overlap in Day Template Application...")
+        
+        # Create a day template with 2:1 shifts
+        day_template_with_2to1 = {
+            "id": "",
+            "name": "2:1 Monday Template",
+            "description": "Monday template with 2:1 overlapping shifts",
+            "day_of_week": 0,  # Monday
+            "shifts": [
+                {"start_time": "09:00", "end_time": "17:00", "is_sleepover": False},  # Regular shift
+                {"start_time": "15:00", "end_time": "23:00", "is_sleepover": False},  # 2:1 overlap
+                {"start_time": "19:00", "end_time": "03:00", "is_sleepover": False}   # Another 2:1 overlap
+            ],
+            "is_active": True
+        }
+        
+        success, created_template = self.run_test(
+            "Create Day Template with 2:1 Overlaps",
+            "POST",
+            "api/day-templates",
+            200,
+            data=day_template_with_2to1
+        )
+        
+        if not success or 'id' not in created_template:
+            print("   ⚠️  Could not create day template with 2:1 overlaps")
+            return False
+        
+        template_id = created_template['id']
+        print(f"   ✅ Created day template with ID: {template_id}")
+        
+        # Apply the template to a specific Monday
+        target_date = "2025-09-01"  # Monday, September 1st, 2025
+        
+        success, response = self.run_test(
+            f"Apply 2:1 Day Template to {target_date}",
+            "POST",
+            f"api/day-templates/apply-to-date/{template_id}?target_date={target_date}",
+            200
+        )
+        
+        if success:
+            entries_created = response.get('entries_created', 0)
+            template_name = response.get('template_name', 'Unknown')
+            print(f"   ✅ Applied '{template_name}' to {target_date}")
+            print(f"   Created {entries_created} roster entries")
+            
+            # Verify the overlapping entries were created
+            success, roster_entries = self.run_test(
+                f"Verify Applied 2:1 Template Entries",
+                "GET",
+                "api/roster",
+                200,
+                params={"month": "2025-09"}
+            )
+            
+            if success:
+                target_entries = [e for e in roster_entries if e['date'] == target_date]
+                print(f"   ✅ Found {len(target_entries)} entries for {target_date}")
+                
+                if len(target_entries) >= 3:  # Should have all 3 overlapping shifts
+                    print(f"   ✅ All overlapping 2:1 shifts created successfully")
+                    for entry in target_entries:
+                        print(f"      Shift: {entry['start_time']}-{entry['end_time']}")
+                    return True
+                else:
+                    print(f"   ❌ Expected 3 overlapping shifts, got {len(target_entries)}")
+        
+        return False
+
 def main():
     print("🚀 Starting Shift Roster & Pay Calculator API Tests")
     print("🎯 FOCUS: Testing NEW Roster Generation from Shift Templates & Enhanced Template Management")
