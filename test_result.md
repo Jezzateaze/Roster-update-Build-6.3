@@ -261,6 +261,18 @@ backend:
           agent: "testing"
           comment: "✅ 2:1 SHIFT OVERLAP FUNCTIONALITY FULLY WORKING! Comprehensive testing completed: 1) Regular shifts correctly prevent overlaps with other regular shifts (409 Conflict returned), 2) Shifts with '2:1' in the name are allowed to overlap with any other shift (case insensitive detection working), 3) Multiple 2:1 shifts can overlap with each other successfully, 4) Regular shifts cannot be updated to overlap with 2:1 shifts (409 Conflict returned), 5) 2:1 shifts can be updated to extend overlaps with other shifts, 6) Enhanced overlap detection logic works across all endpoints: POST /api/roster/add-shift, PUT /api/roster/{entry_id}, POST /api/generate-roster-from-shift-templates/{month}, POST /api/day-templates/apply-to-date/{template_id}. Backend console logging shows when 2:1 overlaps are allowed. All 3/3 2:1 overlap tests passed. Core functionality is production-ready."
 
+  - task: "Allow Overlap Manual Override Functionality"
+    implemented: true
+    working: true
+    file: "server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "testing"
+          comment: "✅ ALLOW OVERLAP FUNCTIONALITY FULLY WORKING! Comprehensive testing completed: 1) POST /api/roster/add-shift endpoint accepts new allow_overlap field, 2) When allow_overlap=False (default), normal overlap prevention works correctly (409 Conflict returned), 3) When allow_overlap=True, shifts can be added even if they overlap successfully, 4) Enhanced error message mentions 'Use Allow Overlap option for 2:1 shifts' when overlap detected, 5) Multiple overlapping shifts can be added with allow_overlap=True, 6) Default behavior (no allow_overlap field) correctly prevents overlaps, 7) RosterEntry model properly accepts and stores allow_overlap field, 8) Pay calculations work correctly for overlapping shifts (verified rates: $42.00/hr weekday day, $44.50/hr weekday evening), 9) All overlapping shifts properly saved to database with correct allow_overlap values. All 10/10 allow overlap tests passed. Manual override functionality is production-ready for 2:1 shift management."
+
 frontend:
   - task: "React Frontend Mobile Responsiveness"
     implemented: true
