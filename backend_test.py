@@ -828,16 +828,30 @@ class ShiftRosterAPITester:
 
 def main():
     print("🚀 Starting Shift Roster & Pay Calculator API Tests")
+    print("🎯 FOCUS: Testing NEW Roster Template Functionality")
     print("=" * 60)
     
     tester = ShiftRosterAPITester()
     
-    # Run all tests
-    tests = [
+    # Run basic tests first
+    basic_tests = [
         tester.test_health_check,
         tester.test_get_staff,
         tester.test_get_shift_templates,
         tester.test_get_settings,
+    ]
+    
+    # NEW ROSTER TEMPLATE TESTS - Main focus
+    template_tests = [
+        tester.test_roster_templates_crud,
+        tester.test_save_current_roster_as_template,
+        tester.test_generate_roster_from_template,
+        tester.test_overlap_detection,
+        tester.test_day_of_week_placement,
+    ]
+    
+    # Additional tests
+    additional_tests = [
         tester.test_generate_roster,
         tester.test_get_roster,
         tester.analyze_existing_pay_calculations,
@@ -845,10 +859,30 @@ def main():
         tester.test_roster_assignment,
     ]
     
-    # Optional: Test staff creation (commented out to avoid cluttering DB)
-    # staff_id = tester.test_create_staff()
+    print("🔧 Running Basic API Tests...")
+    for test in basic_tests:
+        try:
+            test()
+        except Exception as e:
+            print(f"❌ Test failed with exception: {str(e)}")
     
-    for test in tests:
+    print("\n" + "=" * 60)
+    print("🎯 Running NEW ROSTER TEMPLATE TESTS...")
+    print("=" * 60)
+    
+    template_tests_passed = 0
+    for test in template_tests:
+        try:
+            result = test()
+            if result:
+                template_tests_passed += 1
+        except Exception as e:
+            print(f"❌ Template test failed with exception: {str(e)}")
+    
+    print("\n" + "=" * 60)
+    print("🔧 Running Additional Tests...")
+    
+    for test in additional_tests:
         try:
             test()
         except Exception as e:
@@ -856,9 +890,17 @@ def main():
     
     # Print final results
     print("\n" + "=" * 60)
-    print(f"📊 Final Results: {tester.tests_passed}/{tester.tests_run} tests passed")
+    print(f"📊 Overall Results: {tester.tests_passed}/{tester.tests_run} API tests passed")
+    print(f"🎯 Template Tests: {template_tests_passed}/{len(template_tests)} template tests passed")
     
-    if tester.tests_passed == tester.tests_run:
+    if template_tests_passed == len(template_tests):
+        print("🎉 All NEW roster template tests passed!")
+        template_success = True
+    else:
+        print("⚠️  Some roster template tests failed.")
+        template_success = False
+    
+    if tester.tests_passed == tester.tests_run and template_success:
         print("🎉 All tests passed!")
         return 0
     else:
