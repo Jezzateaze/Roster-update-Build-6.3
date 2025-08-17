@@ -2102,7 +2102,7 @@ function App() {
                                       </Button>
                                     </div>
                                     <div className="text-sm text-slate-600">
-                                      {template.start_time} - {template.end_time}
+                                      {formatTime(template.start_time, settings.time_format === '24hr')} - {formatTime(template.end_time, settings.time_format === '24hr')}
                                     </div>
                                     {template.manual_shift_type && (
                                       <Badge variant="outline" className="text-xs">
