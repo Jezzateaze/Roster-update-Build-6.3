@@ -1400,7 +1400,7 @@ function App() {
                           <div className="font-medium">{event.title}</div>
                           {!event.is_all_day && event.start_time && (
                             <div className="text-sm opacity-75">
-                              {event.start_time}{event.end_time && ` - ${event.end_time}`}
+                              {formatTime(event.start_time, settings.time_format === '24hr')}{event.end_time && ` - ${formatTime(event.end_time, settings.time_format === '24hr')}`}
                             </div>
                           )}
                           {event.location && (
