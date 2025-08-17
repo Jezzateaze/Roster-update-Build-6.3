@@ -777,7 +777,7 @@ function App() {
       : 'text-slate-500';
     
     return (
-      <div className={`min-h-[140px] p-1 border-r border-b border-slate-200 ${backgroundClass} group hover:bg-slate-50 transition-colors relative overflow-hidden`}>
+      <div className={`min-h-[180px] p-1 border-r border-b border-slate-200 ${backgroundClass} group hover:bg-slate-50 transition-colors relative overflow-visible`}>
         <div className={`font-medium text-sm mb-2 flex items-center justify-between ${textClass}`}>
           <span>{date.getDate()}</span>
           <div className="flex items-center space-x-1">
