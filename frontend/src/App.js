@@ -2799,14 +2799,17 @@ function App() {
           
           {/* Quick Settings Toggle Buttons */}
           <div className="flex items-center justify-center space-x-3 mt-3 pt-3 border-t border-slate-200">
-            <Button
-              variant={settings.first_day_of_week === 'monday' ? 'default' : 'outline'}
-              size="sm"
-              onClick={toggleFirstDayOfWeek}
-              className="text-xs"
-            >
-              {settings.first_day_of_week === 'monday' ? '📅 Mon First' : '📅 Sun First'}
-            </Button>
+            {/* Mon First/Sun First button - Admin only */}
+            {isAdmin() && (
+              <Button
+                variant={settings.first_day_of_week === 'monday' ? 'default' : 'outline'}
+                size="sm"
+                onClick={toggleFirstDayOfWeek}
+                className="text-xs"
+              >
+                {settings.first_day_of_week === 'monday' ? '📅 Mon First' : '📅 Sun First'}
+              </Button>
+            )}
             
             <Button
               variant={settings.time_format === '24hr' ? 'default' : 'outline'}
