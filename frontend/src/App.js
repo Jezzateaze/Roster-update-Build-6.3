@@ -4653,7 +4653,7 @@ function App() {
 
         {/* User Profile Dialog */}
         <Dialog open={showProfileDialog} onOpenChange={setShowProfileDialog}>
-          <DialogContent className="max-w-md">
+          <DialogContent className="max-w-2xl">
             <DialogHeader>
               <DialogTitle className="flex items-center space-x-2">
                 <User className="w-5 h-5" />
@@ -4662,56 +4662,99 @@ function App() {
             </DialogHeader>
             <div className="space-y-6">
               {/* User Info */}
+              <div className="flex items-center space-x-4 p-4 bg-slate-50 rounded-lg">
+                <div className="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center text-white font-bold text-lg">
+                  {currentUser?.first_name?.charAt(0) || currentUser?.username?.charAt(0) || 'U'}
+                </div>
+                <div>
+                  <h3 className="font-semibold text-lg">{currentUser?.first_name || currentUser?.username}</h3>
+                  <p className="text-slate-600 capitalize">{currentUser?.role || 'User'}</p>
+                </div>
+              </div>
+
+              {/* Editable Personal Details */}
               <div className="space-y-4">
-                <div className="flex items-center space-x-4 p-4 bg-slate-50 rounded-lg">
-                  <div className="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center text-white font-bold text-lg">
-                    {currentUser?.first_name?.charAt(0) || currentUser?.username?.charAt(0) || 'U'}
+                <h4 className="font-medium text-slate-700">Personal Information</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label className="text-sm">Username</Label>
+                    <Input 
+                      value={currentUser?.username || ''}
+                      disabled
+                      className="bg-gray-100"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">Username cannot be changed</p>
                   </div>
                   <div>
-                    <h3 className="font-semibold text-lg">{currentUser?.first_name || currentUser?.username}</h3>
-                    <p className="text-slate-600 capitalize">{currentUser?.role || 'User'}</p>
+                    <Label className="text-sm">First Name</Label>
+                    <Input 
+                      value={profileData.first_name || currentUser?.first_name || ''}
+                      onChange={(e) => setProfileData({ ...profileData, first_name: e.target.value })}
+                      placeholder="Enter first name"
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-sm">Last Name</Label>
+                    <Input 
+                      value={profileData.last_name || currentUser?.last_name || ''}
+                      onChange={(e) => setProfileData({ ...profileData, last_name: e.target.value })}
+                      placeholder="Enter last name"
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-sm">Email Address</Label>
+                    <Input 
+                      type="email"
+                      value={profileData.email || currentUser?.email || ''}
+                      onChange={(e) => setProfileData({ ...profileData, email: e.target.value })}
+                      placeholder="Enter email address"
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-sm">Phone Number</Label>
+                    <Input 
+                      type="tel"
+                      value={profileData.phone || currentUser?.phone || ''}
+                      onChange={(e) => setProfileData({ ...profileData, phone: e.target.value })}
+                      placeholder="Enter phone number"
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-sm">Role</Label>
+                    <Input 
+                      value={currentUser?.role || 'User'}
+                      disabled
+                      className="bg-gray-100 capitalize"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">Role assigned by administrator</p>
                   </div>
                 </div>
-
-                {/* Personal Details */}
-                <div className="space-y-3">
-                  <h4 className="font-medium text-slate-700">Personal Information</h4>
-                  <div className="grid grid-cols-1 gap-3 text-sm">
-                    <div className="flex justify-between">
-                      <span className="text-slate-600">Username:</span>
-                      <span className="font-medium">{currentUser?.username}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-slate-600">Email:</span>
-                      <span className="font-medium">{currentUser?.email || 'Not provided'}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-slate-600">Phone:</span>
-                      <span className="font-medium">{currentUser?.phone || 'Not provided'}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-slate-600">Role:</span>
-                      <Badge variant="outline" className="capitalize">{currentUser?.role}</Badge>
-                    </div>
-                  </div>
+                
+                <div>
+                  <Label className="text-sm">Address</Label>
+                  <Input 
+                    value={profileData.address || currentUser?.address || ''}
+                    onChange={(e) => setProfileData({ ...profileData, address: e.target.value })}
+                    placeholder="Enter your address"
+                  />
                 </div>
+              </div>
 
-                {/* Account Information */}
-                <div className="space-y-3">
-                  <h4 className="font-medium text-slate-700">Account Information</h4>
-                  <div className="grid grid-cols-1 gap-3 text-sm">
-                    <div className="flex justify-between">
-                      <span className="text-slate-600">Account Status:</span>
-                      <Badge variant="outline" className="bg-green-50 text-green-700">Active</Badge>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-slate-600">Last Login:</span>
-                      <span className="font-medium">{currentUser?.last_login ? new Date(currentUser.last_login).toLocaleString() : 'Just now'}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-slate-600">Member Since:</span>
-                      <span className="font-medium">{currentUser?.created_at ? new Date(currentUser.created_at).toLocaleDateString() : 'N/A'}</span>
-                    </div>
+              {/* Account Information */}
+              <div className="space-y-3">
+                <h4 className="font-medium text-slate-700">Account Information</h4>
+                <div className="grid grid-cols-1 gap-3 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-slate-600">Account Status:</span>
+                    <Badge variant="outline" className="bg-green-50 text-green-700">Active</Badge>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-slate-600">Last Login:</span>
+                    <span className="font-medium">{currentUser?.last_login ? new Date(currentUser.last_login).toLocaleString() : 'Just now'}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-slate-600">Member Since:</span>
+                    <span className="font-medium">{currentUser?.created_at ? new Date(currentUser.created_at).toLocaleDateString() : 'N/A'}</span>
                   </div>
                 </div>
               </div>
@@ -4719,10 +4762,27 @@ function App() {
               {/* Action Buttons */}
               <div className="flex flex-col space-y-2">
                 <Button
+                  onClick={async () => {
+                    try {
+                      // Save profile updates
+                      const response = await axios.put(`${API_BASE_URL}/api/users/me`, profileData);
+                      setCurrentUser({ ...currentUser, ...response.data });
+                      alert('✅ Profile updated successfully!');
+                    } catch (error) {
+                      console.error('Error updating profile:', error);
+                      alert(`❌ Error updating profile: ${error.response?.data?.detail || error.message}`);
+                    }
+                  }}
+                  className="w-full"
+                >
+                  Save Profile Changes
+                </Button>
+                <Button
                   onClick={() => {
                     setShowProfileDialog(false);
                     setShowChangePinDialog(true);
                   }}
+                  variant="outline"
                   className="w-full"
                 >
                   Change PIN
