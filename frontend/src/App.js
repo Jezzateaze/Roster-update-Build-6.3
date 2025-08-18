@@ -266,6 +266,8 @@ function App() {
   const [showManageTemplatesDialog, setShowManageTemplatesDialog] = useState(false);
   const [showTemplateEditDialog, setShowTemplateEditDialog] = useState(false);
   const [selectedRosterTemplateForEdit, setSelectedRosterTemplateForEdit] = useState(null);
+  const [showOverlapDialog, setShowOverlapDialog] = useState(false);
+  const [overlapData, setOverlapData] = useState(null);
   const [showYTDReportDialog, setShowYTDReportDialog] = useState(false);
   const [ytdReportType, setYTDReportType] = useState('financial'); // 'calendar' or 'financial'
   const [showSaveTemplateDialog, setShowSaveTemplateDialog] = useState(false);
