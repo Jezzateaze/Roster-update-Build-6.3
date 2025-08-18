@@ -4735,10 +4735,10 @@ function App() {
           </DialogContent>
         </Dialog>
 
-        {/* Staff Profile Dialog (Admin) */}
+        {/* Staff Profile Dialog (Admin) - Comprehensive */}
         {currentUser?.role === 'admin' && (
           <Dialog open={showStaffProfileDialog} onOpenChange={setShowStaffProfileDialog}>
-            <DialogContent className="max-w-2xl">
+            <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle className="flex items-center space-x-2">
                   <Users className="w-5 h-5" />
@@ -4747,106 +4747,456 @@ function App() {
               </DialogHeader>
               {selectedStaffForProfile && (
                 <div className="space-y-6">
-                  {/* Staff Basic Info */}
-                  <div className="flex items-center space-x-4 p-4 bg-slate-50 rounded-lg">
-                    <div className="w-16 h-16 bg-blue-500 rounded-full flex items-center justify-center text-white font-bold text-xl">
-                      {selectedStaffForProfile.name.charAt(0)}
+                  {/* Staff Basic Info & Photo */}
+                  <div className="flex items-start space-x-6 p-4 bg-slate-50 rounded-lg">
+                    <div className="flex-shrink-0">
+                      {selectedStaffForProfile.profile_photo_url ? (
+                        <img 
+                          src={selectedStaffForProfile.profile_photo_url} 
+                          alt={selectedStaffForProfile.name}
+                          className="w-24 h-24 rounded-full object-cover border-2 border-gray-300"
+                        />
+                      ) : (
+                        <div className="w-24 h-24 bg-blue-500 rounded-full flex items-center justify-center text-white font-bold text-2xl">
+                          {selectedStaffForProfile.name.charAt(0)}
+                        </div>
+                      )}
+                      <div className="mt-2">
+                        <input
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          id="profile-photo-upload"
+                          onChange={(e) => {
+                            // TODO: Handle profile photo upload
+                            console.log('Profile photo selected:', e.target.files[0]);
+                          }}
+                        />
+                        <label htmlFor="profile-photo-upload" className="cursor-pointer text-xs text-blue-600 hover:text-blue-800">
+                          Upload Photo
+                        </label>
+                      </div>
                     </div>
-                    <div>
-                      <h3 className="font-semibold text-xl">{selectedStaffForProfile.name}</h3>
-                      <p className="text-slate-600">Staff Member</p>
+                    <div className="flex-1">
+                      <h3 className="font-semibold text-xl mb-2">{selectedStaffForProfile.name}</h3>
                       <Badge variant={selectedStaffForProfile.active ? "default" : "secondary"}>
                         {selectedStaffForProfile.active ? "Active" : "Inactive"}
                       </Badge>
                     </div>
                   </div>
 
-                  {/* Access Control Section */}
+                  {/* Tabbed Content */}
                   <div className="space-y-4">
-                    <h4 className="font-medium text-slate-700 text-lg">Access Control & Privileges</h4>
-                    
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="space-y-3">
-                        <Label className="text-sm font-medium">Account Status</Label>
-                        <div className="flex items-center space-x-2">
-                          <Switch 
-                            checked={selectedStaffForProfile.active}
-                            onCheckedChange={() => {
-                              // Toggle staff active status
-                              const updatedStaff = { ...selectedStaffForProfile, active: !selectedStaffForProfile.active };
-                              setSelectedStaffForProfile(updatedStaff);
-                            }}
+                    {/* Basic Information */}
+                    <div className="space-y-4">
+                      <h4 className="font-medium text-slate-700 text-lg border-b pb-2">Basic Information</h4>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <Label className="text-sm font-medium">Full Name</Label>
+                          <Input 
+                            value={selectedStaffForProfile.name}
+                            onChange={(e) => setSelectedStaffForProfile({
+                              ...selectedStaffForProfile,
+                              name: e.target.value
+                            })}
                           />
-                          <span className="text-sm">{selectedStaffForProfile.active ? 'Active' : 'Inactive'}</span>
                         </div>
-                      </div>
-
-                      <div className="space-y-3">
-                        <Label className="text-sm font-medium">App Access</Label>
-                        <div className="flex items-center space-x-2">
-                          <Switch 
-                            checked={selectedStaffForProfile.active}
-                            onCheckedChange={() => {
-                              // Grant/revoke app access
-                              const updatedStaff = { ...selectedStaffForProfile, active: !selectedStaffForProfile.active };
-                              setSelectedStaffForProfile(updatedStaff);
-                            }}
+                        <div>
+                          <Label className="text-sm font-medium">Date of Birth</Label>
+                          <Input 
+                            type="date"
+                            value={selectedStaffForProfile.date_of_birth}
+                            onChange={(e) => setSelectedStaffForProfile({
+                              ...selectedStaffForProfile,
+                              date_of_birth: e.target.value
+                            })}
                           />
-                          <span className="text-sm">{selectedStaffForProfile.active ? 'Granted' : 'Revoked'}</span>
+                        </div>
+                        <div>
+                          <Label className="text-sm font-medium">Email Address</Label>
+                          <Input 
+                            type="email"
+                            value={selectedStaffForProfile.email}
+                            onChange={(e) => setSelectedStaffForProfile({
+                              ...selectedStaffForProfile,
+                              email: e.target.value
+                            })}
+                          />
+                        </div>
+                        <div>
+                          <Label className="text-sm font-medium">Best Contact Phone</Label>
+                          <Input 
+                            type="tel"
+                            value={selectedStaffForProfile.phone}
+                            onChange={(e) => setSelectedStaffForProfile({
+                              ...selectedStaffForProfile,
+                              phone: e.target.value
+                            })}
+                          />
+                        </div>
+                        <div className="md:col-span-2">
+                          <Label className="text-sm font-medium">Postal Address</Label>
+                          <Input 
+                            value={selectedStaffForProfile.postal_address}
+                            onChange={(e) => setSelectedStaffForProfile({
+                              ...selectedStaffForProfile,
+                              postal_address: e.target.value
+                            })}
+                            placeholder="Street Address, City, State, Postcode"
+                          />
                         </div>
                       </div>
                     </div>
 
-                    {/* Role Assignment */}
-                    <div className="space-y-3">
-                      <Label className="text-sm font-medium">Role & Permissions</Label>
-                      <Select defaultValue="staff">
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select role" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="staff">Staff - Basic Access</SelectItem>
-                          <SelectItem value="supervisor">Supervisor - Can manage shifts</SelectItem>
-                          <SelectItem value="admin">Admin - Full Access</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    {/* View Controls */}
-                    <div className="space-y-3">
-                      <Label className="text-sm font-medium">View Controls</Label>
-                      <div className="space-y-2">
-                        <div className="flex items-center justify-between">
-                          <span className="text-sm">Can view other staff schedules</span>
-                          <Switch defaultChecked={false} />
+                    {/* Emergency Contact */}
+                    <div className="space-y-4">
+                      <h4 className="font-medium text-slate-700 text-lg border-b pb-2">Emergency Contact</h4>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <Label className="text-sm font-medium">Emergency Contact Name</Label>
+                          <Input 
+                            value={selectedStaffForProfile.emergency_contact_name}
+                            onChange={(e) => setSelectedStaffForProfile({
+                              ...selectedStaffForProfile,
+                              emergency_contact_name: e.target.value
+                            })}
+                          />
                         </div>
-                        <div className="flex items-center justify-between">
-                          <span className="text-sm">Can view pay information</span>
-                          <Switch defaultChecked={false} />
+                        <div>
+                          <Label className="text-sm font-medium">Emergency Contact Phone</Label>
+                          <Input 
+                            type="tel"
+                            value={selectedStaffForProfile.emergency_contact_phone}
+                            onChange={(e) => setSelectedStaffForProfile({
+                              ...selectedStaffForProfile,
+                              emergency_contact_phone: e.target.value
+                            })}
+                          />
                         </div>
-                        <div className="flex items-center justify-between">
-                          <span className="text-sm">Can request shift changes</span>
-                          <Switch defaultChecked={true} />
+                        <div>
+                          <Label className="text-sm font-medium">Relationship to Staff</Label>
+                          <Input 
+                            value={selectedStaffForProfile.emergency_contact_relationship}
+                            onChange={(e) => setSelectedStaffForProfile({
+                              ...selectedStaffForProfile,
+                              emergency_contact_relationship: e.target.value
+                            })}
+                            placeholder="e.g., Parent, Spouse, Sibling"
+                          />
                         </div>
-                        <div className="flex items-center justify-between">
-                          <span className="text-sm">Can view full roster</span>
-                          <Switch defaultChecked={false} />
+                        <div>
+                          <Label className="text-sm font-medium">Emergency Contact Address</Label>
+                          <Input 
+                            value={selectedStaffForProfile.emergency_contact_address}
+                            onChange={(e) => setSelectedStaffForProfile({
+                              ...selectedStaffForProfile,
+                              emergency_contact_address: e.target.value
+                            })}
+                          />
                         </div>
                       </div>
                     </div>
-                  </div>
 
-                  {/* Contact Information */}
-                  <div className="space-y-3">
-                    <h4 className="font-medium text-slate-700">Contact Information</h4>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <Label className="text-sm">Email</Label>
-                        <Input placeholder="staff@example.com" />
+                    {/* Professional Information */}
+                    <div className="space-y-4">
+                      <h4 className="font-medium text-slate-700 text-lg border-b pb-2">Professional Information</h4>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <Label className="text-sm font-medium">NDIS Registration Number</Label>
+                          <Input 
+                            value={selectedStaffForProfile.ndis_registration}
+                            onChange={(e) => setSelectedStaffForProfile({
+                              ...selectedStaffForProfile,
+                              ndis_registration: e.target.value
+                            })}
+                          />
+                        </div>
+                        <div>
+                          <Label className="text-sm font-medium">Blue Card Number</Label>
+                          <Input 
+                            value={selectedStaffForProfile.blue_card_number}
+                            onChange={(e) => setSelectedStaffForProfile({
+                              ...selectedStaffForProfile,
+                              blue_card_number: e.target.value
+                            })}
+                          />
+                        </div>
+                        <div>
+                          <Label className="text-sm font-medium">Yellow Card Number</Label>
+                          <Input 
+                            value={selectedStaffForProfile.yellow_card_number}
+                            onChange={(e) => setSelectedStaffForProfile({
+                              ...selectedStaffForProfile,
+                              yellow_card_number: e.target.value
+                            })}
+                          />
+                        </div>
+                        <div>
+                          <Label className="text-sm font-medium">First Aid Registration Number</Label>
+                          <Input 
+                            value={selectedStaffForProfile.first_aid_registration}
+                            onChange={(e) => setSelectedStaffForProfile({
+                              ...selectedStaffForProfile,
+                              first_aid_registration: e.target.value
+                            })}
+                          />
+                        </div>
+                        <div>
+                          <Label className="text-sm font-medium">First Aid Expiry Date</Label>
+                          <Input 
+                            type="date"
+                            value={selectedStaffForProfile.first_aid_expiry}
+                            onChange={(e) => setSelectedStaffForProfile({
+                              ...selectedStaffForProfile,
+                              first_aid_expiry: e.target.value
+                            })}
+                          />
+                        </div>
                       </div>
-                      <div>
-                        <Label className="text-sm">Phone</Label>
-                        <Input placeholder="+61 xxx xxx xxx" />
+                    </div>
+
+                    {/* Transport & Licensing */}
+                    <div className="space-y-4">
+                      <h4 className="font-medium text-slate-700 text-lg border-b pb-2">Transport & Licensing</h4>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <div className="flex items-center space-x-2">
+                            <input
+                              type="checkbox"
+                              id="has-license"
+                              checked={selectedStaffForProfile.has_license}
+                              onChange={(e) => setSelectedStaffForProfile({
+                                ...selectedStaffForProfile,
+                                has_license: e.target.checked
+                              })}
+                              className="rounded"
+                            />
+                            <Label htmlFor="has-license" className="text-sm">Has Current Driver's License</Label>
+                          </div>
+                          {selectedStaffForProfile.has_license && (
+                            <div>
+                              <Label className="text-sm font-medium">License Class</Label>
+                              <Select 
+                                value={selectedStaffForProfile.license_class}
+                                onValueChange={(value) => setSelectedStaffForProfile({
+                                  ...selectedStaffForProfile,
+                                  license_class: value
+                                })}
+                              >
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Select license class" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="C">Class C (Car)</SelectItem>
+                                  <SelectItem value="LR">LR (Light Rigid)</SelectItem>
+                                  <SelectItem value="MR">MR (Medium Rigid)</SelectItem>
+                                  <SelectItem value="HR">HR (Heavy Rigid)</SelectItem>
+                                  <SelectItem value="HC">HC (Heavy Combination)</SelectItem>
+                                  <SelectItem value="MC">MC (Multi-Combination)</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+                          )}
+                        </div>
+                        <div className="space-y-2">
+                          <div className="flex items-center space-x-2">
+                            <input
+                              type="checkbox"
+                              id="can-drive-van"
+                              checked={selectedStaffForProfile.can_drive_van}
+                              onChange={(e) => setSelectedStaffForProfile({
+                                ...selectedStaffForProfile,
+                                can_drive_van: e.target.checked
+                              })}
+                              className="rounded"
+                            />
+                            <Label htmlFor="can-drive-van" className="text-sm">Can Drive Van for Client Transport</Label>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <input
+                              type="checkbox"
+                              id="can-transport-wheelchair"
+                              checked={selectedStaffForProfile.can_transport_wheelchair}
+                              onChange={(e) => setSelectedStaffForProfile({
+                                ...selectedStaffForProfile,
+                                can_transport_wheelchair: e.target.checked
+                              })}
+                              className="rounded"
+                            />
+                            <Label htmlFor="can-transport-wheelchair" className="text-sm">Can Transport Power Wheelchairs</Label>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Experience & Skills */}
+                    <div className="space-y-4">
+                      <h4 className="font-medium text-slate-700 text-lg border-b pb-2">Experience & Skills</h4>
+                      <div className="space-y-4">
+                        <div>
+                          <Label className="text-sm font-medium mb-3 block">Disability Support Experience</Label>
+                          <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                            {[
+                              'Personal Care', 'Meal Preparation', 'Medication Management', 
+                              'Community Access', 'Behavioral Support', 'Mobility Assistance',
+                              'Communication Support', 'Daily Living Skills', 'Social Support'
+                            ].map((skill) => (
+                              <div key={skill} className="flex items-center space-x-2">
+                                <input
+                                  type="checkbox"
+                                  id={`disability-${skill}`}
+                                  checked={selectedStaffForProfile.disability_support_experience?.includes(skill) || false}
+                                  onChange={(e) => {
+                                    const currentExp = selectedStaffForProfile.disability_support_experience || [];
+                                    if (e.target.checked) {
+                                      setSelectedStaffForProfile({
+                                        ...selectedStaffForProfile,
+                                        disability_support_experience: [...currentExp, skill]
+                                      });
+                                    } else {
+                                      setSelectedStaffForProfile({
+                                        ...selectedStaffForProfile,
+                                        disability_support_experience: currentExp.filter(s => s !== skill)
+                                      });
+                                    }
+                                  }}
+                                  className="rounded"
+                                />
+                                <Label htmlFor={`disability-${skill}`} className="text-xs">{skill}</Label>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                        
+                        <div>
+                          <Label className="text-sm font-medium mb-3 block">Nursing & Manual Handling</Label>
+                          <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                            {[
+                              'Manual Handling Certified', 'Wound Care', 'Medication Administration',
+                              'Vital Signs Monitoring', 'Catheter Care', 'Stoma Care',
+                              'Diabetic Care', 'Epilepsy Management', 'CPR Certified'
+                            ].map((skill) => (
+                              <div key={skill} className="flex items-center space-x-2">
+                                <input
+                                  type="checkbox"
+                                  id={`nursing-${skill}`}
+                                  checked={selectedStaffForProfile.nursing_experience?.includes(skill) || false}
+                                  onChange={(e) => {
+                                    const currentExp = selectedStaffForProfile.nursing_experience || [];
+                                    if (e.target.checked) {
+                                      setSelectedStaffForProfile({
+                                        ...selectedStaffForProfile,
+                                        nursing_experience: [...currentExp, skill]
+                                      });
+                                    } else {
+                                      setSelectedStaffForProfile({
+                                        ...selectedStaffForProfile,
+                                        nursing_experience: currentExp.filter(s => s !== skill)
+                                      });
+                                    }
+                                  }}
+                                  className="rounded"
+                                />
+                                <Label htmlFor={`nursing-${skill}`} className="text-xs">{skill}</Label>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div>
+                            <Label className="text-sm font-medium">Strengths</Label>
+                            <textarea 
+                              value={selectedStaffForProfile.strengths}
+                              onChange={(e) => setSelectedStaffForProfile({
+                                ...selectedStaffForProfile,
+                                strengths: e.target.value
+                              })}
+                              rows={3}
+                              className="w-full p-2 border border-gray-300 rounded-md text-sm"
+                              placeholder="List key strengths and abilities..."
+                            />
+                          </div>
+                          <div>
+                            <Label className="text-sm font-medium">Areas for Development</Label>
+                            <textarea 
+                              value={selectedStaffForProfile.weaknesses}
+                              onChange={(e) => setSelectedStaffForProfile({
+                                ...selectedStaffForProfile,
+                                weaknesses: e.target.value
+                              })}
+                              rows={3}
+                              className="w-full p-2 border border-gray-300 rounded-md text-sm"
+                              placeholder="Areas where additional training or support may be beneficial..."
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Access Control Section */}
+                    <div className="space-y-4">
+                      <h4 className="font-medium text-slate-700 text-lg border-b pb-2">Access Control & Privileges</h4>
+                      
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-3">
+                          <Label className="text-sm font-medium">Account Status</Label>
+                          <div className="flex items-center space-x-2">
+                            <input
+                              type="checkbox"
+                              checked={selectedStaffForProfile.active}
+                              onChange={(e) => setSelectedStaffForProfile({
+                                ...selectedStaffForProfile,
+                                active: e.target.checked
+                              })}
+                              className="rounded"
+                            />
+                            <span className="text-sm">{selectedStaffForProfile.active ? 'Active' : 'Inactive'}</span>
+                          </div>
+                        </div>
+
+                        <div className="space-y-3">
+                          <Label className="text-sm font-medium">Role & Permissions</Label>
+                          <Select 
+                            value={selectedStaffForProfile.role || 'staff'}
+                            onValueChange={(value) => setSelectedStaffForProfile({
+                              ...selectedStaffForProfile,
+                              role: value
+                            })}
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select role" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="staff">Staff - Basic Access</SelectItem>
+                              <SelectItem value="supervisor">Supervisor - Can manage shifts</SelectItem>
+                              <SelectItem value="admin">Admin - Full Access</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+
+                      {/* View Controls */}
+                      <div className="space-y-3">
+                        <Label className="text-sm font-medium">View Controls</Label>
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between">
+                            <span className="text-sm">Can view other staff schedules</span>
+                            <input type="checkbox" defaultChecked={false} className="rounded" />
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <span className="text-sm">Can view pay information</span>
+                            <input type="checkbox" defaultChecked={false} className="rounded" />
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <span className="text-sm">Can request shift changes</span>
+                            <input type="checkbox" defaultChecked={true} className="rounded" />
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <span className="text-sm">Can view full roster</span>
+                            <input type="checkbox" defaultChecked={false} className="rounded" />
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </div>
