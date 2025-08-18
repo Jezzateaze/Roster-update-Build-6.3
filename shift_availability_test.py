@@ -331,11 +331,14 @@ class ShiftAvailabilityAPITester:
             )
             
             if success:
-                status = approved_request.get('status')
-                if status == 'approved':
+                message = approved_request.get('message')
+                conflicts = approved_request.get('conflicts', [])
+                if "approved successfully" in message:
                     print(f"   ✅ Shift request approved successfully")
+                    if conflicts:
+                        print(f"   ⚠️  {len(conflicts)} availability conflicts detected")
                 else:
-                    print(f"   ❌ Request status not updated: {status}")
+                    print(f"   ❌ Unexpected approval response: {message}")
                     return False
         
         # Test 5: Test staff trying to approve (should fail)
