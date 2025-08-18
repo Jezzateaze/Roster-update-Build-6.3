@@ -11,6 +11,7 @@ class ShiftAvailabilityAPITester:
         self.admin_token = None
         self.staff_token = None
         self.staff_user_id = None
+        self.staff_id = None  # Actual staff ID for filtering
         self.test_data = {
             'unassigned_shifts': [],
             'shift_requests': [],
