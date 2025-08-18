@@ -6354,8 +6354,8 @@ function App() {
                   <div>
                     <Label htmlFor="bulk-day-change">Move to Different Day</Label>
                     <Select
-                      value={bulkEditData.day_of_week.toString()}
-                      onValueChange={(value) => setBulkEditData({...bulkEditData, day_of_week: value})}
+                      value={bulkEditData.day_of_week.toString() || 'keep'}
+                      onValueChange={(value) => setBulkEditData({...bulkEditData, day_of_week: value === 'keep' ? '' : value})}
                     >
                       <SelectTrigger>
                         <SelectValue placeholder="Keep current day" />
