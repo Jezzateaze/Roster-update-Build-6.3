@@ -275,7 +275,7 @@ backend:
 
   - task: "Backend API Review Request Investigation"
     implemented: true
-    working: true
+    working: false
     file: "server.py"
     stuck_count: 0
     priority: "high"
@@ -284,6 +284,9 @@ backend:
         - working: true
           agent: "testing"
           comment: "🎯 COMPREHENSIVE BACKEND INVESTIGATION COMPLETED! Review request findings: 1) ✅ Staff Profile Updates: PUT /api/staff/{id} endpoint working perfectly - successfully updated Angela's profile and verified persistence, 2) ❌ Shift Assignment: PUT /api/roster/{id} endpoint functional but blocked by overlap detection (409 conflict) - this is expected behavior for safety, 3) ✅ Pay Summary Data Analysis: CRITICAL FINDING - Backend calculates pay for ALL 183 shifts regardless of assignment status. 176 unassigned shifts (96.2%) have pay calculated ($555.00, $336.00, $356.00 examples). This is the ROOT CAUSE of frontend pay summary issues - frontend needs to filter out unassigned shifts (staff_id=null, staff_name=null) from pay calculations, 4) ✅ Active Staff Filter: All 12 staff properly returned as active, correctly filtered. Backend data structure and API endpoints working correctly. Issue is frontend logic needs to exclude unassigned shifts from pay summaries."
+        - working: false
+          agent: "testing"
+          comment: "🎯 FOCUSED OVERLAP HANDLING TEST COMPLETED! Critical issue identified in PUT /api/roster/{id} endpoint: ✅ WORKING: 1) POST /api/roster/add-shift correctly respects allow_overlap flag (line 1148: 'if not entry.allow_overlap and check_shift_overlap'), 2) Backend accepts allow_overlap field in RosterEntry model, 3) Overlap detection works correctly when allow_overlap=False (409 Conflict returned), 4) 2:1 shift name detection works (case insensitive '2:1' in shift name bypasses overlap). ❌ CRITICAL ISSUE: PUT /api/roster/{id} endpoint does NOT respect allow_overlap flag - line 1046 only calls 'check_shift_overlap()' without checking 'if not entry.allow_overlap'. This prevents frontend from updating shifts with allow_overlap=True. REQUIRED FIX: Update PUT endpoint to match POST endpoint logic: 'if not entry.allow_overlap and check_shift_overlap(...)'."
 
   - task: "Pay Summary Display Fix"
     implemented: false
