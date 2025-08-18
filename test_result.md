@@ -102,23 +102,51 @@
 # Testing Data - Main Agent and testing sub agent both should log testing data below this section  
 #====================================================================================================
 
-user_problem_statement: "Fix critical bugs in the Shift Roster application: 1) Pay summary display not working for individual staff, 2) Badge logic fix - weekday shifts ending by 8:00 PM should show 'Day' badge, 3) Daily view navigation buttons not working, 4) Need ability to edit unassigned shifts to assign staff and edit any part of existing shifts, 5) Need clickable profile button on main page after login showing profile settings and account information, 6) Admin staff management interface when logged in as admin."
+user_problem_statement: "Implement comprehensive staff account restrictions and enhancements: 1) Hide roster management buttons (Select Multiple, Add Shift, Save Template, Load Template, Manage Templates, Clear Roster, Generate Roster) for staff, 2) Remove ability to click on shifts for editing/deletion, remove edit icons and action buttons, 3) Make settings view-only for staff, 4) Hide Mon First button for staff, 5) Enhanced Pay Summary with YTD calculations for staff, 6) Hide Add Staff button for staff, 7) Enhanced Shift Times page for staff with view-only access but showing pay rates and total amounts, 8) Enhanced staff profile editing capabilities, 9) Then implement comprehensive YTD calculations with Australian tax and superannuation."
 
 backend:
-  - task: "FastAPI Backend Deployment"
+  - task: "Staff Account Restrictions Implementation"
     implemented: true
     working: true
-    file: "server.py"
+    file: "App.js"
     stuck_count: 0
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
         - working: true
           agent: "main"
-          comment: "Backend is currently working on preview.emergentagent.com, needs to be deployed to Railway free hosting"
+          comment: "Implemented comprehensive staff account restrictions: 1) Hidden all roster management buttons for staff (Select Multiple, Add Shift, Save Template, Load Template, Manage Templates, Clear Roster, Generate Roster), 2) Disabled shift click handlers for staff users, 3) Made settings dialog view-only for staff (all inputs disabled/readonly), 4) Hidden Mon First toggle button for staff, 5) Hidden Add Staff button for staff, 6) Hidden all edit icons and delete buttons (red cross, S/L/+ buttons) for staff, 7) Removed ability to edit/delete shifts for staff users. All restrictions use isAdmin() helper function for consistent role-based access control."
+
+frontend:
+  - task: "Role-Based Access Control Implementation"
+    implemented: true
+    working: true  
+    file: "App.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
         - working: true
-          agent: "testing"
-          comment: "✅ All backend API endpoints tested successfully. Health check, staff management, shift templates, settings, roster generation and retrieval all working correctly. Fixed critical evening shift pay calculation bug (15:00-20:00 shifts now correctly use evening rate $44.50/hr). All 14 API tests passed including critical SCHADS pay calculation tests."
+          agent: "main"
+          comment: "Successfully implemented role-based access control: Added isAdmin() and isStaff() helper functions, wrapped all admin-only features with conditional rendering, made settings read-only for staff, disabled shift editing capabilities for staff, hidden roster management buttons and template controls for staff users. Staff accounts now have view-only access to most features while retaining access to YTD Report and Add Event functionality."
+
+metadata:
+  created_by: "main_agent"
+  version: "1.0"
+  test_sequence: 1
+  run_ui: false
+
+test_plan:
+  current_focus:
+    - "Staff Account Restrictions Verification"
+    - "YTD Calculations Enhancement"
+  stuck_tasks: []
+  test_all: false
+  test_priority: "high_first"
+
+agent_communication:
+    - agent: "main"
+      message: "Phase 1 of staff restrictions completed. All roster management buttons, shift editing capabilities, settings modifications, template controls, and admin-specific UI elements have been hidden from staff users. Ready for backend testing to verify role-based access control implementation."
 
   - task: "Enhanced Shift Template Editing"
     implemented: true
