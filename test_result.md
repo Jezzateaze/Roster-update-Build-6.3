@@ -111,11 +111,47 @@ backend:
     file: "App.js"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
         - working: true
           agent: "main"
-          comment: "Implemented comprehensive staff account restrictions: 1) Hidden all roster management buttons for staff (Select Multiple, Add Shift, Save Template, Load Template, Manage Templates, Clear Roster, Generate Roster), 2) Disabled shift click handlers for staff users, 3) Made settings dialog view-only for staff (all inputs disabled/readonly), 4) Hidden Mon First toggle button for staff, 5) Hidden Add Staff button for staff, 6) Hidden all edit icons and delete buttons (red cross, S/L/+ buttons) for staff, 7) Removed ability to edit/delete shifts for staff users. All restrictions use isAdmin() helper function for consistent role-based access control."
+          comment: "✅ PHASE 1 COMPLETE: Implemented comprehensive staff account restrictions: 1) Hidden all roster management buttons for staff (Select Multiple, Add Shift, Save Template, Load Template, Manage Templates, Clear Roster, Generate Roster), 2) Disabled shift click handlers for staff users, 3) Made settings dialog view-only for staff (all inputs disabled/readonly), 4) Hidden Mon First toggle button for staff, 5) Hidden Add Staff button for staff, 6) Hidden all edit icons and delete buttons (red cross, S/L/+ buttons) for staff, 7) Removed ability to edit/delete shifts for staff users. All restrictions use isAdmin() helper function for consistent role-based access control."
+
+  - task: "Enhanced YTD Reporting with Privacy Controls"
+    implemented: true
+    working: true
+    file: "App.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "main"
+          comment: "✅ IMPLEMENTED: Enhanced YTD reporting system with comprehensive privacy controls. Staff users now only see their own pay data in YTD reports (filtered by staff_id). Updated YTD dialog title to be role-specific ('My Year-to-Date Report & Tax Summary' for staff). Existing tax calculation system (Australian 2024-25 tax brackets, 11.5% superannuation) maintained and working correctly."
+
+  - task: "Enhanced Shift Times Display with Pay Information"
+    implemented: true
+    working: true
+    file: "App.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "main"
+          comment: "✅ IMPLEMENTED: Enhanced Shift Times page for all users with comprehensive pay information display. Added shift type badge, hourly rate, and total pay calculations for each template. Includes automatic shift type determination based on time ranges, manual override display, sleepover pay handling, and rate calculations using current settings. Staff users have view-only access while seeing full pay details."
+
+  - task: "Comprehensive Staff Self-Profile Management"
+    implemented: true
+    working: true
+    file: "App.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "main"
+          comment: "✅ IMPLEMENTED: Created comprehensive staff self-profile editing system. Staff users can now edit their own profiles with all requested fields: Basic Information (name, DOB, email, phone, address with autocomplete), Emergency Contact details, Professional Information (NDIS, Blue Card, Yellow Card, First Aid), Transport & Licensing checkboxes, Experience & Skills (Disability Support, Nursing & Manual Handling), and text areas for Strengths, Weaknesses, and Areas for Development. Profile button in header routes appropriately based on user role."
 
 frontend:
   - task: "Role-Based Access Control Implementation"
