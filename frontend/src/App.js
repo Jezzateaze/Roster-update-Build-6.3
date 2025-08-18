@@ -3345,18 +3345,21 @@ function App() {
                 </CardContent>
               </Card>
 
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center space-x-2">
-                    <DollarSign className="w-5 h-5" />
-                    <span>Total Pay</span>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-3xl font-bold text-emerald-600">{formatCurrency(totalPay)}</div>
-                  <p className="text-slate-600">This week</p>
-                </CardContent>
-              </Card>
+              {/* Total Pay Card - Only visible to admin */}
+              {currentUser?.role === 'admin' && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center space-x-2">
+                      <DollarSign className="w-5 h-5" />
+                      <span>Total Pay</span>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-3xl font-bold text-emerald-600">{formatCurrency(totalPay)}</div>
+                    <p className="text-slate-600">This week</p>
+                  </CardContent>
+                </Card>
+              )}
 
               <Card>
                 <CardHeader>
