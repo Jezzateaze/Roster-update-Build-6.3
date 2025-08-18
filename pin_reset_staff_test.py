@@ -357,7 +357,7 @@ class PinResetStaffTester:
             "Reset PIN without Admin Token (Should Fail)",
             "POST",
             "api/admin/reset_pin",
-            401,  # Expect unauthorized (no token)
+            403,  # Expect forbidden (admin access required)
             data=reset_request,
             use_auth=False  # Don't use auth token
         )
