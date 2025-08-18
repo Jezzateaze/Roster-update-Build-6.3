@@ -3137,11 +3137,18 @@ function App() {
                   <div className="text-center py-8">
                     <Clock className="w-12 h-12 mx-auto text-slate-400 mb-4" />
                     <h3 className="text-lg font-semibold text-slate-600 mb-2">No Shift Templates Found</h3>
-                    <p className="text-slate-500 mb-4">Create default shift templates to get started with roster generation.</p>
-                    <Button onClick={createDefaultShiftTemplates}>
-                      <Plus className="w-4 h-4 mr-2" />
-                      Create Default Templates
-                    </Button>
+                    <p className="text-slate-500 mb-4">
+                      {currentUser?.role === 'admin' 
+                        ? 'Create default shift templates to get started with roster generation.'
+                        : 'No shift templates have been configured yet. Please contact your administrator.'
+                      }
+                    </p>
+                    {currentUser?.role === 'admin' && (
+                      <Button onClick={createDefaultShiftTemplates}>
+                        <Plus className="w-4 h-4 mr-2" />
+                        Create Default Templates
+                      </Button>
+                    )}
                   </div>
                 ) : (
                   <div className="space-y-6">
