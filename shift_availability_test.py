@@ -361,8 +361,8 @@ class ShiftAvailabilityAPITester:
             unassigned_shift = self.test_data['unassigned_shifts'][1]
             reject_request_data = {
                 "roster_entry_id": unassigned_shift['id'],
-                "staff_id": self.staff_user_id,
-                "staff_name": "Test Staff",
+                "staff_id": self.staff_id,  # Use actual staff_id
+                "staff_name": "Angela",
                 "request_date": datetime.utcnow().isoformat(),
                 "notes": "Another shift request"
             }
