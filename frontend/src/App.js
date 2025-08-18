@@ -780,25 +780,9 @@ function App() {
     const template = rosterTemplates.find(t => t.id === templateId);
     if (!template) return;
     
-    const newName = prompt('Enter new template name:', template.name);
-    if (!newName || newName.trim() === '') return;
-    
-    const newDescription = prompt('Enter new description (optional):', template.description || '');
-    
-    try {
-      const updatedTemplate = {
-        ...template,
-        name: newName.trim(),
-        description: newDescription?.trim() || template.description
-      };
-      
-      await axios.put(`${API_BASE_URL}/api/roster-templates/${templateId}`, updatedTemplate);
-      fetchInitialData(); // Reload templates
-      alert('Template updated successfully');
-    } catch (error) {
-      console.error('Error updating roster template:', error);
-      alert(`Error updating template: ${error.response?.data?.detail || error.message}`);
-    }
+    // Set the selected template for editing and open the comprehensive edit dialog
+    setSelectedRosterTemplateForEdit(template);
+    setShowTemplateEditDialog(true);
   };
 
   const getTemplateShiftDetails = (template) => {
