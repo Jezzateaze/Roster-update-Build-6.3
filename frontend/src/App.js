@@ -3234,7 +3234,7 @@ function App() {
                                       </div>
                                     </div>
                                     
-                                    {/* Hours and Pay Information */}
+                                    {/* Hours Information */}
                                     <div className="text-sm space-y-1">
                                       {(() => {
                                         // Calculate hours for this shift template
@@ -3244,28 +3244,11 @@ function App() {
                                         if (totalMinutes < 0) totalMinutes += 24 * 60; // Handle overnight shifts
                                         const totalHours = totalMinutes / 60;
                                         
-                                        // Calculate pay using the same logic as roster entries
-                                        const mockEntry = {
-                                          start_time: template.start_time,
-                                          end_time: template.end_time,
-                                          is_sleepover: template.is_sleepover,
-                                          manual_shift_type: template.manual_shift_type,
-                                          manual_hourly_rate: template.manual_hourly_rate,
-                                          date: currentDate.toISOString().split('T')[0] // Use current date for day type calculation
-                                        };
-                                        const pay = calculatePay(mockEntry, settings);
-                                        
                                         return (
-                                          <>
-                                            <div className="flex justify-between text-blue-600">
-                                              <span>Hours:</span>
-                                              <span className="font-medium">{totalHours.toFixed(1)}h</span>
-                                            </div>
-                                            <div className="flex justify-between text-emerald-600">
-                                              <span>Pay:</span>
-                                              <span className="font-medium">{formatCurrency(pay)}</span>
-                                            </div>
-                                          </>
+                                          <div className="flex justify-between text-blue-600">
+                                            <span>Hours:</span>
+                                            <span className="font-medium">{totalHours.toFixed(1)}h</span>
+                                          </div>
                                         );
                                       })()}
                                     </div>
