@@ -183,7 +183,7 @@ class PinResetStaffTester:
         
         # Test 1: Reset PIN for admin user (existing user with email)
         reset_request = {
-            "email": "jeremy.tomlinson88@gmail.com"  # Admin's email from backend code
+            "email": "john.admin@rostersync.com"  # Admin's actual email
         }
         
         success, response = self.run_test(
