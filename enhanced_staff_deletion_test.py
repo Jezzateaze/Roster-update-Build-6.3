@@ -140,8 +140,12 @@ class EnhancedStaffDeletionTester:
         """Create a test staff member for deletion testing"""
         print(f"\n👤 Creating Test Staff Member...")
         
+        # Use timestamp to ensure unique name
+        import time
+        timestamp = str(int(time.time()))
+        
         test_staff_data = {
-            "name": "Test Staff Delete",
+            "name": f"Test Staff Delete {timestamp}",
             "active": True
         }
         
@@ -156,6 +160,7 @@ class EnhancedStaffDeletionTester:
         
         if success and 'id' in response:
             self.test_staff_id = response['id']
+            self.test_staff_name = response['name']
             print(f"   ✅ Created test staff with ID: {self.test_staff_id}")
             return True
         else:
