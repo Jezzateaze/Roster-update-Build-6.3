@@ -440,8 +440,8 @@ class ShiftAvailabilityAPITester:
         
         # Test 2: Create unavailable record
         unavailable_data = {
-            "staff_id": self.staff_user_id,
-            "staff_name": "Test Staff",
+            "staff_id": self.staff_id,  # Use actual staff_id
+            "staff_name": "Angela",
             "availability_type": "unavailable",
             "date_from": "2025-01-26",
             "date_to": "2025-01-27",
