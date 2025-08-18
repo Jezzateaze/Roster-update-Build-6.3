@@ -179,6 +179,63 @@ class Session(BaseModel):
     expires_at: datetime
     is_active: bool = True
 
+# New models for Shift & Staff Availability System
+class AvailabilityType(str, Enum):
+    AVAILABLE = "available"
+    UNAVAILABLE = "unavailable" 
+    TIME_OFF_REQUEST = "time_off_request"
+    PREFERRED_SHIFTS = "preferred_shifts"
+
+class RequestStatus(str, Enum):
+    PENDING = "pending"
+    APPROVED = "approved"
+    REJECTED = "rejected"
+    CANCELLED = "cancelled"
+
+class NotificationType(str, Enum):
+    SHIFT_REQUEST_APPROVED = "shift_request_approved"
+    SHIFT_REQUEST_REJECTED = "shift_request_rejected"
+    AVAILABILITY_CONFLICT = "availability_conflict"
+    GENERAL = "general"
+
+class ShiftRequest(BaseModel):
+    id: Optional[str] = None
+    roster_entry_id: str  # ID of the unassigned shift
+    staff_id: str
+    staff_name: str
+    request_date: datetime
+    status: RequestStatus = RequestStatus.PENDING
+    notes: Optional[str] = None
+    admin_notes: Optional[str] = None
+    approved_by: Optional[str] = None
+    approved_date: Optional[datetime] = None
+    created_at: Optional[datetime] = None
+
+class StaffAvailability(BaseModel):
+    id: Optional[str] = None
+    staff_id: str
+    staff_name: str
+    availability_type: AvailabilityType
+    date_from: Optional[str] = None  # YYYY-MM-DD for specific dates
+    date_to: Optional[str] = None    # YYYY-MM-DD for date ranges
+    day_of_week: Optional[int] = None  # 0-6 for recurring weekly availability
+    start_time: Optional[str] = None   # HH:MM for time-specific availability
+    end_time: Optional[str] = None     # HH:MM for time-specific availability
+    is_recurring: bool = False         # Whether this applies every week
+    notes: Optional[str] = None
+    created_at: Optional[datetime] = None
+    is_active: bool = True
+
+class Notification(BaseModel):
+    id: Optional[str] = None
+    user_id: str
+    notification_type: NotificationType
+    title: str
+    message: str
+    related_id: Optional[str] = None  # ID of related shift request, availability, etc.
+    is_read: bool = False
+    created_at: Optional[datetime] = None
+
 # Authentication helper functions
 def hash_pin(pin: str) -> str:
     """Hash a PIN using SHA-256"""
