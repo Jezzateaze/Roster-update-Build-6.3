@@ -10,6 +10,7 @@ class EnhancedStaffDeletionTester:
         self.admin_token = None
         self.staff_token = None
         self.test_staff_id = None
+        self.test_staff_name = None
         self.test_shifts = []
 
     def run_test(self, name, method, endpoint, expected_status, data=None, params=None, use_auth=False, token=None):
