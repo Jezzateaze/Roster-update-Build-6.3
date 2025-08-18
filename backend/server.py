@@ -255,7 +255,7 @@ def determine_shift_type(date_str: str, start_time: str, end_time: str, is_publi
     if start_hour < 6 or end_minutes > 24 * 60:
         return ShiftType.WEEKDAY_NIGHT
     # Evening: starts at 8pm or later OR extends past 8pm
-    elif start_hour >= 20 or end_minutes >= 20 * 60:
+    elif start_hour >= 20 or end_minutes > 20 * 60:
         return ShiftType.WEEKDAY_EVENING
     # Day: everything else (6am-8pm range)
     else:
