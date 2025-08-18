@@ -4879,7 +4879,8 @@ function App() {
                       end_time: selectedTemplate.end_time,
                       is_sleepover: selectedTemplate.is_sleepover,
                       manual_shift_type: selectedTemplate.manual_shift_type,
-                      manual_hourly_rate: selectedTemplate.manual_hourly_rate
+                      manual_hourly_rate: selectedTemplate.manual_hourly_rate,
+                      allow_overlap: selectedTemplate.allow_overlap || false
                     });
                     setShowTemplateDialog(false);
                   }}>
