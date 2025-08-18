@@ -4344,6 +4344,17 @@ class ShiftRosterAPITester:
         print("   Fix: Changed backend determine_shift_type() from 'end_minutes >= 20 * 60' to 'end_minutes > 20 * 60'")
         print("   Expected: 12:00PM-8:00PM should be WEEKDAY_DAY and calculate at $336.00 (8 hrs × $42.00)")
         
+        # Clear existing roster entries for January 2025 to avoid overlap issues
+        print("\n   🧹 Clearing existing roster entries for January 2025...")
+        success, response = self.run_test(
+            "Clear January 2025 Roster",
+            "DELETE",
+            "api/roster/month/2025-01",
+            200
+        )
+        if success:
+            print(f"   ✅ Cleared existing roster entries")
+        
         # Test cases for the critical bug fix
         critical_test_cases = [
             {
@@ -4427,7 +4438,8 @@ class ShiftRosterAPITester:
                 "hours_worked": 0.0,
                 "base_pay": 0.0,
                 "sleepover_allowance": 0.0,
-                "total_pay": 0.0
+                "total_pay": 0.0,
+                "allow_overlap": True  # Allow overlap to avoid conflicts with existing data
             }
             
             success, response = self.run_test(
