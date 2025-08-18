@@ -574,6 +574,10 @@ async def create_staff(staff: Staff):
     if not staff.created_at:
         staff.created_at = datetime.now()
     
+    # Validate staff name is not empty
+    if not staff.name or staff.name.strip() == "":
+        raise HTTPException(status_code=422, detail="Staff name cannot be empty")
+    
     # Check if staff name already exists
     existing_staff = db.staff.find_one({"name": staff.name, "active": True})
     if existing_staff:
