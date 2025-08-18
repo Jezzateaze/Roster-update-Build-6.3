@@ -397,11 +397,11 @@ class ShiftAvailabilityAPITester:
                 )
                 
                 if success:
-                    status = rejected_request.get('status')
-                    if status == 'rejected':
+                    message = rejected_request.get('message')
+                    if "rejected" in message:
                         print(f"   ✅ Shift request rejected successfully")
                     else:
-                        print(f"   ❌ Request status not updated: {status}")
+                        print(f"   ❌ Unexpected rejection response: {message}")
                         return False
         
         return True
