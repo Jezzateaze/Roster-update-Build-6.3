@@ -3997,10 +3997,12 @@ function App() {
                 />
               </div>
               <div className="flex justify-end space-x-2">
-                <Button variant="outline" onClick={() => setShowStaffDialog(false)}>
+                <Button variant="outline" onClick={() => setShowStaffDialog(false)} disabled={addingStaff}>
                   Cancel
                 </Button>
-                <Button onClick={addStaff}>Add Staff</Button>
+                <Button onClick={addStaff} disabled={addingStaff}>
+                  {addingStaff ? 'Adding...' : 'Add Staff'}
+                </Button>
               </div>
             </div>
           </DialogContent>
