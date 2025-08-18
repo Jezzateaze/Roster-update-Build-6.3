@@ -4818,7 +4818,7 @@ function App() {
                 <div>
                   <Label htmlFor="template-manual-shift-type">Manual Shift Type Override (Optional)</Label>
                   <Select 
-                    value={selectedTemplate.manual_shift_type || ''} 
+                    value={selectedTemplate.manual_shift_type || 'auto'} 
                     onValueChange={(value) => {
                       setSelectedTemplate({
                         ...selectedTemplate,
