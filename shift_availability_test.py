@@ -464,8 +464,8 @@ class ShiftAvailabilityAPITester:
         
         # Test 3: Create time off request
         time_off_data = {
-            "staff_id": self.staff_user_id,
-            "staff_name": "Test Staff",
+            "staff_id": self.staff_id,  # Use actual staff_id
+            "staff_name": "Angela",
             "availability_type": "time_off_request",
             "date_from": "2025-02-01",
             "date_to": "2025-02-03",
