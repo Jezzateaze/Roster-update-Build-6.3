@@ -2349,6 +2349,17 @@ function App() {
             <Badge variant="outline" className="px-3 py-1">
               {settings.pay_mode === 'default' ? 'Default Pay' : 'SCHADS Award'}
             </Badge>
+            {/* Profile Button */}
+            {isAuthenticated && currentUser && (
+              <Button
+                variant="outline"
+                onClick={() => setShowProfileDialog(true)}
+                className="flex items-center space-x-2"
+              >
+                <User className="w-4 h-4" />
+                <span>{currentUser.first_name || currentUser.username}</span>
+              </Button>
+            )}
             <Button
               variant="outline"
               onClick={() => setShowSettingsDialog(true)}
@@ -2356,6 +2367,17 @@ function App() {
               <Settings className="w-4 h-4 mr-2" />
               Settings
             </Button>
+            {/* Logout Button */}
+            {isAuthenticated && (
+              <Button
+                variant="outline"
+                onClick={logout}
+                className="text-red-600 hover:text-red-700"
+              >
+                <LogOut className="w-4 h-4 mr-2" />
+                Logout
+              </Button>
+            )}
           </div>
           
           {/* Quick Settings Toggle Buttons */}
