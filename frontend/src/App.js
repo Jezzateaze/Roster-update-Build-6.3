@@ -2785,7 +2785,13 @@ function App() {
             {isAuthenticated && currentUser && (
               <Button
                 variant="outline"
-                onClick={() => setShowProfileDialog(true)}
+                onClick={() => {
+                  if (isStaff()) {
+                    setShowStaffSelfProfileDialog(true);
+                  } else {
+                    setShowProfileDialog(true);
+                  }
+                }}
                 className="flex items-center space-x-2"
               >
                 <User className="w-4 h-4" />
