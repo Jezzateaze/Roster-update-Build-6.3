@@ -214,6 +214,53 @@ function App() {
       alert(`❌ Error resetting PIN: ${errorMessage}`);
     }
   };
+
+  // Delete staff member function (Admin only)
+  const handleDeleteStaff = async (staffMember) => {
+    if (!isAdmin()) {
+      alert('❌ Admin access required to delete staff members.');
+      return;
+    }
+
+    const confirmMessage = `⚠️ Are you sure you want to delete staff member "${staffMember.name}"?\n\nThis action will:\n• Deactivate the staff member\n• Unassign them from all future shifts\n• Preserve past shift records for payroll history\n\nType "DELETE" to confirm:`;
+    
+    const confirmation = prompt(confirmMessage);
+    
+    if (confirmation !== 'DELETE') {
+      alert('❌ Deletion cancelled. Staff member was not deleted.');
+      return;
+    }
+
+    try {
+      const response = await axios.delete(`${API_BASE_URL}/api/staff/${staffMember.id}`, {
+        headers: { 'Authorization': `Bearer ${authToken}` }
+      });
+      
+      const result = response.data;
+      
+      let message = `✅ ${result.message}\n\n`;
+      
+      if (result.shifts_affected) {
+        message += `📊 Shift Impact:\n`;
+        message += `• Future shifts unassigned: ${result.shifts_affected.future_shifts_unassigned}\n`;
+        message += `• Past shifts preserved: ${result.shifts_affected.past_shifts_preserved}\n`;
+        message += `• Total shifts affected: ${result.shifts_affected.total_shifts}\n\n`;
+      }
+      
+      message += `The staff member has been deactivated and removed from future scheduling.`;
+      
+      alert(message);
+      
+      // Refresh data
+      fetchInitialData();
+      fetchRosterData();
+      
+    } catch (error) {
+      console.error('Error deleting staff member:', error);
+      alert(`❌ Error deleting staff member: ${error.response?.data?.detail || error.message}`);
+    }
+  };
+
   const [authError, setAuthError] = useState('');
   const [addingStaff, setAddingStaff] = useState(false);
 
