@@ -13,7 +13,7 @@ import json
 from datetime import datetime
 
 class OverlapHandlingTester:
-    def __init__(self, base_url="https://qldstaff.preview.emergentagent.com"):
+    def __init__(self, base_url="https://rostersync-1.preview.emergentagent.com"):
         self.base_url = base_url
         self.tests_run = 0
         self.tests_passed = 0
