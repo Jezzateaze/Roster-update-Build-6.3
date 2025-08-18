@@ -2911,7 +2911,48 @@ function App() {
                       className="p-4 cursor-pointer hover:shadow-md transition-shadow"
                       onClick={() => {
                         if (currentUser?.role === 'admin') {
-                          setSelectedStaffForProfile(member);
+                          // Initialize comprehensive staff profile with all fields
+                          const comprehensiveProfile = {
+                            ...member,
+                            // Basic Information
+                            email: member.email || '',
+                            phone: member.phone || '',
+                            date_of_birth: member.date_of_birth || '',
+                            
+                            // Address Information
+                            postal_address: member.postal_address || '',
+                            
+                            // Emergency Contact
+                            emergency_contact_name: member.emergency_contact_name || '',
+                            emergency_contact_phone: member.emergency_contact_phone || '',
+                            emergency_contact_address: member.emergency_contact_address || '',
+                            emergency_contact_relationship: member.emergency_contact_relationship || '',
+                            
+                            // Professional Information  
+                            ndis_registration: member.ndis_registration || '',
+                            blue_card_number: member.blue_card_number || '',
+                            yellow_card_number: member.yellow_card_number || '',
+                            first_aid_registration: member.first_aid_registration || '',
+                            first_aid_expiry: member.first_aid_expiry || '',
+                            
+                            // Experience & Skills
+                            disability_support_experience: member.disability_support_experience || [],
+                            nursing_experience: member.nursing_experience || [],
+                            manual_handling_certified: member.manual_handling_certified || false,
+                            strengths: member.strengths || '',
+                            weaknesses: member.weaknesses || '',
+                            
+                            // Transport & Licensing
+                            has_license: member.has_license || false,
+                            license_class: member.license_class || '',
+                            can_drive_van: member.can_drive_van || false,
+                            can_transport_wheelchair: member.can_transport_wheelchair || false,
+                            
+                            // Profile Photo
+                            profile_photo_url: member.profile_photo_url || ''
+                          };
+                          
+                          setSelectedStaffForProfile(comprehensiveProfile);
                           setShowStaffProfileDialog(true);
                         }
                       }}
