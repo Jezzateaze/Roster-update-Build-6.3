@@ -90,59 +90,23 @@ class ShiftAvailabilityAPITester:
             print(f"   ❌ Admin authentication failed")
             return False
         
-        # Create a staff user for testing if needed
-        staff_data = {
-            "username": "teststaff",
-            "role": "staff",
-            "email": "teststaff@company.com",
-            "first_name": "Test",
-            "last_name": "Staff"
-        }
+        # Try to login with existing staff user
+        staff_users_to_try = [
+            ("angela", "888888"),
+            ("johnsmith", "888888"),
+            ("alicejohnson", "888888"),
+            ("teststaff", "888888")
+        ]
         
-        success, staff_user = self.run_test(
-            "Create Staff User",
-            "POST",
-            "api/users",
-            200,
-            data=staff_data,
-            use_auth=True
-        )
-        
-        if success:
-            self.staff_user_id = staff_user.get('id')
-            default_pin = staff_user.get('default_pin', '888888')
-            print(f"   ✅ Staff user created - ID: {self.staff_user_id}")
-            
-            # Staff login
+        staff_authenticated = False
+        for username, pin in staff_users_to_try:
             staff_login = {
-                "username": "teststaff",
-                "pin": default_pin
+                "username": username,
+                "pin": pin
             }
             
             success, staff_response = self.run_test(
-                "Staff Login",
-                "POST",
-                "api/auth/login",
-                200,
-                data=staff_login
-            )
-            
-            if success:
-                self.staff_token = staff_response.get('token')
-                print(f"   ✅ Staff authenticated - Token: {self.staff_token[:20]}...")
-            else:
-                print(f"   ❌ Staff authentication failed")
-                return False
-        else:
-            print(f"   ⚠️  Using existing staff credentials")
-            # Try to login with existing staff user
-            staff_login = {
-                "username": "teststaff", 
-                "pin": "888888"
-            }
-            
-            success, staff_response = self.run_test(
-                "Existing Staff Login",
+                f"Staff Login ({username})",
                 "POST",
                 "api/auth/login",
                 200,
@@ -152,7 +116,18 @@ class ShiftAvailabilityAPITester:
             if success:
                 self.staff_token = staff_response.get('token')
                 self.staff_user_id = staff_response.get('user', {}).get('id')
-                print(f"   ✅ Existing staff authenticated")
+                staff_user_data = staff_response.get('user', {})
+                print(f"   ✅ Staff authenticated - Username: {username}")
+                print(f"   Staff ID: {self.staff_user_id}")
+                print(f"   Staff Role: {staff_user_data.get('role')}")
+                staff_authenticated = True
+                break
+            else:
+                print(f"   ⚠️  Failed to login as {username}")
+        
+        if not staff_authenticated:
+            print(f"   ❌ Could not authenticate any staff user")
+            return False
         
         return self.admin_token and self.staff_token
 
