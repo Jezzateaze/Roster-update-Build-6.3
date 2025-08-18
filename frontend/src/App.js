@@ -2343,7 +2343,17 @@ function App() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
-      <div className="container mx-auto p-6">
+      {!isAuthenticated ? (
+        // Login interface - this will be handled by the login dialog
+        <div className="flex items-center justify-center min-h-screen">
+          <div className="text-center">
+            <h1 className="text-4xl font-bold text-slate-800 mb-4">Shift Roster & Pay Calculator</h1>
+            <p className="text-slate-600">Please log in to continue</p>
+          </div>
+        </div>
+      ) : (
+        // Main application interface - only show when authenticated
+        <div className="container mx-auto p-6">
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div>
