@@ -307,14 +307,6 @@ function App() {
     return currentUser && currentUser.role === 'staff';
   };
 
-  // Helper function to check if current user can view pay information
-  const canViewPayInformation = (targetStaffId = null) => {
-    if (!currentUser) return false;
-    if (currentUser.role === 'admin') return true;
-    if (!targetStaffId) return true; // For general pay displays
-    return currentUser.staff_id === targetStaffId;
-  };
-
   // Fetch available users for login dropdown
   const fetchAvailableUsers = async () => {
     try {
