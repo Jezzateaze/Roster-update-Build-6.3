@@ -8070,6 +8070,8 @@ function App() {
             </div>
           </div>
         </DialogContent>
+      </Dialog>
+
       {/* Comprehensive Overlap Management Dialog */}
       <Dialog open={showOverlapDialog} onOpenChange={setShowOverlapDialog}>
         <DialogContent className="max-w-4xl max-h-[85vh] overflow-y-auto">
