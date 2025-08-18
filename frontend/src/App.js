@@ -116,6 +116,8 @@ function App() {
   const [selectedStaffForProfile, setSelectedStaffForProfile] = useState(null);
   const [loginData, setLoginData] = useState({ username: '', pin: '' });
   const [changePinData, setChangePinData] = useState({ current_pin: '', new_pin: '', confirm_pin: '' });
+  const [profileData, setProfileData] = useState({});
+  const [editingProfile, setEditingProfile] = useState(false);
   const [authError, setAuthError] = useState('');
 
   const [currentDate, setCurrentDate] = useState(getBrisbaneDate());
