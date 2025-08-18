@@ -616,37 +616,46 @@ test_plan:
     implemented: true
     working: false
     file: "App.js"
-    stuck_count: 1
+    stuck_count: 2
     priority: "high"
     needs_retesting: false
     status_history:
         - working: false
           agent: "testing"
           comment: "❌ BLOCKED BY AUTHENTICATION: Admin profile update functionality cannot be tested due to 401 authentication error. Login with Admin/0000 fails, preventing access to profile dialog. ✅ CONFIRMED: Address autocomplete backend endpoint working perfectly - tested 'Sydney Opera', 'Melbourne CBD', 'Brisbane' with proper OpenStreetMap integration returning formatted results. Frontend AddressAutocomplete component exists and is properly implemented. BLOCKER: Backend authentication system needs admin user initialization before profile update and address autocomplete can be tested in UI."
+        - working: false
+          agent: "testing"
+          comment: "❌ AUTHENTICATION ISSUE PERSISTS: Comprehensive testing attempted with Admin/0000 credentials. Login appears successful (user shows as 'John' in header), but PIN change dialog blocks access to main features. Authentication flow is partially working but requires PIN change completion to access profile, staff management, and PIN reset features. The PIN change dialog prevents testing of the main requested features. Backend authentication working but frontend flow needs completion."
 
   - task: "Add Staff Functionality"
     implemented: true
     working: false
     file: "App.js"
-    stuck_count: 1
+    stuck_count: 2
     priority: "high"
     needs_retesting: false
     status_history:
         - working: false
           agent: "testing"
           comment: "❌ BLOCKED BY AUTHENTICATION: Add Staff functionality cannot be tested due to 401 authentication error. Cannot access Staff tab or Add Staff button without successful login. ✅ CONFIRMED: Backend /api/staff endpoint accessible (200 OK), suggesting staff management API is functional. Frontend likely has proper Add Staff dialog implementation based on code review. BLOCKER: Authentication must be resolved before Add Staff button, dialog, and success flow can be tested."
+        - working: false
+          agent: "testing"
+          comment: "❌ BLOCKED BY PIN CHANGE DIALOG: Authentication successful (user logged in as 'John') but PIN change dialog prevents access to Staff tab and Add Staff functionality. The mandatory PIN change requirement blocks testing of staff management features. Need to complete PIN change flow or bypass it to test Add Staff button, dialog, and staff creation functionality."
 
   - task: "PIN Reset Functionality"
     implemented: true
     working: false
     file: "App.js"
-    stuck_count: 1
+    stuck_count: 2
     priority: "high"
     needs_retesting: false
     status_history:
         - working: false
           agent: "testing"
           comment: "❌ BLOCKED BY AUTHENTICATION: PIN Reset functionality cannot be tested due to 401 authentication error. Cannot access staff profiles or Reset PIN buttons without successful admin login. Previous testing showed backend /api/admin/reset_pin endpoint working correctly. BLOCKER: Authentication system needs to be fixed before PIN reset dialog, temporary PIN generation, and success messages can be verified in frontend UI."
+        - working: false
+          agent: "testing"
+          comment: "❌ BLOCKED BY PIN CHANGE DIALOG: User successfully authenticated but PIN change dialog prevents access to staff management and PIN reset features. Cannot test PIN reset functionality for existing staff members while PIN change dialog is active. Backend PIN reset API confirmed working in previous tests, but frontend UI testing blocked by mandatory PIN change requirement."
 
   - task: "Mobile Responsiveness for Frontend Fixes"
     implemented: true
