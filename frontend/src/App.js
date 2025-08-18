@@ -4743,7 +4743,9 @@ function App() {
                               </div>
                               <div className="flex justify-between text-sm">
                                 <span className="text-slate-600">Gross Pay:</span>
-                                <span className="font-medium text-emerald-600">{formatCurrency(fyTotals.totalPay)}</span>
+                                {currentUser?.role === 'admin' && (
+                                  <span className="font-medium text-emerald-600">{formatCurrency(fyTotals.totalPay)}</span>
+                                )}
                               </div>
                               <div className="text-xs text-slate-500">
                                 FY {fyTotals.startDate.getFullYear()}/{String(fyTotals.endDate.getFullYear()).slice(-2)}
