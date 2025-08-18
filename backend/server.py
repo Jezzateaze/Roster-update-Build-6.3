@@ -1015,7 +1015,7 @@ async def save_current_roster_as_template(template_name: str, month: str):
 
 @app.post("/api/generate-roster-from-template/{template_id}/{month}")
 async def generate_roster_from_template(template_id: str, month: str):
-    """Generate roster entries for a month using a roster template"""
+    """Generate roster entries for a month using a roster template with advanced 2:1 shift support"""
     # Get the roster template
     template_doc = db.roster_templates.find_one({"id": template_id, "is_active": True})
     if not template_doc:
@@ -1030,6 +1030,8 @@ async def generate_roster_from_template(template_id: str, month: str):
     
     entries_created = 0
     overlaps_detected = []
+    duplicates_prevented = []
+    duplicates_allowed = []
     
     for day in range(1, days_in_month + 1):
         date_obj = datetime(year, month_num, day)
@@ -1045,50 +1047,111 @@ async def generate_roster_from_template(template_id: str, month: str):
             # Get shift name from template if available
             shift_name = shift_data.get("name", template.name)
             
-            # Check for overlaps (allows 2:1 shifts to overlap)
-            if check_shift_overlap(date_str, shift_data["start_time"], shift_data["end_time"], shift_name=shift_name):
-                overlaps_detected.append({
-                    "date": date_str,
-                    "start_time": shift_data["start_time"],
-                    "end_time": shift_data["end_time"],
-                    "name": shift_name
-                })
-                continue  # Skip overlapping shifts (unless they're 2:1)
-            
-            # Check if entry already exists
-            existing = db.roster.find_one({
+            # Check for existing entries at same time
+            existing_entries = list(db.roster.find({
                 "date": date_str,
                 "start_time": shift_data["start_time"],
                 "end_time": shift_data["end_time"]
-            })
+            }))
             
-            if not existing:
-                entry = RosterEntry(
-                    id=str(uuid.uuid4()),
-                    date=date_str,
-                    shift_template_id=f"template-{template_id}-{day_of_week}",
-                    start_time=shift_data["start_time"],
-                    end_time=shift_data["end_time"],
-                    is_sleepover=shift_data.get("is_sleepover", False)
-                )
+            should_skip = False
+            skip_reason = ""
+            
+            # Apply duplicate prevention rules based on template configuration
+            if existing_entries:
+                # Check if any existing entries are unassigned
+                unassigned_exists = any(not entry.get("staff_id") and not entry.get("staff_name") for entry in existing_entries)
                 
-                # Calculate pay
-                settings_doc = db.settings.find_one()
-                settings = Settings(**settings_doc) if settings_doc else Settings()
-                entry = calculate_pay(entry, settings)
+                if unassigned_exists and template.prevent_duplicate_unassigned:
+                    should_skip = True
+                    skip_reason = "Duplicate prevented: Unassigned shift already exists"
+                    duplicates_prevented.append({
+                        "date": date_str,
+                        "start_time": shift_data["start_time"],
+                        "end_time": shift_data["end_time"],
+                        "reason": skip_reason
+                    })
                 
-                db.roster.insert_one(entry.dict())
-                entries_created += 1
+                # Check if we should allow different staff only
+                elif template.allow_different_staff_only and not template.enable_2_1_shift:
+                    # For non-2:1 templates with different staff rule, check if all slots are filled with different staff
+                    assigned_staff = [entry.get("staff_id") for entry in existing_entries if entry.get("staff_id")]
+                    if len(assigned_staff) >= 1:  # Already has one staff member
+                        should_skip = True
+                        skip_reason = "Single staff per shift (non-2:1 template)"
+                        duplicates_prevented.append({
+                            "date": date_str,
+                            "start_time": shift_data["start_time"],
+                            "end_time": shift_data["end_time"],
+                            "reason": skip_reason
+                        })
+            
+            if should_skip:
+                continue
+            
+            # Check for overlaps if not overridden
+            if not template.allow_overlap_override:
+                overlap_check = check_shift_overlap(date_str, shift_data["start_time"], shift_data["end_time"], shift_name=shift_name)
+                if overlap_check and not template.enable_2_1_shift:
+                    overlaps_detected.append({
+                        "date": date_str,
+                        "start_time": shift_data["start_time"],
+                        "end_time": shift_data["end_time"],
+                        "name": shift_name,
+                        "reason": "Overlap detected and not overridden"
+                    })
+                    continue
+            
+            # Create new entry
+            entry = RosterEntry(
+                id=str(uuid.uuid4()),
+                date=date_str,
+                shift_template_id=f"template-{template_id}-{day_of_week}",
+                start_time=shift_data["start_time"],
+                end_time=shift_data["end_time"],
+                is_sleepover=shift_data.get("is_sleepover", False),
+                allow_overlap=template.enable_2_1_shift or template.allow_overlap_override
+            )
+            
+            # Calculate pay
+            settings_doc = db.settings.find_one()
+            settings = Settings(**settings_doc) if settings_doc else Settings()
+            entry = calculate_pay(entry, settings)
+            
+            db.roster.insert_one(entry.dict())
+            entries_created += 1
+            
+            # Track allowed duplicates for reporting
+            if existing_entries:
+                duplicates_allowed.append({
+                    "date": date_str,
+                    "start_time": shift_data["start_time"],
+                    "end_time": shift_data["end_time"],
+                    "reason": "2:1 shift or different staff allowed"
+                })
     
     result = {
         "message": f"Generated {entries_created} roster entries for {month} using template '{template.name}'",
-        "entries_created": entries_created
+        "entries_created": entries_created,
+        "template_config": {
+            "enable_2_1_shift": template.enable_2_1_shift,
+            "allow_overlap_override": template.allow_overlap_override,
+            "prevent_duplicate_unassigned": template.prevent_duplicate_unassigned,
+            "allow_different_staff_only": template.allow_different_staff_only
+        }
     }
     
     if overlaps_detected:
         result["overlaps_detected"] = len(overlaps_detected)
-        result["overlap_details"] = overlaps_detected[:5]  # Show first 5 overlaps
-        result["note"] = "Shifts with '2:1' in the name are allowed to overlap"
+        result["overlap_details"] = overlaps_detected[:5]
+    
+    if duplicates_prevented:
+        result["duplicates_prevented"] = len(duplicates_prevented)
+        result["prevention_details"] = duplicates_prevented[:5]
+    
+    if duplicates_allowed:
+        result["duplicates_allowed"] = len(duplicates_allowed)
+        result["allowance_details"] = duplicates_allowed[:5]
     
     return result
 
