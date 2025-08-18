@@ -60,13 +60,7 @@ const getMondayOfISOWeek = (week, year) => {
   return new Date(mondayOfWeek1.getTime() + (week - 1) * 7 * 86400000);
 };
 
-// Helper function to check if current user can view pay information
-const canViewPayInformation = (targetStaffId = null) => {
-  if (!currentUser) return false;
-  if (currentUser.role === 'admin') return true;
-  if (!targetStaffId) return true; // For general pay displays
-  return currentUser.staff_id === targetStaffId;
-};
+
 
 
 
