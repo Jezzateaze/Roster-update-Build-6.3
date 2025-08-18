@@ -729,11 +729,11 @@ test_plan:
 
   - task: "Pay Information Privacy Controls"
     implemented: true
-    working: true
+    working: "NA"
     file: "App.js"
     stuck_count: 0
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
         - working: "NA"
           agent: "user"
@@ -741,6 +741,9 @@ test_plan:
         - working: true
           agent: "testing"
           comment: "🔐 PAY INFORMATION PRIVACY CONTROLS TESTING COMPLETED SUCCESSFULLY! Comprehensive testing of privacy controls implementation: ✅ ADMIN VIEW TESTING (DESKTOP 1920x1080): Individual shift pay amounts fully visible on calendar (790+ pay amounts found including $336.00, $222.50, $356.00, $175.00, $460.00, $287.50, $592.00, $370.00), Daily pay totals visible (📊 4 shifts 29.0h, 📊 7 shifts 53.0h $1,776.00, 📊 4 shifts 44.0h $1,203.00), YTD Report button visible in toolbar, Pay Summary tab visible in navigation, All pay-related information fully accessible to Admin including assigned shifts (Angela $592.00, Rose $592.00, Kayla $592.00) and unassigned shifts. ✅ MOBILE RESPONSIVENESS TESTING (390x844): Admin view maintains full pay visibility on mobile (790+ pay amounts displayed), Pay Summary tab visible, Privacy controls work correctly on mobile viewport. ✅ PRIVACY IMPLEMENTATION VERIFIED: Code-level privacy control functions implemented (canViewPayInformation(entryStaffId), getPayDisplayText(amount, entryStaffId)), Admin (role === 'admin') retains full visibility of all pay information, Staff (role === 'staff') designed to only see their own pay with others showing '***'. ⚠️ STAFF VIEW LIMITATION: Unable to test staff view directly due to authentication constraints (401 error with staff credentials), but privacy control logic is properly implemented in code. The privacy controls are production-ready with Admin having full access and Staff privacy restrictions properly coded."
+        - working: "NA"
+          agent: "testing"
+          comment: "🔒 UPDATED PRIVACY CONTROLS TESTING REQUESTED: New comprehensive testing required for updated privacy controls focusing on: 1) SHIFT TIMES PAGE PRIVACY - Admin should see Bulk Edit button, Add Shift buttons, Edit/Clone/Delete buttons on templates; Staff should NOT see these controls, only view-only information, 2) PAY SUMMARY PAGE PRIVACY - Admin should see Total Hours (all staff), Total Pay (all staff), Staff Count, Weekly Staff Summary (ALL staff); Staff should see My Hours (only their hours), My Pay (only their pay), My Weekly Summary (only their own row), 3) PRIVACY VERIFICATION - Staff cannot see other staff pay amounts, editing functions hidden from staff, summary information filtered to current user only. Testing required on both desktop (1920x1080) and mobile (390x844) viewports."
 
 agent_communication:
   - agent: "main"
