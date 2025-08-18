@@ -110,6 +110,10 @@ class RosterTemplate(BaseModel):
     created_at: datetime = None
     is_active: bool = True
     template_data: Dict[str, List[Dict]] = {}  # day_of_week (as string) -> list of shift templates
+    enable_2_1_shift: Optional[bool] = False  # Allow multiple staff on same shift time
+    allow_overlap_override: Optional[bool] = False  # Allow override of overlap detection
+    prevent_duplicate_unassigned: Optional[bool] = True  # Prevent duplicate entries if unassigned
+    allow_different_staff_only: Optional[bool] = True  # Allow duplicates only if different staff assigned
 
 class DayTemplate(BaseModel):
     id: str
