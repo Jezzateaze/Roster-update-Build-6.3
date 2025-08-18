@@ -1997,7 +1997,7 @@ function App() {
                   <span className={`${isCurrentMonth ? '' : 'opacity-75'} font-semibold`}>
                     {formatTime(entry.start_time, settings.time_format === '24hr')}-{formatTime(entry.end_time, settings.time_format === '24hr')}
                   </span>
-                  {!bulkSelectionMode && (
+                  {!bulkSelectionMode && isAdmin() && (
                     <Edit className="w-3 h-3 opacity-0 group-hover/shift:opacity-100 transition-opacity" />
                   )}
                 </div>
