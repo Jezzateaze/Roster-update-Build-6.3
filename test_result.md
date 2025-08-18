@@ -624,7 +624,7 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Pay Information Privacy Controls"
+    - "Authorization Middleware Implementation"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
