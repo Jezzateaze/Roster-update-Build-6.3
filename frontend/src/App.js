@@ -4682,6 +4682,226 @@ function App() {
           </DialogContent>
         </Dialog>
 
+        {/* User Profile Dialog */}
+        <Dialog open={showProfileDialog} onOpenChange={setShowProfileDialog}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle className="flex items-center space-x-2">
+                <User className="w-5 h-5" />
+                <span>My Profile</span>
+              </DialogTitle>
+            </DialogHeader>
+            <div className="space-y-6">
+              {/* User Info */}
+              <div className="space-y-4">
+                <div className="flex items-center space-x-4 p-4 bg-slate-50 rounded-lg">
+                  <div className="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center text-white font-bold text-lg">
+                    {currentUser?.first_name?.charAt(0) || currentUser?.username?.charAt(0) || 'U'}
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-lg">{currentUser?.first_name || currentUser?.username}</h3>
+                    <p className="text-slate-600 capitalize">{currentUser?.role || 'User'}</p>
+                  </div>
+                </div>
+
+                {/* Personal Details */}
+                <div className="space-y-3">
+                  <h4 className="font-medium text-slate-700">Personal Information</h4>
+                  <div className="grid grid-cols-1 gap-3 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-slate-600">Username:</span>
+                      <span className="font-medium">{currentUser?.username}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-slate-600">Email:</span>
+                      <span className="font-medium">{currentUser?.email || 'Not provided'}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-slate-600">Phone:</span>
+                      <span className="font-medium">{currentUser?.phone || 'Not provided'}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-slate-600">Role:</span>
+                      <Badge variant="outline" className="capitalize">{currentUser?.role}</Badge>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Account Information */}
+                <div className="space-y-3">
+                  <h4 className="font-medium text-slate-700">Account Information</h4>
+                  <div className="grid grid-cols-1 gap-3 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-slate-600">Account Status:</span>
+                      <Badge variant="outline" className="bg-green-50 text-green-700">Active</Badge>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-slate-600">Last Login:</span>
+                      <span className="font-medium">{currentUser?.last_login ? new Date(currentUser.last_login).toLocaleString() : 'Just now'}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-slate-600">Member Since:</span>
+                      <span className="font-medium">{currentUser?.created_at ? new Date(currentUser.created_at).toLocaleDateString() : 'N/A'}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex flex-col space-y-2">
+                <Button
+                  onClick={() => {
+                    setShowProfileDialog(false);
+                    setShowChangePinDialog(true);
+                  }}
+                  className="w-full"
+                >
+                  Change PIN
+                </Button>
+                <Button variant="outline" onClick={() => setShowProfileDialog(false)}>
+                  Close
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* Staff Profile Dialog (Admin) */}
+        {currentUser?.role === 'admin' && (
+          <Dialog open={showStaffProfileDialog} onOpenChange={setShowStaffProfileDialog}>
+            <DialogContent className="max-w-2xl">
+              <DialogHeader>
+                <DialogTitle className="flex items-center space-x-2">
+                  <Users className="w-5 h-5" />
+                  <span>Staff Profile - {selectedStaffForProfile?.name}</span>
+                </DialogTitle>
+              </DialogHeader>
+              {selectedStaffForProfile && (
+                <div className="space-y-6">
+                  {/* Staff Basic Info */}
+                  <div className="flex items-center space-x-4 p-4 bg-slate-50 rounded-lg">
+                    <div className="w-16 h-16 bg-blue-500 rounded-full flex items-center justify-center text-white font-bold text-xl">
+                      {selectedStaffForProfile.name.charAt(0)}
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-xl">{selectedStaffForProfile.name}</h3>
+                      <p className="text-slate-600">Staff Member</p>
+                      <Badge variant={selectedStaffForProfile.active ? "default" : "secondary"}>
+                        {selectedStaffForProfile.active ? "Active" : "Inactive"}
+                      </Badge>
+                    </div>
+                  </div>
+
+                  {/* Access Control Section */}
+                  <div className="space-y-4">
+                    <h4 className="font-medium text-slate-700 text-lg">Access Control & Privileges</h4>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-3">
+                        <Label className="text-sm font-medium">Account Status</Label>
+                        <div className="flex items-center space-x-2">
+                          <Switch 
+                            checked={selectedStaffForProfile.active}
+                            onCheckedChange={() => {
+                              // Toggle staff active status
+                              const updatedStaff = { ...selectedStaffForProfile, active: !selectedStaffForProfile.active };
+                              setSelectedStaffForProfile(updatedStaff);
+                            }}
+                          />
+                          <span className="text-sm">{selectedStaffForProfile.active ? 'Active' : 'Inactive'}</span>
+                        </div>
+                      </div>
+
+                      <div className="space-y-3">
+                        <Label className="text-sm font-medium">App Access</Label>
+                        <div className="flex items-center space-x-2">
+                          <Switch 
+                            checked={selectedStaffForProfile.active}
+                            onCheckedChange={() => {
+                              // Grant/revoke app access
+                              const updatedStaff = { ...selectedStaffForProfile, active: !selectedStaffForProfile.active };
+                              setSelectedStaffForProfile(updatedStaff);
+                            }}
+                          />
+                          <span className="text-sm">{selectedStaffForProfile.active ? 'Granted' : 'Revoked'}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Role Assignment */}
+                    <div className="space-y-3">
+                      <Label className="text-sm font-medium">Role & Permissions</Label>
+                      <Select defaultValue="staff">
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select role" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="staff">Staff - Basic Access</SelectItem>
+                          <SelectItem value="supervisor">Supervisor - Can manage shifts</SelectItem>
+                          <SelectItem value="admin">Admin - Full Access</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    {/* View Controls */}
+                    <div className="space-y-3">
+                      <Label className="text-sm font-medium">View Controls</Label>
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm">Can view other staff schedules</span>
+                          <Switch defaultChecked={false} />
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm">Can view pay information</span>
+                          <Switch defaultChecked={false} />
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm">Can request shift changes</span>
+                          <Switch defaultChecked={true} />
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm">Can view full roster</span>
+                          <Switch defaultChecked={false} />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Contact Information */}
+                  <div className="space-y-3">
+                    <h4 className="font-medium text-slate-700">Contact Information</h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <Label className="text-sm">Email</Label>
+                        <Input placeholder="staff@example.com" />
+                      </div>
+                      <div>
+                        <Label className="text-sm">Phone</Label>
+                        <Input placeholder="+61 xxx xxx xxx" />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Action Buttons */}
+                  <div className="flex justify-between pt-4 border-t">
+                    <Button variant="outline" onClick={() => setShowStaffProfileDialog(false)}>
+                      Cancel
+                    </Button>
+                    <div className="flex space-x-2">
+                      <Button variant="outline">
+                        Reset PIN
+                      </Button>
+                      <Button>
+                        Save Changes
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </DialogContent>
+          </Dialog>
+        )}
+
         </div>
       )}
     </div>
