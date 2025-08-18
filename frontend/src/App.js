@@ -2208,7 +2208,7 @@ function App() {
                           </div>
                           <div className="text-right">
                             <div className="text-lg font-bold text-emerald-600">
-                              {formatCurrency(entry.total_pay)}
+                              {getPayDisplayText(entry.total_pay, entry.staff_id)}
                             </div>
                             <div className="text-sm text-slate-600">
                               {entry.staff_name || 'Unassigned'}
