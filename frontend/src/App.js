@@ -251,6 +251,7 @@ function App() {
     start_time: '',
     end_time: '',
     is_sleepover: false,
+    allow_overlap: false,
     shift_type_override: '',
     day_of_week: '',
     apply_to: 'selected' // 'selected' or 'all'
