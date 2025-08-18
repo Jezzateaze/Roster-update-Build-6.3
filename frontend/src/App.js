@@ -20,6 +20,22 @@ const API_BASE_URL = process.env.REACT_APP_BACKEND_URL;
 
 // Helper function for timezone-safe date formatting
 const formatDateString = (date) => {
+  // Handle both Date objects and date strings
+  if (typeof date === 'string') {
+    // If it's already a string in YYYY-MM-DD format, return as is
+    if (/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+      return date;
+    }
+    // Otherwise, try to parse it as a Date
+    date = new Date(date);
+  }
+  
+  // Ensure we have a valid Date object
+  if (!(date instanceof Date) || isNaN(date.getTime())) {
+    console.error('Invalid date passed to formatDateString:', date);
+    return '';
+  }
+  
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, '0');
   const day = String(date.getDate()).padStart(2, '0');
