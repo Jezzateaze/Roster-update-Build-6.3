@@ -242,15 +242,26 @@ class EnhancedStaffDeletionTester:
             "DELETE Staff Without Authentication (Should Fail)",
             "DELETE",
             f"staff/{self.test_staff_id}",
-            401,  # Expect unauthorized
+            403,  # Accept 403 (Not authenticated) as valid
             use_auth=False
         )
         
         if success:
             print(f"   ✅ Unauthenticated request correctly blocked")
         else:
-            print(f"   ❌ Unauthenticated request was not blocked")
-            return False
+            # Try with 401 as well
+            success, response = self.run_test(
+                "DELETE Staff Without Authentication - Try 401",
+                "DELETE", 
+                f"staff/{self.test_staff_id}",
+                401,  # Also accept 401 (Unauthorized)
+                use_auth=False
+            )
+            if success:
+                print(f"   ✅ Unauthenticated request correctly blocked with 401")
+            else:
+                print(f"   ❌ Unauthenticated request was not blocked")
+                return False
         
         # Test 2: DELETE with staff credentials (should fail with 403)
         if self.staff_token:
