@@ -852,7 +852,25 @@ function App() {
       alert(`✅ Staff member "${newStaffName}" added successfully!`);
     } catch (error) {
       console.error('Error adding staff:', error);
-      alert(`❌ Error adding staff: ${error.response?.data?.detail || error.message}`);
+      
+      // Better error message extraction
+      let errorMessage = 'Unknown error occurred';
+      
+      if (error.response?.data) {
+        if (typeof error.response.data === 'string') {
+          errorMessage = error.response.data;
+        } else if (error.response.data.detail) {
+          errorMessage = error.response.data.detail;
+        } else if (error.response.data.message) {
+          errorMessage = error.response.data.message;
+        } else {
+          errorMessage = JSON.stringify(error.response.data);
+        }
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
+      alert(`❌ Error adding staff: ${errorMessage}`);
     } finally {
       setAddingStaff(false);
     }
