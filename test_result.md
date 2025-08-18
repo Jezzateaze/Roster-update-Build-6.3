@@ -284,6 +284,9 @@ backend:
         - working: false
           agent: "user"
           comment: "User reports pay summary not working for individual staff"
+        - working: false
+          agent: "testing"
+          comment: "🎯 BACKEND ANALYSIS COMPLETE: Root cause identified for pay summary issues. Backend analysis shows 183 roster entries with 176 (96.2%) unassigned shifts having pay calculated ($555.00, $336.00, $356.00 examples). This causes frontend pay summary to include unassigned shift pay in totals. Backend working correctly - issue is frontend needs to filter out unassigned shifts (staff_id=null, staff_name=null) from pay calculations. Staff assignment via PUT /api/roster/{id} working but blocked by overlap detection. All 12 staff active and properly returned. Backend data structure analysis complete."
 
   - task: "Badge Logic Fix for Weekday Shifts"
     implemented: false
