@@ -2034,7 +2034,7 @@ function App() {
                 <span className="text-blue-600 font-medium">
                   {dailyTotals.totalHours.toFixed(1)}h
                 </span>
-                {dailyTotals.assignedShifts > 0 && (
+                {dailyTotals.assignedShifts > 0 && canViewPayInformation() && (
                   <span className="text-emerald-600 font-medium">
                     {formatCurrency(dailyTotals.totalPay)}
                   </span>
