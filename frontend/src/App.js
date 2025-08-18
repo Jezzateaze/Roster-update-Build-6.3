@@ -1712,6 +1712,7 @@ function App() {
         if (bulkEditData.shift_type_override) updatedTemplate.shift_type_override = bulkEditData.shift_type_override;
         if (bulkEditData.day_of_week !== '') updatedTemplate.day_of_week = parseInt(bulkEditData.day_of_week);
         updatedTemplate.is_sleepover = bulkEditData.is_sleepover;
+        updatedTemplate.allow_overlap = bulkEditData.allow_overlap || false;
         
         return axios.put(`${API_BASE_URL}/api/shift-templates/${templateId}`, updatedTemplate);
       });
