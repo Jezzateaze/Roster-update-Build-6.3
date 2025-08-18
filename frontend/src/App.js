@@ -3878,6 +3878,289 @@ function App() {
             </Card>
           </TabsContent>
 
+          <TabsContent value="availability" className="space-y-6">
+            <div className="space-y-6">
+              {/* Notifications Panel */}
+              {notifications.filter(n => !n.is_read).length > 0 && (
+                <Card className="border-blue-200 bg-blue-50">
+                  <CardHeader>
+                    <CardTitle className="flex items-center justify-between">
+                      <div className="flex items-center space-x-2">
+                        <Bell className="w-5 h-5 text-blue-600" />
+                        <span className="text-blue-800">Notifications ({notifications.filter(n => !n.is_read).length})</span>
+                      </div>
+                      <Button 
+                        variant="ghost" 
+                        size="sm"
+                        onClick={() => setShowNotifications(!showNotifications)}
+                      >
+                        {showNotifications ? 'Hide' : 'Show'}
+                      </Button>
+                    </CardTitle>
+                  </CardHeader>
+                  {showNotifications && (
+                    <CardContent>
+                      <div className="space-y-3">
+                        {notifications.filter(n => !n.is_read).map((notification) => (
+                          <div key={notification.id} className="bg-white p-3 rounded-lg border">
+                            <div className="flex items-start justify-between">
+                              <div className="flex-1">
+                                <p className="font-medium text-slate-800">{notification.title}</p>
+                                <p className="text-sm text-slate-600 mt-1">{notification.message}</p>
+                                <p className="text-xs text-slate-500 mt-2">
+                                  {new Date(notification.created_at).toLocaleString()}
+                                </p>
+                              </div>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => markNotificationRead(notification.id)}
+                              >
+                                Mark Read
+                              </Button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </CardContent>
+                  )}
+                </Card>
+              )}
+
+              {/* Unassigned Shifts Section */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center space-x-2">
+                    <Clock className="w-5 h-5" />
+                    <span>Available Unassigned Shifts</span>
+                  </CardTitle>
+                  <p className="text-sm text-slate-600">
+                    {isStaff() ? 'Request to fill any unassigned shifts below' : 'Shifts waiting for staff assignment'}
+                  </p>
+                </CardHeader>
+                <CardContent>
+                  {unassignedShifts.length === 0 ? (
+                    <div className="text-center py-8 text-slate-500">
+                      <Clock className="w-12 h-12 mx-auto mb-3 opacity-50" />
+                      <p>No unassigned shifts available</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {unassignedShifts.map((shift) => (
+                        <div key={shift.id} className="border rounded-lg p-4 hover:bg-slate-50 transition-colors">
+                          <div className="flex items-center justify-between">
+                            <div className="flex-1">
+                              <div className="flex items-center space-x-4">
+                                <div className="text-lg font-medium text-slate-800">
+                                  {formatDateString(shift.date)}
+                                </div>
+                                <div className="text-slate-600">
+                                  {formatTime(shift.start_time, settings.time_format === '24hr')} - {formatTime(shift.end_time, settings.time_format === '24hr')}
+                                </div>
+                                <div className="flex items-center space-x-2">
+                                  {getShiftTypeBadge(shift)}
+                                  <Badge variant="outline" className="text-emerald-600">
+                                    {formatCurrency(shift.total_pay)}
+                                  </Badge>
+                                </div>
+                              </div>
+                              <div className="text-sm text-slate-500 mt-1">
+                                {shift.hours_worked?.toFixed(1)} hours • {shift.is_sleepover ? 'Sleepover shift' : 'Regular shift'}
+                              </div>
+                            </div>
+                            {isStaff() && (
+                              <Button 
+                                onClick={() => {
+                                  setSelectedUnassignedShift(shift);
+                                  setShowShiftRequestDialog(true);
+                                }}
+                                className="ml-4"
+                              >
+                                Request Shift
+                              </Button>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* Shift Requests Section */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center space-x-2">
+                    <FileText className="w-5 h-5" />
+                    <span>{isStaff() ? 'My Shift Requests' : 'All Shift Requests'}</span>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {shiftRequests.length === 0 ? (
+                    <div className="text-center py-8 text-slate-500">
+                      <FileText className="w-12 h-12 mx-auto mb-3 opacity-50" />
+                      <p>No shift requests</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {shiftRequests.map((request) => {
+                        const shift = unassignedShifts.find(s => s.id === request.roster_entry_id) || {};
+                        return (
+                          <div key={request.id} className="border rounded-lg p-4">
+                            <div className="flex items-center justify-between">
+                              <div className="flex-1">
+                                <div className="flex items-center space-x-4">
+                                  <div className="font-medium text-slate-800">
+                                    {request.staff_name}
+                                  </div>
+                                  <div className="text-slate-600">
+                                    {shift.date ? formatDateString(shift.date) : 'N/A'} • 
+                                    {shift.start_time && shift.end_time ? ` ${formatTime(shift.start_time)} - ${formatTime(shift.end_time)}` : ' Time TBD'}
+                                  </div>
+                                  <Badge variant={
+                                    request.status === 'pending' ? 'secondary' :
+                                    request.status === 'approved' ? 'default' : 'destructive'
+                                  }>
+                                    {request.status}
+                                  </Badge>
+                                </div>
+                                {request.notes && (
+                                  <p className="text-sm text-slate-600 mt-1">"{request.notes}"</p>
+                                )}
+                                {request.admin_notes && (
+                                  <p className="text-sm text-blue-600 mt-1">Admin: "{request.admin_notes}"</p>
+                                )}
+                                <div className="text-xs text-slate-500 mt-2">
+                                  Requested: {new Date(request.request_date).toLocaleString()}
+                                </div>
+                              </div>
+                              {isAdmin() && request.status === 'pending' && (
+                                <div className="flex space-x-2 ml-4">
+                                  <Button 
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => {
+                                      const notes = prompt('Admin notes (optional):');
+                                      if (notes !== null) approveShiftRequest(request.id, notes);
+                                    }}
+                                  >
+                                    Approve
+                                  </Button>
+                                  <Button 
+                                    variant="destructive" 
+                                    size="sm"
+                                    onClick={() => {
+                                      const notes = prompt('Reason for rejection:');
+                                      if (notes) rejectShiftRequest(request.id, notes);
+                                    }}
+                                  >
+                                    Reject
+                                  </Button>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* Staff Availability Section */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center justify-between">
+                    <div className="flex items-center space-x-2">
+                      <Calendar className="w-5 h-5" />
+                      <span>{isStaff() ? 'My Availability' : 'Staff Availability'}</span>
+                    </div>
+                    <Button onClick={() => setShowAvailabilityDialog(true)}>
+                      <Plus className="w-4 h-4 mr-2" />
+                      {isStaff() ? 'Update My Availability' : 'Add Availability'}
+                    </Button>
+                  </CardTitle>
+                  <p className="text-sm text-slate-600">
+                    {isStaff() ? 
+                      'Manage your availability, time off requests, and preferred shifts' :
+                      'View and manage all staff availability and preferences'
+                    }
+                  </p>
+                </CardHeader>
+                <CardContent>
+                  {staffAvailability.length === 0 ? (
+                    <div className="text-center py-8 text-slate-500">
+                      <Calendar className="w-12 h-12 mx-auto mb-3 opacity-50" />
+                      <p>No availability records</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {staffAvailability.map((availability) => (
+                        <div key={availability.id} className="border rounded-lg p-4">
+                          <div className="flex items-start justify-between">
+                            <div className="flex-1">
+                              <div className="flex items-center space-x-4 mb-2">
+                                <div className="font-medium text-slate-800">
+                                  {availability.staff_name}
+                                </div>
+                                {getAvailabilityTypeBadge(availability.availability_type)}
+                              </div>
+                              
+                              <div className="text-sm text-slate-600 space-y-1">
+                                {availability.is_recurring ? (
+                                  <p>🔄 Every {getDayOfWeekName(availability.day_of_week)}</p>
+                                ) : (
+                                  <p>📅 {availability.date_from === availability.date_to ? 
+                                    formatAvailabilityDate(availability.date_from) :
+                                    `${formatAvailabilityDate(availability.date_from)} - ${formatAvailabilityDate(availability.date_to)}`
+                                  }</p>
+                                )}
+                                
+                                {availability.start_time && availability.end_time && (
+                                  <p>🕐 {formatTime(availability.start_time)} - {formatTime(availability.end_time)}</p>
+                                )}
+                                
+                                {availability.notes && (
+                                  <p className="text-slate-700">💬 {availability.notes}</p>
+                                )}
+                              </div>
+                              
+                              <div className="text-xs text-slate-500 mt-2">
+                                Added: {new Date(availability.created_at).toLocaleDateString()}
+                              </div>
+                            </div>
+                            
+                            {(isAdmin() || (isStaff() && availability.staff_id === currentUser?.staff_id)) && (
+                              <Button 
+                                variant="ghost" 
+                                size="sm"
+                                onClick={async () => {
+                                  if (window.confirm('Are you sure you want to remove this availability record?')) {
+                                    try {
+                                      await axios.delete(`${API_BASE_URL}/api/staff-availability/${availability.id}`, {
+                                        headers: { 'Authorization': `Bearer ${authToken}` }
+                                      });
+                                      fetchStaffAvailability();
+                                      alert('✅ Availability record removed');
+                                    } catch (error) {
+                                      alert('❌ Error removing availability');
+                                    }
+                                  }
+                                }}
+                              >
+                                Remove
+                              </Button>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+
           <TabsContent value="export" className="space-y-6">
             <Card>
               <CardHeader>
