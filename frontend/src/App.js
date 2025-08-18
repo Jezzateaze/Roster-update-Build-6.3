@@ -1538,6 +1538,169 @@ function App() {
     return { staffTotals, totalHours, totalPay };
   };
 
+  const getDailyTotals = (date) => {
+    const dayEntries = getDayEntries(date);
+    let totalHours = 0;
+    let totalPay = 0;
+    let assignedShifts = 0;
+
+    dayEntries.forEach(entry => {
+      // Include all shifts for hours calculation but only assigned for pay
+      totalHours += entry.hours_worked || 0;
+      
+      if (entry.staff_id && entry.staff_name) {
+        const staffMember = staff.find(s => s.id === entry.staff_id);
+        if (staffMember && staffMember.active) {
+          totalPay += entry.total_pay || 0;
+          assignedShifts++;
+        }
+      }
+    });
+
+    return { 
+      totalHours, 
+      totalPay, 
+      totalShifts: dayEntries.length,
+      assignedShifts 
+    };
+  };
+
+  const getYearToDateTotals = (useFinancialYear = false) => {
+    const currentYear = currentDate.getFullYear();
+    const currentMonth = currentDate.getMonth(); // 0-11
+    
+    // Determine year boundaries
+    let startDate, endDate;
+    if (useFinancialYear) {
+      // Australian Financial Year: July 1 - June 30
+      if (currentMonth >= 6) { // July onwards (months 6-11)
+        startDate = new Date(currentYear, 6, 1); // July 1 current year
+        endDate = new Date(currentYear + 1, 5, 30); // June 30 next year
+      } else { // January - June (months 0-5)
+        startDate = new Date(currentYear - 1, 6, 1); // July 1 previous year
+        endDate = new Date(currentYear, 5, 30); // June 30 current year
+      }
+    } else {
+      // Calendar Year: January 1 - December 31
+      startDate = new Date(currentYear, 0, 1); // January 1
+      endDate = new Date(currentYear, 11, 31); // December 31
+    }
+
+    const ytdEntries = rosterEntries.filter(entry => {
+      const entryDate = new Date(entry.date);
+      return entryDate >= startDate && entryDate <= endDate;
+    });
+
+    const staffTotals = {};
+    let totalHours = 0;
+    let totalPay = 0;
+
+    ytdEntries.forEach(entry => {
+      if (entry.staff_id && entry.staff_name) {
+        const staffMember = staff.find(s => s.id === entry.staff_id);
+        
+        if (staffMember && staffMember.active) {
+          if (!staffTotals[entry.staff_name]) {
+            staffTotals[entry.staff_name] = { 
+              hours: 0, 
+              pay: 0,
+              grossPay: 0,
+              afterTaxPay: 0 
+            };
+          }
+          
+          const grossPay = entry.total_pay || 0;
+          const afterTaxPay = calculateAfterTaxPay(grossPay, staffMember);
+          
+          staffTotals[entry.staff_name].hours += entry.hours_worked || 0;
+          staffTotals[entry.staff_name].pay += grossPay;
+          staffTotals[entry.staff_name].grossPay += grossPay;
+          staffTotals[entry.staff_name].afterTaxPay += afterTaxPay;
+          
+          totalHours += entry.hours_worked || 0;
+          totalPay += grossPay;
+        }
+      }
+    });
+
+    return { 
+      staffTotals, 
+      totalHours, 
+      totalPay,
+      startDate,
+      endDate,
+      period: useFinancialYear ? 'Financial Year' : 'Calendar Year'
+    };
+  };
+
+  // Simple Australian tax calculation
+  const calculateAfterTaxPay = (grossPay, staffMember = null) => {
+    // Default Australian tax brackets for 2024-25
+    const defaultTaxBrackets = [
+      { min: 0, max: 18200, rate: 0 },           // Tax-free threshold
+      { min: 18201, max: 45000, rate: 0.19 },   // 19%
+      { min: 45001, max: 120000, rate: 0.325 }, // 32.5%
+      { min: 120001, max: 180000, rate: 0.37 }, // 37%
+      { min: 180001, max: Infinity, rate: 0.45 } // 45%
+    ];
+
+    // Use custom tax rate if staff member has one configured
+    let taxBrackets = defaultTaxBrackets;
+    let superannuationRate = 0.115; // Default 11.5% superannuation
+    let customSuperContribution = 0;
+
+    if (staffMember && staffMember.custom_tax_brackets) {
+      taxBrackets = staffMember.custom_tax_brackets;
+    }
+
+    if (staffMember && staffMember.superannuation_rate !== undefined) {
+      superannuationRate = staffMember.superannuation_rate / 100; // Convert percentage
+    }
+
+    if (staffMember && staffMember.additional_super_contribution) {
+      if (staffMember.super_contribution_type === 'percentage') {
+        customSuperContribution = grossPay * (staffMember.additional_super_contribution / 100);
+      } else {
+        customSuperContribution = staffMember.additional_super_contribution;
+      }
+    }
+
+    // Annual gross pay (assuming this is annual)
+    const annualGross = grossPay;
+    
+    // Calculate tax
+    let tax = 0;
+    let remainingIncome = annualGross;
+    
+    for (const bracket of taxBrackets) {
+      if (remainingIncome <= 0) break;
+      
+      const taxableInThisBracket = Math.min(
+        remainingIncome,
+        bracket.max - bracket.min + 1
+      );
+      
+      tax += taxableInThisBracket * bracket.rate;
+      remainingIncome -= taxableInThisBracket;
+    }
+
+    // Calculate superannuation
+    const mandatorySuper = grossPay * superannuationRate;
+    const totalSuper = mandatorySuper + customSuperContribution;
+
+    // After-tax pay
+    const afterTaxPay = grossPay - tax - totalSuper;
+
+    return {
+      grossPay,
+      tax,
+      mandatorySuper,
+      customSuperContribution,
+      totalSuper,
+      afterTaxPay: Math.max(0, afterTaxPay) // Ensure not negative
+    };
+  };
+
   const renderCalendarDay = (date) => {
     const dayEntries = getDayEntries(date);
     const dayEvents = getDayEvents(date);
