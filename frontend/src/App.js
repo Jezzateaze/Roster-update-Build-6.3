@@ -459,6 +459,32 @@ function App() {
     }
   };
 
+  const getTemplateShiftDetails = (template) => {
+    if (!template.template_data) return 'No shift data available';
+    
+    const dayNames = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+    let shiftCount = 0;
+    let details = [];
+    
+    dayNames.forEach((dayName, dayIndex) => {
+      const dayKey = String(dayIndex); // Template data uses string keys
+      const dayShifts = template.template_data[dayKey] || [];
+      
+      if (dayShifts.length > 0) {
+        shiftCount += dayShifts.length;
+        const shiftTimes = dayShifts.map(shift => 
+          `${formatTime(shift.start_time, settings.time_format === '24hr')}-${formatTime(shift.end_time, settings.time_format === '24hr')}${shift.is_sleepover ? ' (Sleepover)' : ''}`
+        ).join(', ');
+        details.push(`${dayName}: ${shiftTimes}`);
+      }
+    });
+    
+    return {
+      totalShifts: shiftCount,
+      details: details.length > 0 ? details : ['No shifts defined']
+    };
+  };
+
   const openDayTemplateDialog = (date, action) => {
     setSelectedDateForTemplate(date);
     setDayTemplateAction(action);
