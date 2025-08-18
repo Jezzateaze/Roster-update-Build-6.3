@@ -111,6 +111,9 @@ function App() {
   const [authToken, setAuthToken] = useState(null);
   const [showLoginDialog, setShowLoginDialog] = useState(true);
   const [showChangePinDialog, setShowChangePinDialog] = useState(false);
+  const [showProfileDialog, setShowProfileDialog] = useState(false);
+  const [showStaffProfileDialog, setShowStaffProfileDialog] = useState(false);
+  const [selectedStaffForProfile, setSelectedStaffForProfile] = useState(null);
   const [loginData, setLoginData] = useState({ username: '', pin: '' });
   const [changePinData, setChangePinData] = useState({ current_pin: '', new_pin: '', confirm_pin: '' });
   const [authError, setAuthError] = useState('');
