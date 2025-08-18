@@ -90,43 +90,29 @@ class ShiftAvailabilityAPITester:
             print(f"   ❌ Admin authentication failed")
             return False
         
-        # Try to login with existing staff user
-        staff_users_to_try = [
-            ("angela", "888888"),
-            ("johnsmith", "888888"),
-            ("alicejohnson", "888888"),
-            ("teststaff", "888888")
-        ]
+        # Try to login with existing staff user (angela with reset PIN)
+        staff_login = {
+            "username": "angela",
+            "pin": "888888"
+        }
         
-        staff_authenticated = False
-        for username, pin in staff_users_to_try:
-            staff_login = {
-                "username": username,
-                "pin": pin
-            }
-            
-            success, staff_response = self.run_test(
-                f"Staff Login ({username})",
-                "POST",
-                "api/auth/login",
-                200,
-                data=staff_login
-            )
-            
-            if success:
-                self.staff_token = staff_response.get('token')
-                self.staff_user_id = staff_response.get('user', {}).get('id')
-                staff_user_data = staff_response.get('user', {})
-                print(f"   ✅ Staff authenticated - Username: {username}")
-                print(f"   Staff ID: {self.staff_user_id}")
-                print(f"   Staff Role: {staff_user_data.get('role')}")
-                staff_authenticated = True
-                break
-            else:
-                print(f"   ⚠️  Failed to login as {username}")
+        success, staff_response = self.run_test(
+            "Staff Login (angela)",
+            "POST",
+            "api/auth/login",
+            200,
+            data=staff_login
+        )
         
-        if not staff_authenticated:
-            print(f"   ❌ Could not authenticate any staff user")
+        if success:
+            self.staff_token = staff_response.get('token')
+            self.staff_user_id = staff_response.get('user', {}).get('id')
+            staff_user_data = staff_response.get('user', {})
+            print(f"   ✅ Staff authenticated - Username: angela")
+            print(f"   Staff ID: {self.staff_user_id}")
+            print(f"   Staff Role: {staff_user_data.get('role')}")
+        else:
+            print(f"   ❌ Could not authenticate staff user")
             return False
         
         return self.admin_token and self.staff_token
