@@ -6502,6 +6502,402 @@ function App() {
           </Dialog>
         )}
 
+        {/* Staff Self-Profile Dialog - Comprehensive */}
+        {isStaff() && (
+          <Dialog open={showStaffSelfProfileDialog} onOpenChange={setShowStaffSelfProfileDialog}>
+            <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle className="flex items-center space-x-2">
+                  <User className="w-5 h-5" />
+                  <span>My Profile - {currentUser?.first_name || currentUser?.username}</span>
+                </DialogTitle>
+              </DialogHeader>
+              {currentUser && (
+                <div className="space-y-6">
+                  {/* Profile Photo & Basic Info */}
+                  <div className="flex items-start space-x-6 p-4 bg-slate-50 rounded-lg">
+                    <div className="flex-shrink-0">
+                      {currentUser.profile_photo_url ? (
+                        <img 
+                          src={currentUser.profile_photo_url} 
+                          alt={currentUser.first_name || currentUser.username}
+                          className="w-24 h-24 rounded-full object-cover border-2 border-gray-300"
+                        />
+                      ) : (
+                        <div className="w-24 h-24 bg-blue-500 rounded-full flex items-center justify-center text-white font-bold text-2xl">
+                          {(currentUser.first_name || currentUser.username || 'U').charAt(0)}
+                        </div>
+                      )}
+                      <div className="mt-2">
+                        <input
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          id="self-profile-photo-upload"
+                          onChange={(e) => {
+                            // TODO: Handle profile photo upload
+                            console.log('Self profile photo selected:', e.target.files[0]);
+                          }}
+                        />
+                        <label htmlFor="self-profile-photo-upload" className="cursor-pointer text-xs text-blue-600 hover:text-blue-800">
+                          Upload Photo
+                        </label>
+                      </div>
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="text-lg font-semibold text-slate-800">{currentUser.first_name || currentUser.username}</h3>
+                      <p className="text-slate-600">{currentUser.role === 'staff' ? 'Staff Member' : 'User'}</p>
+                      <Badge variant={currentUser.is_active ? 'default' : 'secondary'} className="mt-2">
+                        {currentUser.is_active ? '✅ Active' : '❌ Inactive'}
+                      </Badge>
+                    </div>
+                  </div>
+
+                  {/* Basic Information */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="self-first-name">First Name</Label>
+                      <Input
+                        id="self-first-name"
+                        value={currentUser.first_name || ''}
+                        onChange={(e) => setCurrentUser({...currentUser, first_name: e.target.value})}
+                        placeholder="Enter first name"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="self-last-name">Last Name</Label>
+                      <Input
+                        id="self-last-name"
+                        value={currentUser.last_name || ''}
+                        onChange={(e) => setCurrentUser({...currentUser, last_name: e.target.value})}
+                        placeholder="Enter last name"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="self-dob">Date of Birth</Label>
+                      <Input
+                        id="self-dob"
+                        type="date"
+                        value={currentUser.date_of_birth || ''}
+                        onChange={(e) => setCurrentUser({...currentUser, date_of_birth: e.target.value})}
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="self-email">Email Address</Label>
+                      <Input
+                        id="self-email"
+                        type="email"
+                        value={currentUser.email || ''}
+                        onChange={(e) => setCurrentUser({...currentUser, email: e.target.value})}
+                        placeholder="Enter email address"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="self-phone">Best Contact Phone</Label>
+                      <Input
+                        id="self-phone"
+                        type="tel"
+                        value={currentUser.phone || ''}
+                        onChange={(e) => setCurrentUser({...currentUser, phone: e.target.value})}
+                        placeholder="Enter phone number"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Address Information */}
+                  <div className="space-y-4">
+                    <h4 className="text-lg font-semibold text-slate-800">Postal Address</h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="md:col-span-2">
+                        <Label htmlFor="self-street-address">Street Address</Label>
+                        <AddressAutocomplete
+                          value={currentUser.street_address || ''}
+                          onChange={(value) => setCurrentUser({...currentUser, street_address: value})}
+                          placeholder="Enter street address"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="self-city">City</Label>
+                        <Input
+                          id="self-city"
+                          value={currentUser.city || ''}
+                          onChange={(e) => setCurrentUser({...currentUser, city: e.target.value})}
+                          placeholder="Enter city"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="self-state">State</Label>
+                        <Select value={currentUser.state || ''} onValueChange={(value) => setCurrentUser({...currentUser, state: value})}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select state" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="NSW">NSW</SelectItem>
+                            <SelectItem value="VIC">VIC</SelectItem>
+                            <SelectItem value="QLD">QLD</SelectItem>
+                            <SelectItem value="WA">WA</SelectItem>
+                            <SelectItem value="SA">SA</SelectItem>
+                            <SelectItem value="TAS">TAS</SelectItem>
+                            <SelectItem value="ACT">ACT</SelectItem>
+                            <SelectItem value="NT">NT</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <Label htmlFor="self-postcode">Postcode</Label>
+                        <Input
+                          id="self-postcode"
+                          value={currentUser.postcode || ''}
+                          onChange={(e) => setCurrentUser({...currentUser, postcode: e.target.value})}
+                          placeholder="Enter postcode"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Emergency Contact */}
+                  <div className="space-y-4">
+                    <h4 className="text-lg font-semibold text-slate-800">Emergency Contact</h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="self-emergency-name">Emergency Contact Name</Label>
+                        <Input
+                          id="self-emergency-name"
+                          value={currentUser.emergency_contact_name || ''}
+                          onChange={(e) => setCurrentUser({...currentUser, emergency_contact_name: e.target.value})}
+                          placeholder="Enter emergency contact name"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="self-emergency-phone">Emergency Contact Phone</Label>
+                        <Input
+                          id="self-emergency-phone"
+                          type="tel"
+                          value={currentUser.emergency_contact_phone || ''}
+                          onChange={(e) => setCurrentUser({...currentUser, emergency_contact_phone: e.target.value})}
+                          placeholder="Enter emergency contact phone"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="self-emergency-relationship">Relationship to Staff</Label>
+                        <Select 
+                          value={currentUser.emergency_contact_relationship || ''} 
+                          onValueChange={(value) => setCurrentUser({...currentUser, emergency_contact_relationship: value})}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select relationship" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="Parent">Parent</SelectItem>
+                            <SelectItem value="Spouse">Spouse</SelectItem>
+                            <SelectItem value="Sibling">Sibling</SelectItem>
+                            <SelectItem value="Child">Child</SelectItem>
+                            <SelectItem value="Friend">Friend</SelectItem>
+                            <SelectItem value="Other">Other</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <Label htmlFor="self-emergency-address">Emergency Contact Address</Label>
+                        <Input
+                          id="self-emergency-address"
+                          value={currentUser.emergency_contact_address || ''}
+                          onChange={(e) => setCurrentUser({...currentUser, emergency_contact_address: e.target.value})}
+                          placeholder="Enter emergency contact address"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Professional Information */}
+                  <div className="space-y-4">
+                    <h4 className="text-lg font-semibold text-slate-800">Professional Information</h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="self-ndis-number">NDIS Registration Number</Label>
+                        <Input
+                          id="self-ndis-number"
+                          value={currentUser.ndis_registration_number || ''}
+                          onChange={(e) => setCurrentUser({...currentUser, ndis_registration_number: e.target.value})}
+                          placeholder="Enter NDIS registration number"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="self-blue-card">Blue Card Number</Label>
+                        <Input
+                          id="self-blue-card"
+                          value={currentUser.blue_card_number || ''}
+                          onChange={(e) => setCurrentUser({...currentUser, blue_card_number: e.target.value})}
+                          placeholder="Enter blue card number"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="self-yellow-card">Yellow Card Number</Label>
+                        <Input
+                          id="self-yellow-card"
+                          value={currentUser.yellow_card_number || ''}
+                          onChange={(e) => setCurrentUser({...currentUser, yellow_card_number: e.target.value})}
+                          placeholder="Enter yellow card number"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="self-first-aid-reg">First Aid Registration Number</Label>
+                        <Input
+                          id="self-first-aid-reg"
+                          value={currentUser.first_aid_registration_number || ''}
+                          onChange={(e) => setCurrentUser({...currentUser, first_aid_registration_number: e.target.value})}
+                          placeholder="Enter first aid registration number"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="self-first-aid-expiry">First Aid Expiry Date</Label>
+                        <Input
+                          id="self-first-aid-expiry"
+                          type="date"
+                          value={currentUser.first_aid_expiry_date || ''}
+                          onChange={(e) => setCurrentUser({...currentUser, first_aid_expiry_date: e.target.value})}
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Transport & Licensing */}
+                  <div className="space-y-4">
+                    <h4 className="text-lg font-semibold text-slate-800">Transport & Licensing</h4>
+                    <div className="space-y-3">
+                      <div className="flex items-center space-x-2">
+                        <Switch
+                          id="self-has-license"
+                          checked={currentUser.has_drivers_license || false}
+                          onCheckedChange={(checked) => setCurrentUser({...currentUser, has_drivers_license: checked})}
+                        />
+                        <Label htmlFor="self-has-license">Has Current Driver's License</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Switch
+                          id="self-can-drive-van"
+                          checked={currentUser.can_drive_van || false}
+                          onCheckedChange={(checked) => setCurrentUser({...currentUser, can_drive_van: checked})}
+                        />
+                        <Label htmlFor="self-can-drive-van">Can Drive Van for Client Transport</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Switch
+                          id="self-can-transport-wheelchair"
+                          checked={currentUser.can_transport_power_wheelchairs || false}
+                          onCheckedChange={(checked) => setCurrentUser({...currentUser, can_transport_power_wheelchairs: checked})}
+                        />
+                        <Label htmlFor="self-can-transport-wheelchair">Can Transport Power Wheelchairs</Label>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Skills & Experience Sections */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {/* Disability Support Experience */}
+                    <div className="space-y-4">
+                      <h4 className="text-lg font-semibold text-slate-800">Disability Support Experience</h4>
+                      <div className="space-y-3">
+                        {['personal_care', 'medication_management', 'behavioral_support', 'communication_support', 'social_support', 'meal_preparation', 'community_access', 'mobility_assistance', 'daily_living_skills'].map((skill) => (
+                          <div key={skill} className="flex items-center space-x-2">
+                            <Switch
+                              id={`self-${skill}`}
+                              checked={currentUser[skill] || false}
+                              onCheckedChange={(checked) => setCurrentUser({...currentUser, [skill]: checked})}
+                            />
+                            <Label htmlFor={`self-${skill}`}>
+                              {skill.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
+                            </Label>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Nursing & Manual Handling */}
+                    <div className="space-y-4">
+                      <h4 className="text-lg font-semibold text-slate-800">Nursing & Manual Handling</h4>
+                      <div className="space-y-3">
+                        {['manual_handling_certified', 'medication_administration', 'catheter_care', 'diabetic_care', 'cpr_certified', 'wound_care', 'vital_signs_monitoring', 'stoma_care', 'epilepsy_management'].map((skill) => (
+                          <div key={skill} className="flex items-center space-x-2">
+                            <Switch
+                              id={`self-${skill}`}
+                              checked={currentUser[skill] || false}
+                              onCheckedChange={(checked) => setCurrentUser({...currentUser, [skill]: checked})}
+                            />
+                            <Label htmlFor={`self-${skill}`}>
+                              {skill.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
+                            </Label>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Text Areas for Strengths, Weaknesses, Areas for Development */}
+                  <div className="space-y-4">
+                    <div>
+                      <Label htmlFor="self-strengths">Strengths</Label>
+                      <p className="text-sm text-slate-600 mb-2">List key strengths and abilities...</p>
+                      <textarea
+                        id="self-strengths"
+                        className="w-full p-3 border rounded-md min-h-20"
+                        value={currentUser.strengths || ''}
+                        onChange={(e) => setCurrentUser({...currentUser, strengths: e.target.value})}
+                        placeholder="Describe your key strengths and abilities..."
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="self-weaknesses">Weaknesses</Label>
+                      <p className="text-sm text-slate-600 mb-2">List areas you feel uncomfortable with or need support...</p>
+                      <textarea
+                        id="self-weaknesses"
+                        className="w-full p-3 border rounded-md min-h-20"
+                        value={currentUser.weaknesses || ''}
+                        onChange={(e) => setCurrentUser({...currentUser, weaknesses: e.target.value})}
+                        placeholder="Describe areas you feel uncomfortable with or tasks you find challenging..."
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="self-development-areas">Areas for Development</Label>
+                      <p className="text-sm text-slate-600 mb-2">Areas where additional training or support may be beneficial...</p>
+                      <textarea
+                        id="self-development-areas"
+                        className="w-full p-3 border rounded-md min-h-20"
+                        value={currentUser.areas_for_development || ''}
+                        onChange={(e) => setCurrentUser({...currentUser, areas_for_development: e.target.value})}
+                        placeholder="Describe areas where you would like additional training or support..."
+                      />
+                    </div>
+                  </div>
+
+                  {/* Action Buttons */}
+                  <div className="flex justify-end space-x-2 pt-4 border-t">
+                    <Button variant="outline" onClick={() => setShowStaffSelfProfileDialog(false)}>
+                      Cancel
+                    </Button>
+                    <Button onClick={async () => {
+                      try {
+                        const response = await axios.put(`${API_BASE_URL}/api/users/me`, currentUser, {
+                          headers: { 'Authorization': `Bearer ${authToken}` }
+                        });
+                        console.log('Profile updated:', response.data);
+                        setCurrentUser(response.data);
+                        setShowStaffSelfProfileDialog(false);
+                        alert('✅ Profile updated successfully!');
+                      } catch (error) {
+                        console.error('Error updating profile:', error);
+                        alert(`❌ Error updating profile: ${error.response?.data?.detail || error.message}`);
+                      }
+                    }}>
+                      Save Changes
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </DialogContent>
+          </Dialog>
+        )}
+
         </div>
       )}
       
