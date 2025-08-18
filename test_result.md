@@ -293,11 +293,11 @@ backend:
 
   - task: "Pay Calculation Bug Fix - 12PM-8PM Shifts"
     implemented: true
-    working: true
+    working: false
     file: "server.py"
-    stuck_count: 0
+    stuck_count: 1
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
         - working: false
           agent: "user"
@@ -308,6 +308,9 @@ backend:
         - working: true
           agent: "testing"
           comment: "✅ CRITICAL BUG FIX VERIFIED: 12:00PM-8:00PM shifts now correctly calculate at day rate ($336.00) instead of evening rate. All critical tests passed (3/3). Edge cases working: 12:00-19:59 DAY rate ($42/hr), 12:00-20:01 EVENING rate ($44.50/hr), 20:00-22:00 EVENING rate. No regression detected in other pay calculations. Backend fix is production-ready."
+        - working: false
+          agent: "testing"
+          comment: "🚨 CRITICAL REGRESSION DETECTED: Comprehensive testing reveals pay calculation bug fix is NOT working correctly. FAILED TESTS: 1) 12:00PM-7:59PM shift calculated at $335.30 instead of expected $335.16 (precision issue), 2) 12:00PM-8:01PM shift calculated at $356.74 instead of expected $356.89 (precision issue), 3) 8:00PM-10:00PM shift calculated at $148.00 instead of expected $89.00 (WRONG RATE - using Saturday rate $74/hr instead of evening rate $44.50/hr), 4) 7:59PM end time calculated at $335.30 instead of $335.16. CRITICAL FINDING: Backend is applying SATURDAY rates ($74/hr) to some weekday evening shifts instead of weekday evening rates ($44.50/hr). The 8:00PM boundary logic fix may have introduced a new bug affecting shift type determination."
 
   - task: "Roster Templates Management Interface"
     implemented: true
