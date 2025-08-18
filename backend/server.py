@@ -1236,6 +1236,70 @@ async def reset_pin(request: ResetPinRequest):
     
     return {"message": "Temporary PIN sent to email address"}
 
+@app.post("/api/admin/reset_pin")
+async def admin_reset_pin(request: dict, current_user: dict = Depends(get_current_user)):
+    """Admin reset PIN for any user (Admin only)"""
+    if current_user["role"] != "admin":
+        raise HTTPException(status_code=403, detail="Admin access required")
+    
+    email = request.get("email")
+    if not email:
+        raise HTTPException(status_code=400, detail="Email is required")
+    
+    # Try to find user by email first, then by generated email pattern
+    user = db.users.find_one({"email": email, "is_active": True})
+    
+    # If not found and email looks like generated email, try to find by staff name
+    if not user and "@company.com" in email:
+        # Extract staff name from generated email pattern
+        staff_name_pattern = email.split("@")[0]
+        # Find staff member by name pattern
+        staff_member = db.staff.find_one({"active": True})
+        if staff_member:
+            staff_names = list(db.staff.find({"active": True}))
+            for staff in staff_names:
+                generated_email = f"{staff['name'].lower().replace(' ', '')}@company.com"
+                if generated_email == email:
+                    # Create a user account for this staff member if it doesn't exist
+                    existing_user = db.users.find_one({"staff_id": staff["id"]}) 
+                    if not existing_user:
+                        # Create user account for staff member
+                        new_user = User(
+                            id=str(uuid.uuid4()),
+                            username=staff["name"].lower().replace(" ", ""),
+                            pin_hash=hash_pin("0000"),  # Default PIN
+                            role=UserRole.STAFF,
+                            email=email,
+                            first_name=staff["name"].split()[0] if " " in staff["name"] else staff["name"],
+                            last_name=" ".join(staff["name"].split()[1:]) if " " in staff["name"] else "",
+                            staff_id=staff["id"],
+                            created_at=datetime.utcnow()
+                        )
+                        db.users.insert_one(new_user.dict())
+                        user = new_user.dict()
+                    else:
+                        user = existing_user
+                    break
+    
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    # Generate temporary PIN
+    temp_pin = str(secrets.randbelow(10000)).zfill(4)  # 4-digit temp PIN for simplicity
+    temp_pin_hash = hash_pin(temp_pin)
+    
+    # Update user with temporary PIN
+    db.users.update_one(
+        {"id": user["id"]},
+        {"$set": {"pin_hash": temp_pin_hash, "is_first_login": True}}
+    )
+    
+    return {
+        "message": "PIN reset successful",
+        "temp_pin": temp_pin,
+        "username": user.get("username", "")
+    }
+
 @app.get("/api/auth/logout")
 async def logout(token: str):
     """Logout user and invalidate session"""
