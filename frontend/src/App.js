@@ -4646,6 +4646,293 @@ function App() {
           </DialogContent>
         </Dialog>
 
+        {/* Year-to-Date Report Dialog */}
+        <Dialog open={showYTDReportDialog} onOpenChange={setShowYTDReportDialog}>
+          <DialogContent className="max-w-6xl max-h-[85vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="text-xl font-bold text-slate-800">
+                📊 Year-to-Date Report & Tax Calculator
+              </DialogTitle>
+            </DialogHeader>
+            <div className="space-y-6">
+              {/* Report Type Toggle */}
+              <div className="flex items-center justify-center space-x-4 p-4 bg-slate-50 rounded-lg">
+                <label className="flex items-center space-x-2">
+                  <input
+                    type="radio"
+                    name="ytdReportType"
+                    value="calendar"
+                    checked={ytdReportType === 'calendar'}
+                    onChange={(e) => setYTDReportType(e.target.value)}
+                    className="text-blue-600"
+                  />
+                  <span className="font-medium">📅 Calendar Year</span>
+                  <span className="text-sm text-slate-500">(Jan-Dec)</span>
+                </label>
+                <label className="flex items-center space-x-2">
+                  <input
+                    type="radio"
+                    name="ytdReportType"
+                    value="financial"
+                    checked={ytdReportType === 'financial'}
+                    onChange={(e) => setYTDReportType(e.target.value)}
+                    className="text-blue-600"
+                  />
+                  <span className="font-medium">💰 Financial Year</span>
+                  <span className="text-sm text-slate-500">(Jul-Jun)</span>
+                </label>
+              </div>
+
+              {(() => {
+                const ytdData = getYearToDateTotals(ytdReportType === 'financial');
+                
+                return (
+                  <>
+                    {/* Summary Cards */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <Card>
+                        <CardHeader className="pb-2">
+                          <CardTitle className="text-sm font-medium text-slate-700">
+                            📅 {ytdData.period}
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="text-xs text-slate-500 mb-2">
+                            {ytdData.startDate.toLocaleDateString('en-AU')} - {ytdData.endDate.toLocaleDateString('en-AU')}
+                          </div>
+                          <div className="space-y-2">
+                            <div className="flex justify-between">
+                              <span className="text-sm text-slate-600">Total Hours:</span>
+                              <span className="font-bold text-blue-600">{ytdData.totalHours.toFixed(1)}h</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="text-sm text-slate-600">Gross Pay:</span>
+                              <span className="font-bold text-emerald-600">{formatCurrency(ytdData.totalPay)}</span>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+
+                      <Card>
+                        <CardHeader className="pb-2">
+                          <CardTitle className="text-sm font-medium text-slate-700">
+                            👥 Total Staff
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="text-2xl font-bold text-blue-600 mb-2">
+                            {Object.keys(ytdData.staffTotals).length}
+                          </div>
+                          <div className="text-xs text-slate-500">
+                            Active staff with assigned shifts this period
+                          </div>
+                        </CardContent>
+                      </Card>
+
+                      <Card>
+                        <CardHeader className="pb-2">
+                          <CardTitle className="text-sm font-medium text-slate-700">
+                            📊 Average
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="space-y-2">
+                            <div className="flex justify-between text-sm">
+                              <span className="text-slate-600">Per Staff:</span>
+                              <span className="font-medium text-blue-600">
+                                {Object.keys(ytdData.staffTotals).length > 0 
+                                  ? (ytdData.totalHours / Object.keys(ytdData.staffTotals).length).toFixed(1) 
+                                  : '0'}h
+                              </span>
+                            </div>
+                            <div className="flex justify-between text-sm">
+                              <span className="text-slate-600">Pay/Hour:</span>
+                              <span className="font-medium text-emerald-600">
+                                {ytdData.totalHours > 0 
+                                  ? formatCurrency(ytdData.totalPay / ytdData.totalHours) 
+                                  : formatCurrency(0)}
+                              </span>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </div>
+
+                    {/* Individual Staff Breakdown */}
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="text-lg font-bold text-slate-800">
+                          👤 Individual Staff Breakdown
+                        </CardTitle>
+                        <div className="text-sm text-slate-600">
+                          Comprehensive hours, gross pay, and after-tax calculations for each staff member
+                        </div>
+                      </CardHeader>
+                      <CardContent>
+                        {Object.keys(ytdData.staffTotals).length === 0 ? (
+                          <div className="text-center py-8">
+                            <div className="text-slate-400 mb-2">📊</div>
+                            <div className="text-lg font-semibold text-slate-600 mb-2">No Data Available</div>
+                            <div className="text-slate-500">No assigned shifts found for the selected period.</div>
+                          </div>
+                        ) : (
+                          <div className="overflow-x-auto">
+                            <table className="w-full text-sm">
+                              <thead>
+                                <tr className="border-b border-slate-200">
+                                  <th className="text-left py-3 px-2 font-semibold text-slate-700">Staff Member</th>
+                                  <th className="text-right py-3 px-2 font-semibold text-slate-700">Hours Worked</th>
+                                  <th className="text-right py-3 px-2 font-semibold text-slate-700">Gross Pay</th>
+                                  <th className="text-right py-3 px-2 font-semibold text-slate-700">Est. Tax</th>
+                                  <th className="text-right py-3 px-2 font-semibold text-slate-700">Superannuation</th>
+                                  <th className="text-right py-3 px-2 font-semibold text-slate-700">After-Tax Pay</th>
+                                  <th className="text-right py-3 px-2 font-semibold text-slate-700">Avg Rate</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {Object.entries(ytdData.staffTotals)
+                                  .sort(([, a], [, b]) => b.hours - a.hours) // Sort by hours descending
+                                  .map(([staffName, totals]) => {
+                                    const staffMember = staff.find(s => s.name === staffName);
+                                    const taxDetails = calculateAfterTaxPay(totals.grossPay, staffMember);
+                                    const avgRate = totals.hours > 0 ? totals.grossPay / totals.hours : 0;
+                                    
+                                    return (
+                                      <tr key={staffName} className="border-b border-slate-100 hover:bg-slate-50">
+                                        <td className="py-3 px-2">
+                                          <div className="font-medium text-slate-800">{staffName}</div>
+                                          <div className="text-xs text-slate-500">
+                                            {staffMember?.active ? '✅ Active' : '❌ Inactive'}
+                                          </div>
+                                        </td>
+                                        <td className="text-right py-3 px-2">
+                                          <div className="font-medium text-blue-600">{totals.hours.toFixed(1)}h</div>
+                                          <div className="text-xs text-slate-500">
+                                            {((totals.hours / ytdData.totalHours) * 100).toFixed(1)}%
+                                          </div>
+                                        </td>
+                                        <td className="text-right py-3 px-2">
+                                          <div className="font-medium text-emerald-600">{formatCurrency(totals.grossPay)}</div>
+                                        </td>
+                                        <td className="text-right py-3 px-2">
+                                          <div className="font-medium text-red-600">-{formatCurrency(taxDetails.tax)}</div>
+                                          <div className="text-xs text-slate-500">
+                                            {((taxDetails.tax / totals.grossPay) * 100).toFixed(1)}%
+                                          </div>
+                                        </td>
+                                        <td className="text-right py-3 px-2">
+                                          <div className="font-medium text-orange-600">-{formatCurrency(taxDetails.totalSuper)}</div>
+                                          <div className="text-xs text-slate-500">
+                                            {((taxDetails.totalSuper / totals.grossPay) * 100).toFixed(1)}%
+                                          </div>
+                                        </td>
+                                        <td className="text-right py-3 px-2">
+                                          <div className="font-bold text-green-600">{formatCurrency(taxDetails.afterTaxPay)}</div>
+                                          <div className="text-xs text-slate-500">
+                                            {((taxDetails.afterTaxPay / totals.grossPay) * 100).toFixed(1)}%
+                                          </div>
+                                        </td>
+                                        <td className="text-right py-3 px-2">
+                                          <div className="font-medium text-slate-700">{formatCurrency(avgRate)}/h</div>
+                                        </td>
+                                      </tr>
+                                    );
+                                  })}
+                              </tbody>
+                              <tfoot>
+                                <tr className="border-t-2 border-slate-300 bg-slate-50">
+                                  <td className="py-3 px-2 font-bold text-slate-800">TOTALS</td>
+                                  <td className="text-right py-3 px-2 font-bold text-blue-600">
+                                    {ytdData.totalHours.toFixed(1)}h
+                                  </td>
+                                  <td className="text-right py-3 px-2 font-bold text-emerald-600">
+                                    {formatCurrency(ytdData.totalPay)}
+                                  </td>
+                                  <td className="text-right py-3 px-2 font-bold text-red-600">
+                                    -{formatCurrency(Object.values(ytdData.staffTotals).reduce((sum, s) => {
+                                      const staffMember = staff.find(st => st.name === Object.keys(ytdData.staffTotals).find(name => ytdData.staffTotals[name] === s));
+                                      return sum + calculateAfterTaxPay(s.grossPay, staffMember).tax;
+                                    }, 0))}
+                                  </td>
+                                  <td className="text-right py-3 px-2 font-bold text-orange-600">
+                                    -{formatCurrency(Object.values(ytdData.staffTotals).reduce((sum, s) => {
+                                      const staffMember = staff.find(st => st.name === Object.keys(ytdData.staffTotals).find(name => ytdData.staffTotals[name] === s));
+                                      return sum + calculateAfterTaxPay(s.grossPay, staffMember).totalSuper;
+                                    }, 0))}
+                                  </td>
+                                  <td className="text-right py-3 px-2 font-bold text-green-600">
+                                    {formatCurrency(Object.values(ytdData.staffTotals).reduce((sum, s) => {
+                                      const staffMember = staff.find(st => st.name === Object.keys(ytdData.staffTotals).find(name => ytdData.staffTotals[name] === s));
+                                      return sum + calculateAfterTaxPay(s.grossPay, staffMember).afterTaxPay;
+                                    }, 0))}
+                                  </td>
+                                  <td className="text-right py-3 px-2 font-bold text-slate-700">
+                                    {ytdData.totalHours > 0 ? formatCurrency(ytdData.totalPay / ytdData.totalHours) : formatCurrency(0)}/h
+                                  </td>
+                                </tr>
+                              </tfoot>
+                            </table>
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+
+                    {/* Tax Information */}
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="text-lg font-bold text-slate-800">
+                          💡 Tax & Superannuation Information
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="space-y-4 text-sm">
+                          <div className="bg-blue-50 p-4 rounded-lg">
+                            <h4 className="font-semibold text-blue-800 mb-2">Australian Tax Brackets (2024-25)</h4>
+                            <div className="space-y-1 text-blue-700">
+                              <div>$0 - $18,200: <strong>0%</strong> (Tax-free threshold)</div>
+                              <div>$18,201 - $45,000: <strong>19%</strong></div>
+                              <div>$45,001 - $120,000: <strong>32.5%</strong></div>
+                              <div>$120,001 - $180,000: <strong>37%</strong></div>
+                              <div>$180,001+: <strong>45%</strong></div>
+                            </div>
+                          </div>
+                          
+                          <div className="bg-orange-50 p-4 rounded-lg">
+                            <h4 className="font-semibold text-orange-800 mb-2">Superannuation</h4>
+                            <div className="text-orange-700">
+                              <div><strong>Mandatory Rate:</strong> 11.5% (default)</div>
+                              <div><strong>Additional Contributions:</strong> Staff can set custom rates or dollar amounts</div>
+                            </div>
+                          </div>
+                          
+                          <div className="bg-slate-50 p-4 rounded-lg">
+                            <h4 className="font-semibold text-slate-800 mb-2">Important Notes</h4>
+                            <div className="text-slate-600 space-y-1">
+                              <div>• Tax calculations are estimates based on annual income</div>
+                              <div>• Does not include Medicare levy (2%) or other deductions</div>
+                              <div>• Individual circumstances may affect actual tax liability</div>
+                              <div>• Staff can configure custom tax brackets in their profiles</div>
+                            </div>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </>
+                );
+              })()}
+
+              <div className="flex justify-between items-center pt-4 border-t border-slate-200">
+                <div className="text-sm text-slate-500">
+                  💡 Tip: Export functionality coming soon - save this data for your records
+                </div>
+                <Button variant="outline" onClick={() => setShowYTDReportDialog(false)}>
+                  Close Report
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+
         {/* Day Template Dialog */}
         <Dialog open={showDayTemplateDialog} onOpenChange={setShowDayTemplateDialog}>
           <DialogContent className="max-w-md">
