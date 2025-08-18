@@ -659,11 +659,54 @@ async def update_staff(staff_id: str, staff: Staff):
     return staff
 
 @app.delete("/api/staff/{staff_id}")
-async def delete_staff(staff_id: str):
+async def delete_staff(staff_id: str, current_user: dict = Depends(get_current_user)):
+    """Deactivate a staff member (Admin only)"""
+    if current_user["role"] != "admin":
+        raise HTTPException(status_code=403, detail="Admin access required")
+    
+    # Check if staff member exists
+    staff_member = db.staff.find_one({"id": staff_id})
+    if not staff_member:
+        raise HTTPException(status_code=404, detail="Staff not found")
+    
+    # Check for assigned shifts
+    assigned_shifts = list(db.roster.find({"staff_id": staff_id}))
+    future_shifts = []
+    past_shifts = []
+    
+    from datetime import datetime
+    today = datetime.now().strftime("%Y-%m-%d")
+    
+    for shift in assigned_shifts:
+        if shift.get("date", "") >= today:
+            future_shifts.append(shift)
+        else:
+            past_shifts.append(shift)
+    
+    # Deactivate the staff member
     result = db.staff.update_one({"id": staff_id}, {"$set": {"active": False}})
+    
     if result.matched_count == 0:
         raise HTTPException(status_code=404, detail="Staff not found")
-    return {"message": "Staff deactivated"}
+    
+    # Unassign from future shifts (keep past shifts for record keeping)
+    if future_shifts:
+        db.roster.update_many(
+            {"staff_id": staff_id, "date": {"$gte": today}},
+            {"$unset": {"staff_id": "", "staff_name": ""}}
+        )
+    
+    response = {
+        "message": f"Staff member '{staff_member.get('first_name', '')} {staff_member.get('last_name', '')}' has been deactivated",
+        "staff_name": f"{staff_member.get('first_name', '')} {staff_member.get('last_name', '')}".strip(),
+        "shifts_affected": {
+            "future_shifts_unassigned": len(future_shifts),
+            "past_shifts_preserved": len(past_shifts),
+            "total_shifts": len(assigned_shifts)
+        }
+    }
+    
+    return response
 
 # Shift template endpoints
 @app.get("/api/shift-templates")
