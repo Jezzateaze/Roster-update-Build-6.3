@@ -288,7 +288,7 @@ class ShiftAvailabilityAPITester:
             
             # Verify all requests belong to this staff member
             for request in staff_requests:
-                if request.get('staff_id') != self.staff_user_id:
+                if request.get('staff_id') != self.staff_id:
                     print(f"   ❌ Staff seeing other staff's requests")
                     return False
             print(f"   ✅ Staff only sees own requests")
