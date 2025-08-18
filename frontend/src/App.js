@@ -4986,7 +4986,7 @@ function App() {
           <DialogContent className="max-w-6xl max-h-[85vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle className="text-xl font-bold text-slate-800">
-                📊 Year-to-Date Report & Tax Calculator
+                📊 {isStaff() ? 'My Year-to-Date Report & Tax Summary' : 'Year-to-Date Report & Tax Calculator'}
               </DialogTitle>
             </DialogHeader>
             <div className="space-y-6">
