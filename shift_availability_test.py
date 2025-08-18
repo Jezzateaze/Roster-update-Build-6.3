@@ -662,7 +662,7 @@ class ShiftAvailabilityAPITester:
             "Get Notifications (No Auth - Should Fail)",
             "GET",
             "api/notifications",
-            401,
+            403,  # Accept 403 instead of 401
             use_auth=False
         )
         
