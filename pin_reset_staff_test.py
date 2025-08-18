@@ -69,7 +69,7 @@ class PinResetStaffTester:
         
         login_data = {
             "username": "Admin",
-            "pin": "0000"
+            "pin": "2333"  # Updated PIN from previous test
         }
         
         success, response = self.run_test(
