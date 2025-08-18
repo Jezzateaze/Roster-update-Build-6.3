@@ -152,6 +152,7 @@ class PinResetStaffTester:
         
         # Test 3: Create staff with missing name (should fail)
         test_staff_invalid = {
+            "id": "",
             "active": True
         }
         
