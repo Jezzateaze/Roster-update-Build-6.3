@@ -1606,6 +1606,34 @@ function App() {
     }).format(amount);
   };
 
+  // Privacy control: Check if current user should see pay information
+  const canViewPayInformation = (entryStaffId = null) => {
+    if (!currentUser) return false;
+    
+    // Admin can see all pay information
+    if (currentUser.role === 'admin') return true;
+    
+    // Staff can only see their own pay information
+    if (currentUser.role === 'staff') {
+      // If entryStaffId is provided, check if it matches current user's staff_id
+      if (entryStaffId) {
+        return currentUser.staff_id === entryStaffId;
+      }
+      // For general pay visibility, staff cannot see others' pay
+      return false;
+    }
+    
+    return false;
+  };
+
+  // Get display text for pay information based on privacy rules
+  const getPayDisplayText = (amount, entryStaffId = null) => {
+    if (canViewPayInformation(entryStaffId)) {
+      return formatCurrency(amount);
+    }
+    return '***'; // Hide pay information
+  };
+
   const getWeeklyTotals = () => {
     const weekStart = new Date(currentDate);
     weekStart.setDate(currentDate.getDate() - currentDate.getDay() + 1); // Monday
