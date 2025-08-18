@@ -4337,17 +4337,190 @@ class ShiftRosterAPITester:
         
         return fix_working
 
+    def test_12pm_8pm_pay_calculation_fix(self):
+        """Test the critical pay calculation fix for 12:00PM-8:00PM weekday shifts"""
+        print(f"\n🎯 CRITICAL BUG FIX VERIFICATION: Testing 12:00PM-8:00PM Pay Calculation Fix...")
+        print("   Problem: 12:00PM-8:00PM shifts were calculating at evening rate ($44.50) instead of day rate ($42.00)")
+        print("   Fix: Changed backend determine_shift_type() from 'end_minutes >= 20 * 60' to 'end_minutes > 20 * 60'")
+        print("   Expected: 12:00PM-8:00PM should be WEEKDAY_DAY and calculate at $336.00 (8 hrs × $42.00)")
+        
+        # Test cases for the critical bug fix
+        critical_test_cases = [
+            {
+                "name": "🎯 CRITICAL: 12:00PM-8:00PM Weekday Shift (Bug Fix Verification)",
+                "date": "2025-01-06",  # Monday
+                "start_time": "12:00",
+                "end_time": "20:00",
+                "expected_hours": 8.0,
+                "expected_rate": 42.00,  # Should be DAY rate, not EVENING
+                "expected_pay": 336.00,  # 8 * 42.00
+                "shift_type": "WEEKDAY_DAY",
+                "is_critical": True
+            },
+            {
+                "name": "🎯 EDGE CASE: 12:00PM-7:59PM Weekday Shift (Should be DAY)",
+                "date": "2025-01-07",  # Tuesday
+                "start_time": "12:00",
+                "end_time": "19:59",
+                "expected_hours": 7.98,  # 7 hours 59 minutes
+                "expected_rate": 42.00,  # Should be DAY rate
+                "expected_pay": 335.16,  # 7.98 * 42.00
+                "shift_type": "WEEKDAY_DAY",
+                "is_critical": True
+            },
+            {
+                "name": "🎯 EDGE CASE: 12:00PM-8:01PM Weekday Shift (Should be EVENING)",
+                "date": "2025-01-08",  # Wednesday
+                "start_time": "12:00",
+                "end_time": "20:01",
+                "expected_hours": 8.02,  # 8 hours 1 minute
+                "expected_rate": 44.50,  # Should be EVENING rate
+                "expected_pay": 356.89,  # 8.02 * 44.50
+                "shift_type": "WEEKDAY_EVENING",
+                "is_critical": True
+            },
+            {
+                "name": "🎯 CONTROL: 8:00PM-10:00PM Weekday Shift (Should be EVENING)",
+                "date": "2025-01-09",  # Thursday
+                "start_time": "20:00",
+                "end_time": "22:00",
+                "expected_hours": 2.0,
+                "expected_rate": 44.50,  # Should be EVENING rate
+                "expected_pay": 89.00,  # 2 * 44.50
+                "shift_type": "WEEKDAY_EVENING",
+                "is_critical": False
+            },
+            {
+                "name": "🎯 REGRESSION: 7:30AM-3:30PM Weekday Shift (Should remain DAY)",
+                "date": "2025-01-10",  # Friday
+                "start_time": "07:30",
+                "end_time": "15:30",
+                "expected_hours": 8.0,
+                "expected_rate": 42.00,  # Should be DAY rate
+                "expected_pay": 336.00,  # 8 * 42.00
+                "shift_type": "WEEKDAY_DAY",
+                "is_critical": False
+            }
+        ]
+        
+        critical_tests_passed = 0
+        critical_tests_total = sum(1 for case in critical_test_cases if case.get('is_critical', False))
+        all_tests_passed = 0
+        
+        print(f"\n   Running {len(critical_test_cases)} test cases ({critical_tests_total} critical)...")
+        
+        for i, test_case in enumerate(critical_test_cases):
+            is_critical = test_case.get('is_critical', False)
+            print(f"\n   {'🎯 CRITICAL TEST' if is_critical else '📋 TEST'} {i+1}: {test_case['name']}")
+            
+            # Create roster entry for testing
+            roster_entry = {
+                "id": "",  # Will be auto-generated
+                "date": test_case["date"],
+                "shift_template_id": f"pay-fix-test-{i+1}",
+                "start_time": test_case["start_time"],
+                "end_time": test_case["end_time"],
+                "is_sleepover": False,
+                "is_public_holiday": False,
+                "staff_id": None,
+                "staff_name": None,
+                "hours_worked": 0.0,
+                "base_pay": 0.0,
+                "sleepover_allowance": 0.0,
+                "total_pay": 0.0
+            }
+            
+            success, response = self.run_test(
+                f"POST /api/roster/add-shift - {test_case['name']}",
+                "POST",
+                "api/roster/add-shift",
+                200,
+                data=roster_entry
+            )
+            
+            if success:
+                hours_worked = response.get('hours_worked', 0)
+                total_pay = response.get('total_pay', 0)
+                base_pay = response.get('base_pay', 0)
+                
+                print(f"      📊 Results:")
+                print(f"         Hours worked: {hours_worked} (expected: {test_case['expected_hours']})")
+                print(f"         Total pay: ${total_pay:.2f} (expected: ${test_case['expected_pay']:.2f})")
+                print(f"         Expected shift type: {test_case['shift_type']}")
+                
+                # Check calculations with tolerance for floating point precision
+                hours_correct = abs(hours_worked - test_case['expected_hours']) < 0.05
+                pay_correct = abs(total_pay - test_case['expected_pay']) < 0.50  # Allow 50 cent tolerance
+                
+                if hours_correct and pay_correct:
+                    print(f"      ✅ {'CRITICAL ' if is_critical else ''}TEST PASSED")
+                    all_tests_passed += 1
+                    if is_critical:
+                        critical_tests_passed += 1
+                else:
+                    print(f"      ❌ {'CRITICAL ' if is_critical else ''}TEST FAILED")
+                    if not hours_correct:
+                        print(f"         ❌ Hours mismatch: got {hours_worked}, expected {test_case['expected_hours']}")
+                    if not pay_correct:
+                        print(f"         ❌ Pay mismatch: got ${total_pay:.2f}, expected ${test_case['expected_pay']:.2f}")
+                        
+                        # Calculate what rate was actually used
+                        if hours_worked > 0:
+                            actual_rate = total_pay / hours_worked
+                            print(f"         📊 Actual rate used: ${actual_rate:.2f}/hr (expected: ${test_case['expected_rate']:.2f}/hr)")
+                            
+                            if abs(actual_rate - 44.50) < 0.01:
+                                print(f"         🚨 ISSUE: Using EVENING rate instead of DAY rate!")
+                            elif abs(actual_rate - 42.00) < 0.01:
+                                print(f"         ✅ Using correct DAY rate")
+                    
+                    if is_critical:
+                        print(f"      🚨 CRITICAL BUG FIX VERIFICATION FAILED!")
+                        print(f"         The 12:00PM-8:00PM pay calculation fix may not be working correctly")
+            else:
+                print(f"      ❌ {'CRITICAL ' if is_critical else ''}TEST FAILED - Could not create roster entry")
+                if is_critical:
+                    print(f"      🚨 CRITICAL TEST COULD NOT BE EXECUTED!")
+        
+        # Summary
+        print(f"\n   📊 PAY CALCULATION FIX TEST RESULTS:")
+        print(f"      Critical tests passed: {critical_tests_passed}/{critical_tests_total}")
+        print(f"      Total tests passed: {all_tests_passed}/{len(critical_test_cases)}")
+        
+        if critical_tests_passed == critical_tests_total:
+            print(f"      ✅ ALL CRITICAL PAY CALCULATION TESTS PASSED!")
+            print(f"      ✅ 12:00PM-8:00PM bug fix is working correctly")
+        else:
+            print(f"      ❌ CRITICAL PAY CALCULATION TESTS FAILED!")
+            print(f"      ❌ 12:00PM-8:00PM bug fix needs attention")
+            
+        if all_tests_passed == len(critical_test_cases):
+            print(f"      ✅ No regression detected in other pay calculations")
+        else:
+            print(f"      ⚠️  Some regression tests failed - review other pay calculations")
+        
+        return critical_tests_passed == critical_tests_total
+
 def main():
     print("🚀 Starting Shift Roster & Pay Calculator API Tests")
-    print("🎯 FOCUS: Critical Overlap Handling Fix in PUT Endpoint")
+    print("🎯 FOCUS: Critical Pay Calculation Fix for 12:00PM-8:00PM Shifts")
     print("=" * 80)
     
     tester = ShiftRosterAPITester()
     
-    # Run the critical overlap handling fix test
-    success = tester.test_critical_overlap_handling_fix()
+    # Run basic health checks first
+    print("\n📋 Running Basic Health Checks...")
+    tester.test_health_check()
+    tester.test_get_staff()
+    tester.test_get_settings()
     
-    print(f"\n🏁 Critical Test Complete!")
+    # Run the critical pay calculation fix test
+    print("\n" + "="*80)
+    print("🎯 CRITICAL PAY CALCULATION FIX TEST")
+    print("="*80)
+    success = tester.test_12pm_8pm_pay_calculation_fix()
+    
+    print(f"\n🏁 Critical Pay Calculation Test Complete!")
     print(f"Result: {'✅ PASSED' if success else '❌ FAILED'}")
     
     return 0 if success else 1
