@@ -3005,53 +3005,61 @@ function App() {
                     <div className="flex items-center justify-between">
                       {!bulkSelectionMode ? (
                         <div className="flex items-center space-x-2">
-                          <Button 
-                            variant="outline" 
-                            onClick={() => setShowGenerateFromTemplateDialog(true)}
-                          >
-                            Load Template
-                          </Button>
-                          <Button 
-                            variant="outline" 
-                            onClick={() => setShowManageTemplatesDialog(true)}
-                          >
-                            Manage Templates
-                          </Button>
-                          {/* YTD Report - Only visible to admin */}
-                          {currentUser?.role === 'admin' && (
-                            <Button 
-                              variant="outline" 
-                              onClick={() => setShowYTDReportDialog(true)}
-                              className="text-purple-600 hover:text-purple-700 border-purple-200 hover:border-purple-300"
-                            >
-                              📊 YTD Report
-                            </Button>
+                          {/* Admin-only template and roster management buttons */}
+                          {isAdmin() && (
+                            <>
+                              <Button 
+                                variant="outline" 
+                                onClick={() => setShowGenerateFromTemplateDialog(true)}
+                              >
+                                Load Template
+                              </Button>
+                              <Button 
+                                variant="outline" 
+                                onClick={() => setShowManageTemplatesDialog(true)}
+                              >
+                                Manage Templates
+                              </Button>
+                              <Button variant="outline" onClick={clearMonthlyRoster}>
+                                Clear Roster
+                              </Button>
+                              <Button onClick={generateMonthlyRoster} className="bg-blue-600 hover:bg-blue-700 text-white">
+                                Generate Roster
+                              </Button>
+                            </>
                           )}
-                          <Button variant="outline" onClick={clearMonthlyRoster}>
-                            Clear Roster
-                          </Button>
-                          <Button onClick={generateMonthlyRoster} className="bg-blue-600 hover:bg-blue-700 text-white">
-                            Generate Roster
+                          {/* YTD Report - Admin sees full report, Staff sees personal YTD */}
+                          <Button 
+                            variant="outline" 
+                            onClick={() => setShowYTDReportDialog(true)}
+                            className="text-purple-600 hover:text-purple-700 border-purple-200 hover:border-purple-300"
+                          >
+                            📊 YTD Report
                           </Button>
                         </div>
                       ) : (
                         <div className="flex items-center space-x-2">
-                          <Button 
-                            variant="destructive" 
-                            onClick={bulkDeleteShifts}
-                            disabled={selectedShifts.size === 0}
-                          >
-                            <Trash2 className="w-4 h-4 mr-2" />
-                            Delete Selected ({selectedShifts.size})
-                          </Button>
-                          <Button 
-                            variant="outline" 
-                            onClick={() => setShowBulkActionsDialog(true)}
-                            disabled={selectedShifts.size === 0}
-                          >
-                            <Edit className="w-4 h-4 mr-2" />
-                            Edit Selected
-                          </Button>
+                          {/* Admin-only bulk actions */}
+                          {isAdmin() && (
+                            <>
+                              <Button 
+                                variant="destructive" 
+                                onClick={bulkDeleteShifts}
+                                disabled={selectedShifts.size === 0}
+                              >
+                                <Trash2 className="w-4 h-4 mr-2" />
+                                Delete Selected ({selectedShifts.size})
+                              </Button>
+                              <Button 
+                                variant="outline" 
+                                onClick={() => setShowBulkActionsDialog(true)}
+                                disabled={selectedShifts.size === 0}
+                              >
+                                <Edit className="w-4 h-4 mr-2" />
+                                Edit Selected
+                              </Button>
+                            </>
+                          )}
                         </div>
                       )}
                     </div>
