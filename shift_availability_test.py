@@ -679,7 +679,7 @@ class ShiftAvailabilityAPITester:
         # Test 1: Check for conflicts when assigning staff to shift
         unassigned_shift = self.test_data['unassigned_shifts'][0]
         conflict_check_data = {
-            "staff_id": self.staff_user_id,
+            "staff_id": self.staff_id,  # Use actual staff_id
             "roster_entry_id": unassigned_shift['id'],
             "date": unassigned_shift['date'],
             "start_time": unassigned_shift['start_time'],
