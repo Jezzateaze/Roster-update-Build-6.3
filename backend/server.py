@@ -568,10 +568,22 @@ async def get_staff():
 
 @app.post("/api/staff")
 async def create_staff(staff: Staff):
-    staff.id = str(uuid.uuid4())
-    staff.created_at = datetime.now()
-    db.staff.insert_one(staff.dict())
-    return staff
+    """Create a new staff member"""
+    if not staff.id:
+        staff.id = str(uuid.uuid4())
+    if not staff.created_at:
+        staff.created_at = datetime.now()
+    
+    # Check if staff name already exists
+    existing_staff = db.staff.find_one({"name": staff.name, "active": True})
+    if existing_staff:
+        raise HTTPException(status_code=400, detail=f"Staff member with name '{staff.name}' already exists")
+    
+    try:
+        db.staff.insert_one(staff.dict())
+        return staff
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to create staff member: {str(e)}")
 
 @app.put("/api/staff/{staff_id}")
 async def update_staff(staff_id: str, staff: Staff):
