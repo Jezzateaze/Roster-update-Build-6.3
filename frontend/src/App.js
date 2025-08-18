@@ -4497,7 +4497,115 @@ function App() {
                                   ))}
                                 </div>
                               </div>
+                              {/* Enhanced Totals Summary Section */}
+                    <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
+                      {/* Weekly Totals */}
+                      {(() => {
+                        const weeklyTotals = getWeeklyTotals();
+                        const weekStart = new Date(currentDate);
+                        weekStart.setDate(currentDate.getDate() - currentDate.getDay() + 1); // Monday
+                        const weekEnd = new Date(weekStart);
+                        weekEnd.setDate(weekStart.getDate() + 6);
+                        
+                        return (
+                          <Card>
+                            <CardHeader className="pb-2">
+                              <CardTitle className="text-sm font-medium text-slate-700">
+                                📅 This Week ({weekStart.toLocaleDateString('en-AU', { month: 'short', day: 'numeric' })} - {weekEnd.toLocaleDateString('en-AU', { month: 'short', day: 'numeric' })})
+                              </CardTitle>
+                            </CardHeader>
+                            <CardContent className="space-y-2">
+                              <div className="flex justify-between text-sm">
+                                <span className="text-slate-600">Total Hours:</span>
+                                <span className="font-medium text-blue-600">{weeklyTotals.totalHours.toFixed(1)}h</span>
+                              </div>
+                              <div className="flex justify-between text-sm">
+                                <span className="text-slate-600">Total Pay:</span>
+                                <span className="font-medium text-emerald-600">{formatCurrency(weeklyTotals.totalPay)}</span>
+                              </div>
+                              <div className="pt-2 border-t border-slate-200">
+                                <div className="text-xs text-slate-500 mb-1">Staff Breakdown:</div>
+                                <div className="space-y-1 max-h-24 overflow-y-auto">
+                                  {Object.entries(weeklyTotals.staffTotals).length === 0 ? (
+                                    <div className="text-xs text-slate-400 italic">No assigned shifts</div>
+                                  ) : (
+                                    Object.entries(weeklyTotals.staffTotals).map(([name, totals]) => (
+                                      <div key={name} className="flex justify-between text-xs">
+                                        <span className="text-slate-600 truncate">{name}:</span>
+                                        <div className="flex space-x-2">
+                                          <span className="text-blue-600">{totals.hours.toFixed(1)}h</span>
+                                          <span className="text-emerald-600">{formatCurrency(totals.pay)}</span>
+                                        </div>
+                                      </div>
+                                    ))
+                                  )}
+                                </div>
+                              </div>
                             </CardContent>
+                          </Card>
+                        );
+                      })()}
+
+                      {/* Calendar Year Totals */}
+                      {(() => {
+                        const yearTotals = getYearToDateTotals(false); // Calendar year for admin
+                        
+                        return (
+                          <Card>
+                            <CardHeader className="pb-2">
+                              <CardTitle className="text-sm font-medium text-slate-700">
+                                📊 Calendar Year {yearTotals.startDate.getFullYear()}
+                              </CardTitle>
+                            </CardHeader>
+                            <CardContent className="space-y-2">
+                              <div className="flex justify-between text-sm">
+                                <span className="text-slate-600">Total Hours:</span>
+                                <span className="font-medium text-blue-600">{yearTotals.totalHours.toFixed(1)}h</span>
+                              </div>
+                              <div className="flex justify-between text-sm">
+                                <span className="text-slate-600">Gross Pay:</span>
+                                <span className="font-medium text-emerald-600">{formatCurrency(yearTotals.totalPay)}</span>
+                              </div>
+                              <div className="text-xs text-slate-500">
+                                {yearTotals.startDate.toLocaleDateString('en-AU')} - {yearTotals.endDate.toLocaleDateString('en-AU')}
+                              </div>
+                            </CardContent>
+                          </Card>
+                        );
+                      })()}
+
+                      {/* Financial Year Totals */}
+                      {(() => {
+                        const fyTotals = getYearToDateTotals(true); // Financial year
+                        
+                        return (
+                          <Card>
+                            <CardHeader className="pb-2">
+                              <CardTitle className="text-sm font-medium text-slate-700">
+                                💰 Financial Year
+                              </CardTitle>
+                            </CardHeader>
+                            <CardContent className="space-y-2">
+                              <div className="flex justify-between text-sm">
+                                <span className="text-slate-600">Total Hours:</span>
+                                <span className="font-medium text-blue-600">{fyTotals.totalHours.toFixed(1)}h</span>
+                              </div>
+                              <div className="flex justify-between text-sm">
+                                <span className="text-slate-600">Gross Pay:</span>
+                                <span className="font-medium text-emerald-600">{formatCurrency(fyTotals.totalPay)}</span>
+                              </div>
+                              <div className="text-xs text-slate-500">
+                                FY {fyTotals.startDate.getFullYear()}/{String(fyTotals.endDate.getFullYear()).slice(-2)}
+                              </div>
+                              <div className="text-xs text-slate-400">
+                                {fyTotals.startDate.toLocaleDateString('en-AU')} - {fyTotals.endDate.toLocaleDateString('en-AU')}
+                              </div>
+                            </CardContent>
+                          </Card>
+                        );
+                      })()}
+                    </div>
+                  </CardContent>
                           )}
                         </Card>
                       );
