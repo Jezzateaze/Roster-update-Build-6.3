@@ -8191,7 +8191,7 @@ function App() {
                   onClick={handlePublishAllShifts}
                   className="bg-green-600 hover:bg-green-700 text-white"
                 >
-                  ✅ Publish All Including Overlaps ({(overlapData.response.entries_created || 0) + (overlapData.response.overlaps_detected || 0)} shifts)
+                  ✅ Publish All Including Overlaps ({((overlapData.response.entries_created || 0) + (overlapData.response.overlaps_detected || 0))} shifts)
                 </Button>
               </div>
             </div>
