@@ -153,7 +153,7 @@ function App() {
         });
         
         console.log('PIN reset response:', response.data);
-        alert(`🔐 PIN has been reset for ${selectedStaffForProfile.name}.\n\nNew temporary PIN: ${response.data.temp_pin}\n\nPlease provide this to the staff member securely.`);
+        alert(`🔐 PIN has been reset for ${selectedStaffForProfile.name}.\n\nNew temporary PIN: ${response.data.temp_pin}\n\nUsername: ${response.data.username}\n\nPlease provide these credentials to the staff member securely.`);
       }
     } catch (error) {
       console.error('Error resetting PIN:', error);
@@ -161,6 +161,7 @@ function App() {
     }
   };
   const [authError, setAuthError] = useState('');
+  const [addingStaff, setAddingStaff] = useState(false);
 
   const [currentDate, setCurrentDate] = useState(getBrisbaneDate());
   const [staff, setStaff] = useState([]);
