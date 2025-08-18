@@ -527,7 +527,7 @@ class ShiftAvailabilityAPITester:
             
             # Verify all records belong to this staff member
             for record in staff_availability:
-                if record.get('staff_id') != self.staff_user_id:
+                if record.get('staff_id') != self.staff_id:
                     print(f"   ❌ Staff seeing other staff's availability")
                     return False
             print(f"   ✅ Staff only sees own availability records")
