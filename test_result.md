@@ -304,7 +304,7 @@ backend:
           comment: "User reports 12:00PM-8:00PM shifts show correct 'Day' badge but calculate at evening rates ($356 instead of $336). Should be 8 hours × $42/hr = $336 day rate."
         - working: false
           agent: "main"
-          comment: "Bug identified: Backend determine_shift_type() uses 'end_minutes >= 20 * 60' (includes 8PM as evening) while frontend badge uses 'endMinutes > 20 * 60' (excludes 8PM from evening). Need to fix backend to match frontend logic."
+          comment: "Bug identified: Backend determine_shift_type() uses 'end_minutes >= 20 * 60' (includes 8PM as evening) while frontend badge uses 'endMinutes > 20 * 60' (excludes 8PM from evening). Fixed backend line 258 to match frontend logic: changed '>= 20 * 60' to '> 20 * 60'. Now 12PM-8PM shifts should calculate at day rate ($42/hr × 8hrs = $336)."
 
   - task: "Pay Summary Display Fix"
     implemented: false
