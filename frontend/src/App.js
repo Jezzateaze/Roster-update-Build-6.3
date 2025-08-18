@@ -6361,7 +6361,7 @@ function App() {
                         <SelectValue placeholder="Keep current day" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">Keep Current Day</SelectItem>
+                        <SelectItem value="keep">Keep Current Day</SelectItem>
                         <SelectItem value="0">Monday</SelectItem>
                         <SelectItem value="1">Tuesday</SelectItem>
                         <SelectItem value="2">Wednesday</SelectItem>
