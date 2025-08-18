@@ -689,14 +689,27 @@ function App() {
         templates: shiftTemplates
       });
       
+      // Check for overlaps and show dialog if any exist
+      if (response.data.overlaps_detected && response.data.overlaps_detected > 0) {
+        setOverlapData({
+          type: 'shift-templates',
+          month: monthString,
+          templates: shiftTemplates,
+          response: response.data,
+          message: `Generated roster for ${currentDate.toLocaleString('default', { month: 'long', year: 'numeric' })}`
+        });
+        setShowOverlapDialog(true);
+        return; // Don't show success message yet
+      }
+      
       fetchRosterData();
       
       let message = `Generated roster for ${currentDate.toLocaleString('default', { month: 'long', year: 'numeric' })}`;
       if (response.data.entries_created) {
         message += `\n${response.data.entries_created} shifts created`;
       }
-      if (response.data.overlaps_detected) {
-        message += `\n${response.data.overlaps_detected} overlapping shifts were skipped`;
+      if (response.data.overlaps_detected === 0) {
+        message += `\nNo overlapping shifts detected`;
       }
       
       alert(message);
