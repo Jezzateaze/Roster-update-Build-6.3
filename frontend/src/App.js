@@ -4930,6 +4930,150 @@ function App() {
 
         </div>
       )}
+      
+      {/* Authentication Dialogs - Always available */}
+      {/* Login Dialog */}
+      <Dialog open={showLoginDialog && !isAuthenticated} onOpenChange={() => {}}>
+        <DialogContent className="max-w-md" closable={false}>
+          <DialogHeader>
+            <DialogTitle className="text-center">
+              🔐 Shift Roster Login
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="text-center text-sm text-slate-600">
+              <p>Welcome to the Workforce Management System</p>
+              <p>Please enter your credentials to continue</p>
+            </div>
+
+            {authError && (
+              <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+                {authError}
+              </div>
+            )}
+
+            <div className="space-y-3">
+              <div>
+                <Label htmlFor="username">Username</Label>
+                <Input
+                  id="username"
+                  type="text"
+                  placeholder="Enter username"
+                  value={loginData.username}
+                  onChange={(e) => setLoginData({ ...loginData, username: e.target.value })}
+                />
+              </div>
+              <div>
+                <Label htmlFor="pin">PIN (4 or 6 digits)</Label>
+                <Input
+                  id="pin"
+                  type="password"
+                  placeholder="Enter PIN"
+                  value={loginData.pin}
+                  onChange={(e) => setLoginData({ ...loginData, pin: e.target.value })}
+                />
+              </div>
+            </div>
+
+            <div className="text-xs text-slate-500 p-3 bg-slate-50 border border-slate-200 rounded-lg">
+              <p><strong>Default Login:</strong></p>
+              <p>• Admin: Username "Admin", PIN "0000"</p>
+              <p>• New Staff: PIN "888888" (must change on first login)</p>
+            </div>
+
+            <Button 
+              onClick={login} 
+              className="w-full"
+              disabled={!loginData.username || !loginData.pin}
+            >
+              Sign In
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Change PIN Dialog */}
+      <Dialog open={showChangePinDialog} onOpenChange={setShowChangePinDialog}>
+        <DialogContent className="max-w-md" closable={!currentUser?.is_first_login}>
+          <DialogHeader>
+            <DialogTitle className="text-center">
+              🔐 Change Your PIN
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="text-center text-sm text-slate-600">
+              <p>For security, please change your default PIN</p>
+              <p>Choose a secure 4 or 6 digit PIN</p>
+            </div>
+
+            {authError && (
+              <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+                {authError}
+              </div>
+            )}
+
+            <div className="space-y-3">
+              <div>
+                <Label htmlFor="current-pin">Current PIN</Label>
+                <Input
+                  id="current-pin"
+                  type="password"
+                  placeholder="Enter current PIN"
+                  value={changePinData.current_pin}
+                  onChange={(e) => setChangePinData({ ...changePinData, current_pin: e.target.value })}
+                />
+              </div>
+              <div>
+                <Label htmlFor="new-pin">New PIN (4 or 6 digits)</Label>
+                <Input
+                  id="new-pin"
+                  type="password"
+                  placeholder="Enter new PIN"
+                  value={changePinData.new_pin}
+                  onChange={(e) => setChangePinData({ ...changePinData, new_pin: e.target.value })}
+                />
+              </div>
+              <div>
+                <Label htmlFor="confirm-pin">Confirm New PIN</Label>
+                <Input
+                  id="confirm-pin"
+                  type="password"
+                  placeholder="Confirm new PIN"
+                  value={changePinData.confirm_pin}
+                  onChange={(e) => setChangePinData({ ...changePinData, confirm_pin: e.target.value })}
+                />
+              </div>
+            </div>
+
+            <div className="text-xs text-slate-500 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+              <p><strong>PIN Requirements:</strong></p>
+              <p>• Must be exactly 4 or 6 digits</p>
+              <p>• Numeric characters only</p>
+              <p>• Choose something secure but memorable</p>
+            </div>
+
+            <div className="flex space-x-2">
+              {!currentUser?.is_first_login && (
+                <Button 
+                  variant="outline" 
+                  onClick={() => setShowChangePinDialog(false)}
+                  className="flex-1"
+                >
+                  Skip for Now
+                </Button>
+              )}
+              <Button 
+                onClick={changePin} 
+                className={currentUser?.is_first_login ? "w-full" : "flex-1"}
+                disabled={!changePinData.current_pin || !changePinData.new_pin || !changePinData.confirm_pin}
+              >
+                Change PIN
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+      
     </div>
   );
 }
