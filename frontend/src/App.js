@@ -7584,6 +7584,178 @@ function App() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Shift Request Dialog */}
+      <Dialog open={showShiftRequestDialog} onOpenChange={setShowShiftRequestDialog}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Request Shift</DialogTitle>
+          </DialogHeader>
+          {selectedUnassignedShift && (
+            <div className="space-y-4">
+              <div className="p-4 bg-slate-50 rounded-lg">
+                <h3 className="font-medium text-slate-800 mb-2">Shift Details</h3>
+                <div className="text-sm text-slate-600 space-y-1">
+                  <p><strong>Date:</strong> {formatDateString(selectedUnassignedShift.date)}</p>
+                  <p><strong>Time:</strong> {formatTime(selectedUnassignedShift.start_time)} - {formatTime(selectedUnassignedShift.end_time)}</p>
+                  <p><strong>Hours:</strong> {selectedUnassignedShift.hours_worked?.toFixed(1)} hours</p>
+                  <p><strong>Pay:</strong> {formatCurrency(selectedUnassignedShift.total_pay)}</p>
+                  <div className="flex items-center space-x-2 mt-2">
+                    {getShiftTypeBadge(selectedUnassignedShift)}
+                  </div>
+                </div>
+              </div>
+              
+              <div>
+                <Label htmlFor="shift-request-notes">Additional Notes (Optional)</Label>
+                <textarea
+                  id="shift-request-notes"
+                  className="w-full p-3 border rounded-md mt-1"
+                  rows={3}
+                  placeholder="Add any notes about your request..."
+                  value={selectedUnassignedShift.requestNotes || ''}
+                  onChange={(e) => setSelectedUnassignedShift({
+                    ...selectedUnassignedShift,
+                    requestNotes: e.target.value
+                  })}
+                />
+              </div>
+              
+              <div className="flex justify-end space-x-2">
+                <Button variant="outline" onClick={() => setShowShiftRequestDialog(false)}>
+                  Cancel
+                </Button>
+                <Button onClick={() => submitShiftRequest(selectedUnassignedShift.id, selectedUnassignedShift.requestNotes)}>
+                  Submit Request
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Staff Availability Dialog */}
+      <Dialog open={showAvailabilityDialog} onOpenChange={setShowAvailabilityDialog}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>{isStaff() ? 'Update My Availability' : 'Add Staff Availability'}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label>Availability Type</Label>
+              <Select 
+                value={newAvailability.availability_type} 
+                onValueChange={(value) => setNewAvailability({...newAvailability, availability_type: value})}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="available">✅ Available</SelectItem>
+                  <SelectItem value="unavailable">❌ Unavailable</SelectItem>
+                  <SelectItem value="time_off_request">🏖️ Time Off Request</SelectItem>
+                  <SelectItem value="preferred_shifts">⭐ Preferred Shifts</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="flex items-center space-x-2">
+              <Switch
+                id="is-recurring"
+                checked={newAvailability.is_recurring}
+                onCheckedChange={(checked) => setNewAvailability({...newAvailability, is_recurring: checked})}
+              />
+              <Label htmlFor="is-recurring">Recurring (every week)</Label>
+            </div>
+
+            {newAvailability.is_recurring ? (
+              <div>
+                <Label>Day of Week</Label>
+                <Select 
+                  value={newAvailability.day_of_week?.toString() || ''} 
+                  onValueChange={(value) => setNewAvailability({...newAvailability, day_of_week: parseInt(value)})}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select day" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="0">Monday</SelectItem>
+                    <SelectItem value="1">Tuesday</SelectItem>
+                    <SelectItem value="2">Wednesday</SelectItem>
+                    <SelectItem value="3">Thursday</SelectItem>
+                    <SelectItem value="4">Friday</SelectItem>
+                    <SelectItem value="5">Saturday</SelectItem>
+                    <SelectItem value="6">Sunday</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="date-from">From Date</Label>
+                  <Input
+                    id="date-from"
+                    type="date"
+                    value={newAvailability.date_from}
+                    onChange={(e) => setNewAvailability({...newAvailability, date_from: e.target.value})}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="date-to">To Date (leave blank for single day)</Label>
+                  <Input
+                    id="date-to"
+                    type="date"
+                    value={newAvailability.date_to}
+                    onChange={(e) => setNewAvailability({...newAvailability, date_to: e.target.value})}
+                  />
+                </div>
+              </div>
+            )}
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="start-time">Start Time (optional)</Label>
+                <Input
+                  id="start-time"
+                  type="time"
+                  value={newAvailability.start_time}
+                  onChange={(e) => setNewAvailability({...newAvailability, start_time: e.target.value})}
+                />
+              </div>
+              <div>
+                <Label htmlFor="end-time">End Time (optional)</Label>
+                <Input
+                  id="end-time"
+                  type="time"
+                  value={newAvailability.end_time}
+                  onChange={(e) => setNewAvailability({...newAvailability, end_time: e.target.value})}
+                />
+              </div>
+            </div>
+
+            <div>
+              <Label htmlFor="availability-notes">Notes</Label>
+              <textarea
+                id="availability-notes"
+                className="w-full p-3 border rounded-md mt-1"
+                rows={3}
+                placeholder="Add any additional notes..."
+                value={newAvailability.notes}
+                onChange={(e) => setNewAvailability({...newAvailability, notes: e.target.value})}
+              />
+            </div>
+
+            <div className="flex justify-end space-x-2">
+              <Button variant="outline" onClick={() => setShowAvailabilityDialog(false)}>
+                Cancel
+              </Button>
+              <Button onClick={() => createStaffAvailability(newAvailability)}>
+                Save Availability
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
       
     </div>
   );
