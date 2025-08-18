@@ -363,6 +363,18 @@ agent_communication:
           agent: "testing"
           comment: "✅ 2:1 SHIFT OVERLAP FUNCTIONALITY FULLY WORKING! Comprehensive testing completed: 1) Regular shifts correctly prevent overlaps with other regular shifts (409 Conflict returned), 2) Shifts with '2:1' in the name are allowed to overlap with any other shift (case insensitive detection working), 3) Multiple 2:1 shifts can overlap with each other successfully, 4) Regular shifts cannot be updated to overlap with 2:1 shifts (409 Conflict returned), 5) 2:1 shifts can be updated to extend overlaps with other shifts, 6) Enhanced overlap detection logic works across all endpoints: POST /api/roster/add-shift, PUT /api/roster/{entry_id}, POST /api/generate-roster-from-shift-templates/{month}, POST /api/day-templates/apply-to-date/{template_id}. Backend console logging shows when 2:1 overlaps are allowed. All 3/3 2:1 overlap tests passed. Core functionality is production-ready."
 
+  - task: "Allow 2:1 Shift Overlapping Toggle in Shift Templates"
+    implemented: true
+    working: false
+    file: "App.js"
+    stuck_count: 1
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: false
+          agent: "testing"
+          comment: "❌ CRITICAL FRONTEND ISSUE BLOCKING 2:1 OVERLAP TOGGLE TESTING: Comprehensive testing attempted but blocked by React Select component runtime errors. IMPLEMENTATION VERIFIED: 1) ✅ Backend: ShiftTemplate model has allow_overlap field (line 67), 2) ✅ Frontend Code: Individual template edit toggle at lines 4802-4814 with proper label 'Allow 2:1 Shift Overlapping', 3) ✅ Frontend Code: Bulk edit toggle at lines 6321-6325, 4) ✅ Frontend Code: Yellow badge display at lines 3638-3642 with correct styling, 5) ✅ State Management: Toggle properly integrated with template state. CRITICAL BLOCKING ISSUE: React Select runtime error 'A <Select.Item /> must have a value prop that is not an empty string' prevents template edit dialogs from opening. This is the same Select component issue mentioned in previous test results. TESTING RESULTS: 1) ❌ Individual template editing: Edit buttons exist but dialogs fail to open due to Select errors, 2) ❌ Bulk template editing: Bulk edit mode activates but dialog fails to open due to Select errors, 3) ❌ Yellow badge verification: No badges visible as templates cannot be edited to enable overlap, 4) ✅ Admin access: Successfully logged in and navigated to Shift Times tab, 5) ✅ UI Structure: All 28 shift templates visible with proper layout. REQUIRED FIX: The React Select component value prop issues must be resolved before the 2:1 overlap toggle functionality can be properly tested and used. The feature is implemented correctly but blocked by this critical frontend error."
+
   - task: "Allow Overlap Manual Override Functionality"
     implemented: true
     working: true
