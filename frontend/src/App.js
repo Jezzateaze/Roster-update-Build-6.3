@@ -3424,27 +3424,61 @@ function App() {
 
             <Card>
               <CardHeader>
-                <CardTitle>Weekly Staff Summary</CardTitle>
+                <CardTitle>
+                  {currentUser?.role === 'admin' ? 'Weekly Staff Summary' : 'My Weekly Summary'}
+                </CardTitle>
+                {currentUser?.role === 'staff' && (
+                  <p className="text-slate-600 text-sm">Your personal hours and pay information</p>
+                )}
               </CardHeader>
               <CardContent>
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Staff Member</TableHead>
+                      <TableHead>
+                        {currentUser?.role === 'admin' ? 'Staff Member' : 'Name'}
+                      </TableHead>
                       <TableHead>Hours Worked</TableHead>
-                      <TableHead>Gross Pay</TableHead>
+                      {currentUser?.role === 'admin' && <TableHead>Gross Pay</TableHead>}
+                      {currentUser?.role === 'staff' && <TableHead>My Pay</TableHead>}
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {Object.entries(staffTotals).map(([name, totals]) => (
-                      <TableRow key={name}>
-                        <TableCell className="font-medium">{name}</TableCell>
-                        <TableCell>{totals.hours.toFixed(1)}</TableCell>
-                        <TableCell className="font-medium text-emerald-600">
-                          {formatCurrency(totals.pay)}
+                    {Object.entries(staffTotals)
+                      .filter(([name, totals]) => {
+                        // Admin can see all staff, staff can only see their own
+                        if (currentUser?.role === 'admin') return true;
+                        if (currentUser?.role === 'staff') {
+                          // Find the staff member by matching name with current user
+                          const staffMember = staff.find(s => s.name === name);
+                          return staffMember && currentUser.staff_id === staffMember.id;
+                        }
+                        return false;
+                      })
+                      .map(([name, totals]) => (
+                        <TableRow key={name}>
+                          <TableCell className="font-medium">{name}</TableCell>
+                          <TableCell>{totals.hours.toFixed(1)}</TableCell>
+                          <TableCell className="font-medium text-emerald-600">
+                            {currentUser?.role === 'admin' 
+                              ? formatCurrency(totals.pay)
+                              : formatCurrency(totals.pay) // Staff can see their own pay
+                            }
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    {/* No data message for staff if they have no shifts */}
+                    {currentUser?.role === 'staff' && 
+                     Object.entries(staffTotals).filter(([name, totals]) => {
+                       const staffMember = staff.find(s => s.name === name);
+                       return staffMember && currentUser.staff_id === staffMember.id;
+                     }).length === 0 && (
+                      <TableRow>
+                        <TableCell colSpan={3} className="text-center py-6 text-slate-500">
+                          No shifts assigned for this week
                         </TableCell>
                       </TableRow>
-                    ))}
+                    )}
                   </TableBody>
                 </Table>
               </CardContent>
