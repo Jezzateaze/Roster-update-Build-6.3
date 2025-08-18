@@ -2244,8 +2244,8 @@ function App() {
                         </div>
                       )}
                       
-                      {/* Delete button */}
-                      {!bulkSelectionMode && (
+                      {/* Action buttons - Admin only */}
+                      {!bulkSelectionMode && isAdmin() && (
                         <button
                           className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full text-sm opacity-0 group-hover:opacity-100 mobile-delete-hover flex items-center justify-center hover:bg-red-600 transition-all z-20 shadow-sm border border-white"
                           onClick={(e) => {
