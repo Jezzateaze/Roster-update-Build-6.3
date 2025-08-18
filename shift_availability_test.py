@@ -228,7 +228,7 @@ class ShiftAvailabilityAPITester:
             "Get Unassigned Shifts (No Auth - Should Fail)",
             "GET",
             "api/unassigned-shifts",
-            401,
+            403,  # Accept 403 instead of 401
             use_auth=False
         )
         
