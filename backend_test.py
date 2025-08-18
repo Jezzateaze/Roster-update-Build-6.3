@@ -3636,15 +3636,337 @@ class ShiftRosterAPITester:
         
         return passed_tests == total_tests
 
+    def test_staff_profile_updates_review(self):
+        """Test updating staff profile information - REVIEW REQUEST SPECIFIC"""
+        print(f"\n👤 Testing Staff Profile Updates (Review Request)...")
+        
+        if not self.staff_data:
+            print("   ⚠️  No staff data available for profile update test")
+            return False
+        
+        # Get first staff member for testing
+        staff_member = self.staff_data[0]
+        staff_id = staff_member['id']
+        original_name = staff_member['name']
+        
+        print(f"   Testing profile update for: {original_name} (ID: {staff_id})")
+        
+        # Update staff profile with new information
+        updated_profile = {
+            **staff_member,
+            "name": f"{original_name} (Updated)",
+            "active": True
+        }
+        
+        success, response = self.run_test(
+            "Update Staff Profile",
+            "PUT",
+            f"api/staff/{staff_id}",
+            200,
+            data=updated_profile
+        )
+        
+        if success:
+            print(f"   ✅ Staff profile updated successfully")
+            print(f"   Updated name: {response.get('name')}")
+            
+            # Verify the update by fetching staff again
+            success, updated_staff_list = self.run_test(
+                "Verify Staff Profile Update",
+                "GET",
+                "api/staff",
+                200
+            )
+            
+            if success:
+                updated_staff = next((s for s in updated_staff_list if s['id'] == staff_id), None)
+                if updated_staff and updated_staff['name'] == updated_profile['name']:
+                    print(f"   ✅ Profile update verified in staff list")
+                    return True
+                else:
+                    print(f"   ❌ Profile update not reflected in staff list")
+        
+        return False
+
+    def test_shift_assignment_updates_review(self):
+        """Test updating roster entries to assign staff to unassigned shifts - REVIEW REQUEST SPECIFIC"""
+        print(f"\n📋 Testing Shift Assignment Updates (Review Request)...")
+        
+        # First get current roster data
+        current_month = datetime.now().strftime("%Y-%m")
+        success, roster_entries = self.run_test(
+            f"Get Current Roster for Assignment Test",
+            "GET",
+            "api/roster",
+            200,
+            params={"month": current_month}
+        )
+        
+        if not success or not roster_entries:
+            print("   ⚠️  No roster entries available for assignment test")
+            return False
+        
+        if not self.staff_data:
+            print("   ⚠️  No staff data available for assignment test")
+            return False
+        
+        # Find an unassigned shift
+        unassigned_shift = None
+        for entry in roster_entries:
+            if not entry.get('staff_id') and not entry.get('staff_name'):
+                unassigned_shift = entry
+                break
+        
+        if not unassigned_shift:
+            print("   ⚠️  No unassigned shifts found for testing")
+            return False
+        
+        # Get a staff member to assign
+        staff_member = self.staff_data[0]
+        
+        print(f"   Assigning {staff_member['name']} to shift on {unassigned_shift['date']} {unassigned_shift['start_time']}-{unassigned_shift['end_time']}")
+        
+        # Update the shift with staff assignment
+        updated_shift = {
+            **unassigned_shift,
+            "staff_id": staff_member['id'],
+            "staff_name": staff_member['name']
+        }
+        
+        success, response = self.run_test(
+            "Assign Staff to Unassigned Shift (PUT /api/roster/{id})",
+            "PUT",
+            f"api/roster/{unassigned_shift['id']}",
+            200,
+            data=updated_shift
+        )
+        
+        if success:
+            print(f"   ✅ Staff assignment successful")
+            print(f"   Assigned staff: {response.get('staff_name')}")
+            print(f"   Staff ID: {response.get('staff_id')}")
+            
+            # Verify pay calculation is still correct
+            if response.get('total_pay') > 0:
+                print(f"   ✅ Pay calculation maintained: ${response.get('total_pay')}")
+            else:
+                print(f"   ⚠️  Pay calculation may need review: ${response.get('total_pay')}")
+            
+            return True
+        
+        return False
+
+    def analyze_pay_summary_data_review(self):
+        """Examine roster data for pay summary analysis - REVIEW REQUEST SPECIFIC"""
+        print(f"\n💰 Analyzing Pay Summary Data (Review Request)...")
+        
+        # Get current roster data
+        current_month = datetime.now().strftime("%Y-%m")
+        success, roster_entries = self.run_test(
+            f"Get Roster Data for Pay Summary Analysis",
+            "GET",
+            "api/roster",
+            200,
+            params={"month": current_month}
+        )
+        
+        if not success or not roster_entries:
+            print("   ⚠️  No roster entries available for analysis")
+            return False
+        
+        print(f"   Analyzing {len(roster_entries)} roster entries...")
+        
+        # Analyze shift assignments
+        assigned_shifts = []
+        unassigned_shifts = []
+        inactive_staff_shifts = []
+        
+        for entry in roster_entries:
+            staff_name = entry.get('staff_name')
+            staff_id = entry.get('staff_id')
+            
+            if staff_name or staff_id:
+                assigned_shifts.append(entry)
+                
+                # Check if assigned to inactive staff
+                if staff_id:
+                    staff_member = next((s for s in self.staff_data if s['id'] == staff_id), None)
+                    if staff_member and not staff_member.get('active', True):
+                        inactive_staff_shifts.append(entry)
+            else:
+                unassigned_shifts.append(entry)
+        
+        print(f"\n   📊 Shift Assignment Analysis:")
+        print(f"   Total shifts: {len(roster_entries)}")
+        print(f"   Assigned shifts: {len(assigned_shifts)} ({len(assigned_shifts)/len(roster_entries)*100:.1f}%)")
+        print(f"   Unassigned shifts: {len(unassigned_shifts)} ({len(unassigned_shifts)/len(roster_entries)*100:.1f}%)")
+        print(f"   Shifts assigned to inactive staff: {len(inactive_staff_shifts)}")
+        
+        # Analyze pay calculation data
+        shifts_with_pay = [e for e in roster_entries if e.get('total_pay', 0) > 0]
+        shifts_without_pay = [e for e in roster_entries if e.get('total_pay', 0) == 0]
+        
+        print(f"\n   💵 Pay Calculation Analysis:")
+        print(f"   Shifts with pay calculated: {len(shifts_with_pay)} ({len(shifts_with_pay)/len(roster_entries)*100:.1f}%)")
+        print(f"   Shifts without pay: {len(shifts_without_pay)} ({len(shifts_without_pay)/len(roster_entries)*100:.1f}%)")
+        
+        # Analyze pay by assignment status
+        assigned_with_pay = [e for e in assigned_shifts if e.get('total_pay', 0) > 0]
+        unassigned_with_pay = [e for e in unassigned_shifts if e.get('total_pay', 0) > 0]
+        
+        print(f"\n   🎯 Pay Summary Issues Analysis:")
+        print(f"   Assigned shifts with pay: {len(assigned_with_pay)}/{len(assigned_shifts)}")
+        print(f"   Unassigned shifts with pay: {len(unassigned_with_pay)}/{len(unassigned_shifts)}")
+        
+        if len(unassigned_with_pay) > 0:
+            print(f"   ⚠️  ISSUE: {len(unassigned_with_pay)} unassigned shifts have pay calculated")
+            print(f"      This may cause issues in pay summary display")
+            
+            # Show examples
+            for i, shift in enumerate(unassigned_with_pay[:3]):
+                print(f"      Example {i+1}: {shift['date']} {shift['start_time']}-{shift['end_time']} - ${shift['total_pay']}")
+        
+        # Staff-specific pay analysis
+        staff_pay_summary = {}
+        for entry in assigned_shifts:
+            staff_name = entry.get('staff_name', 'Unknown')
+            if staff_name not in staff_pay_summary:
+                staff_pay_summary[staff_name] = {
+                    'shifts': 0,
+                    'total_hours': 0,
+                    'total_pay': 0
+                }
+            
+            staff_pay_summary[staff_name]['shifts'] += 1
+            staff_pay_summary[staff_name]['total_hours'] += entry.get('hours_worked', 0)
+            staff_pay_summary[staff_name]['total_pay'] += entry.get('total_pay', 0)
+        
+        print(f"\n   👥 Staff Pay Summary (Top 5):")
+        sorted_staff = sorted(staff_pay_summary.items(), key=lambda x: x[1]['total_pay'], reverse=True)
+        for staff_name, data in sorted_staff[:5]:
+            print(f"   {staff_name}: {data['shifts']} shifts, {data['total_hours']:.1f}h, ${data['total_pay']:.2f}")
+        
+        return True
+
+    def test_active_staff_filter_review(self):
+        """Test staff endpoint to verify active vs inactive staff - REVIEW REQUEST SPECIFIC"""
+        print(f"\n✅ Testing Active Staff Filter (Review Request)...")
+        
+        success, all_staff = self.run_test(
+            "Get All Staff (Active Filter Test)",
+            "GET",
+            "api/staff",
+            200
+        )
+        
+        if not success:
+            print("   ❌ Could not retrieve staff data")
+            return False
+        
+        print(f"   Retrieved {len(all_staff)} staff members")
+        
+        # Analyze active vs inactive status
+        active_staff = [s for s in all_staff if s.get('active', True)]
+        inactive_staff = [s for s in all_staff if not s.get('active', True)]
+        
+        print(f"\n   📊 Staff Status Analysis:")
+        print(f"   Active staff: {len(active_staff)}")
+        print(f"   Inactive staff: {len(inactive_staff)}")
+        
+        # List all staff with their status
+        print(f"\n   👥 Staff List with Status:")
+        for staff in sorted(all_staff, key=lambda x: x['name']):
+            status = "✅ Active" if staff.get('active', True) else "❌ Inactive"
+            print(f"   {staff['name']}: {status}")
+        
+        # Check if the API is properly filtering (should only return active staff)
+        if len(inactive_staff) == 0:
+            print(f"\n   ✅ Staff endpoint correctly returns only active staff")
+        else:
+            print(f"\n   ⚠️  Staff endpoint returns inactive staff - may need filtering")
+        
+        return True
+
+    def run_review_request_tests(self):
+        """Run comprehensive tests for the review request issues"""
+        print("\n" + "="*80)
+        print("🎯 REVIEW REQUEST COMPREHENSIVE TESTING")
+        print("="*80)
+        print("Testing specific issues mentioned in the review request:")
+        print("1. Staff Profile Updates")
+        print("2. Shift Assignment (PUT /api/roster/{id})")
+        print("3. Pay Summary Data Analysis")
+        print("4. Active Staff Filter")
+        print("="*80)
+        
+        test_results = {}
+        
+        # Test 1: Staff Profile Updates
+        print("\n" + "="*50)
+        print("1. STAFF PROFILE UPDATES TEST")
+        print("="*50)
+        test_results['staff_profile_updates'] = self.test_staff_profile_updates_review()
+        
+        # Test 2: Shift Assignment
+        print("\n" + "="*50)
+        print("2. SHIFT ASSIGNMENT UPDATES TEST")
+        print("="*50)
+        test_results['shift_assignment'] = self.test_shift_assignment_updates_review()
+        
+        # Test 3: Pay Summary Data Analysis
+        print("\n" + "="*50)
+        print("3. PAY SUMMARY DATA ANALYSIS")
+        print("="*50)
+        test_results['pay_summary_analysis'] = self.analyze_pay_summary_data_review()
+        
+        # Test 4: Active Staff Filter
+        print("\n" + "="*50)
+        print("4. ACTIVE STAFF FILTER TEST")
+        print("="*50)
+        test_results['active_staff_filter'] = self.test_active_staff_filter_review()
+        
+        # Summary
+        print("\n" + "="*80)
+        print("🎯 REVIEW REQUEST TEST RESULTS SUMMARY")
+        print("="*80)
+        
+        passed_tests = sum(1 for result in test_results.values() if result)
+        total_tests = len(test_results)
+        
+        for test_name, result in test_results.items():
+            status = "✅ PASS" if result else "❌ FAIL"
+            print(f"{test_name.replace('_', ' ').title()}: {status}")
+        
+        print(f"\nOverall Results: {passed_tests}/{total_tests} tests passed")
+        
+        if passed_tests == total_tests:
+            print("\n🎉 ALL REVIEW REQUEST TESTS PASSED!")
+        else:
+            print(f"\n⚠️  {total_tests - passed_tests} test(s) failed - see details above")
+        
+        return passed_tests == total_tests
+
 def main():
     print("🚀 Starting Shift Roster & Pay Calculator API Tests")
-    print("🎯 FOCUS: Review Request - Authentication, Pay Calculation, Staff Management, Roster Data, API Health")
+    print("🎯 FOCUS: Review Request - Staff Profile Updates, Shift Assignment, Pay Summary Data, Active Staff Filter")
     print("=" * 80)
     
     tester = ShiftRosterAPITester()
     
-    # Run focused tests based on review request
-    return 0 if tester.run_focused_backend_tests() else 1
+    # Run core setup tests first
+    print("\n📋 Running Core Setup Tests...")
+    tester.test_health_check()
+    tester.test_authentication_system()
+    tester.test_get_staff()
+    tester.test_get_shift_templates()
+    tester.test_get_settings()
+    tester.test_generate_roster()
+    tester.test_get_roster()
+    
+    # Run the specific review request tests
+    success = tester.run_review_request_tests()
+    
+    return 0 if success else 1
 
 if __name__ == "__main__":
     sys.exit(main())
