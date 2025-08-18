@@ -68,15 +68,7 @@ const canViewPayInformation = (targetStaffId = null) => {
   return currentUser.staff_id === targetStaffId;
 };
 
-// Helper function to check if current user is admin
-const isAdmin = () => {
-  return currentUser && currentUser.role === 'admin';
-};
 
-// Helper function to check if current user is staff
-const isStaff = () => {
-  return currentUser && currentUser.role === 'staff';
-};
 
 // Helper function to format time based on user preference
 const formatTime = (timeString, is24Hour = true) => {
