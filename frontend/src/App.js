@@ -6309,6 +6309,14 @@ function App() {
                     />
                     <Label>Sleepover Shift</Label>
                   </div>
+
+                  <div className="flex items-center space-x-2">
+                    <Switch
+                      checked={bulkEditData.allow_overlap || false}
+                      onCheckedChange={(checked) => setBulkEditData({...bulkEditData, allow_overlap: checked})}
+                    />
+                    <Label>Allow 2:1 Shift Overlapping</Label>
+                  </div>
                 </div>
 
                 {/* Advanced Settings */}
