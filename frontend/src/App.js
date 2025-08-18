@@ -1983,6 +1983,7 @@ function App() {
               <div 
                 className={`flex-1 ${bulkSelectionMode ? 'ml-5' : ''}`}
                 onClick={() => {
+                  if (!isAdmin()) return; // Staff cannot edit shifts
                   if (bulkSelectionMode) {
                     toggleShiftSelection(entry.id);
                   } else {
@@ -1990,6 +1991,7 @@ function App() {
                     setShowShiftDialog(true);
                   }
                 }}
+                style={{ cursor: isAdmin() ? 'pointer' : 'default' }}
               >
                 <div className="font-medium flex items-center justify-between">
                   <span className={`${isCurrentMonth ? '' : 'opacity-75'} font-semibold`}>
