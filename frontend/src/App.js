@@ -3170,9 +3170,9 @@ function App() {
                           ) : (
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                               {dayTemplates.map((template, shiftIndex) => (
-                                <Card key={template.id} className={`p-4 relative ${bulkEditMode && selectedTemplates.has(template.id) ? 'ring-2 ring-blue-500 bg-blue-50' : ''}`}>
-                                  {/* Bulk Edit Checkbox */}
-                                  {bulkEditMode && (
+                                <Card key={template.id} className={`p-4 relative ${currentUser?.role === 'admin' && bulkEditMode && selectedTemplates.has(template.id) ? 'ring-2 ring-blue-500 bg-blue-50' : ''}`}>
+                                  {/* Bulk Edit Checkbox - Admin only */}
+                                  {currentUser?.role === 'admin' && bulkEditMode && (
                                     <div className="absolute top-2 left-2 z-10">
                                       <input
                                         type="checkbox"
@@ -3183,14 +3183,15 @@ function App() {
                                     </div>
                                   )}
                                   
-                                  <div className={`space-y-3 ${bulkEditMode ? 'ml-6' : ''}`}>
+                                  <div className={`space-y-3 ${currentUser?.role === 'admin' && bulkEditMode ? 'ml-6' : ''}`}>
                                     <div className="flex items-center justify-between">
                                       <h4 className="font-medium">
                                         {template.name || `Shift ${shiftIndex + 1}`}
                                         {template.is_sleepover && <Badge variant="secondary" className="ml-2">Sleepover</Badge>}
                                       </h4>
                                       
-                                      {!bulkEditMode && (
+                                      {/* Edit buttons - Admin only */}
+                                      {currentUser?.role === 'admin' && !bulkEditMode && (
                                         <div className="flex space-x-1">
                                           <Button
                                             variant="outline"
@@ -3225,19 +3226,63 @@ function App() {
                                         </div>
                                       )}
                                     </div>
+                                    
+                                    {/* Shift time display */}
                                     <div className="text-sm text-slate-600">
-                                      {formatTime(template.start_time, settings.time_format === '24hr')} - {formatTime(template.end_time, settings.time_format === '24hr')}
+                                      <div className="font-medium">
+                                        {formatTime(template.start_time, settings.time_format === '24hr')} - {formatTime(template.end_time, settings.time_format === '24hr')}
+                                      </div>
                                     </div>
-                                    {template.manual_shift_type && (
-                                      <Badge variant="outline" className="text-xs">
-                                        Override: {template.manual_shift_type}
-                                      </Badge>
-                                    )}
-                                    {template.manual_hourly_rate && (
-                                      <Badge variant="outline" className="text-xs">
-                                        Rate: ${template.manual_hourly_rate}/hr
-                                      </Badge>
-                                    )}
+                                    
+                                    {/* Hours and Pay Information */}
+                                    <div className="text-sm space-y-1">
+                                      {(() => {
+                                        // Calculate hours for this shift template
+                                        const startMinutes = parseInt(template.start_time.split(':')[0]) * 60 + parseInt(template.start_time.split(':')[1]);
+                                        const endMinutes = parseInt(template.end_time.split(':')[0]) * 60 + parseInt(template.end_time.split(':')[1]);
+                                        let totalMinutes = endMinutes - startMinutes;
+                                        if (totalMinutes < 0) totalMinutes += 24 * 60; // Handle overnight shifts
+                                        const totalHours = totalMinutes / 60;
+                                        
+                                        // Calculate pay using the same logic as roster entries
+                                        const mockEntry = {
+                                          start_time: template.start_time,
+                                          end_time: template.end_time,
+                                          is_sleepover: template.is_sleepover,
+                                          manual_shift_type: template.manual_shift_type,
+                                          manual_hourly_rate: template.manual_hourly_rate,
+                                          date: currentDate.toISOString().split('T')[0] // Use current date for day type calculation
+                                        };
+                                        const pay = calculatePay(mockEntry, settings);
+                                        
+                                        return (
+                                          <>
+                                            <div className="flex justify-between text-blue-600">
+                                              <span>Hours:</span>
+                                              <span className="font-medium">{totalHours.toFixed(1)}h</span>
+                                            </div>
+                                            <div className="flex justify-between text-emerald-600">
+                                              <span>Pay:</span>
+                                              <span className="font-medium">{formatCurrency(pay)}</span>
+                                            </div>
+                                          </>
+                                        );
+                                      })()}
+                                    </div>
+                                    
+                                    {/* Badges for overrides */}
+                                    <div className="flex flex-wrap gap-1">
+                                      {template.manual_shift_type && (
+                                        <Badge variant="outline" className="text-xs">
+                                          Override: {template.manual_shift_type}
+                                        </Badge>
+                                      )}
+                                      {template.manual_hourly_rate && (
+                                        <Badge variant="outline" className="text-xs">
+                                          Rate: ${template.manual_hourly_rate}/hr
+                                        </Badge>
+                                      )}
+                                    </div>
                                   </div>
                                 </Card>
                               ))}
