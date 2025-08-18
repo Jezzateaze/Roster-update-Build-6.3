@@ -362,7 +362,7 @@ class PinResetStaffTester:
             use_auth=False  # Don't use auth token
         )
         
-        if success:  # Success means we got expected 401 status
+        if success:  # Success means we got expected 403 status
             print(f"   ✅ Unauthorized access correctly blocked")
             return True
         else:
