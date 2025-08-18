@@ -695,6 +695,7 @@ test_plan:
     - "Quick Settings Toggle Buttons Implementation - All three toggle buttons (First Day of Week, Time Format, Dark Mode) working perfectly with cross-view consistency and settings integration"
     - "Comprehensive Bulk Editing Functionality for Shift Templates - Complete bulk editing system with template selection, bulk actions, individual template actions (Edit, Clone, Delete), and professional bulk edit interface working perfectly"
     - "Login Dropdown Functionality - Complete login dropdown system with user selection, toggle between dropdown and manual input, mobile responsiveness, and fallback mechanisms working perfectly"
+    - "Shift & Staff Availability API System - All 5 newly implemented API endpoint groups working perfectly: Unassigned Shifts API, Shift Requests API (create/approve/reject), Staff Availability API (CRUD operations for available/unavailable/time_off_request/preferred_shifts), Notifications API, and Assignment Conflicts API with proper role-based access control and authentication"
 
   - task: "Quick Settings Toggle Buttons Implementation Testing"
     implemented: true
