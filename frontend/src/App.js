@@ -4216,6 +4216,139 @@ function App() {
           </DialogContent>
         </Dialog>
 
+        {/* Manage Templates Dialog */}
+        <Dialog open={showManageTemplatesDialog} onOpenChange={setShowManageTemplatesDialog}>
+          <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="text-xl font-bold text-slate-800">
+                📋 Manage Roster Templates
+              </DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              {rosterTemplates.length === 0 ? (
+                <div className="text-center py-8">
+                  <CalendarIcon className="w-12 h-12 mx-auto text-slate-400 mb-4" />
+                  <h3 className="text-lg font-semibold text-slate-600 mb-2">No Templates Found</h3>
+                  <p className="text-slate-500 mb-4">Save your current roster as a template to get started.</p>
+                  <Button onClick={() => {
+                    setShowManageTemplatesDialog(false);
+                    setShowSaveTemplateDialog(true);
+                  }}>
+                    Create First Template
+                  </Button>
+                </div>
+              ) : (
+                <>
+                  <div className="text-sm text-slate-600 mb-4">
+                    You have {rosterTemplates.length} saved roster template{rosterTemplates.length !== 1 ? 's' : ''}. 
+                    Templates store shift patterns for easy reuse across different months.
+                  </div>
+                  
+                  <div className="space-y-4">
+                    {rosterTemplates.map(template => {
+                      const shiftDetails = getTemplateShiftDetails(template);
+                      const createdDate = template.created_at ? new Date(template.created_at).toLocaleDateString() : 'Unknown';
+                      
+                      return (
+                        <Card key={template.id} className="border border-slate-200 hover:border-slate-300 transition-colors">
+                          <CardHeader className="pb-3">
+                            <div className="flex items-start justify-between">
+                              <div className="flex-1">
+                                <CardTitle className="text-lg font-semibold text-slate-800 mb-1">
+                                  {template.name}
+                                </CardTitle>
+                                {template.description && (
+                                  <p className="text-sm text-slate-600 mb-2">
+                                    {template.description}
+                                  </p>
+                                )}
+                                <div className="flex items-center space-x-4 text-xs text-slate-500">
+                                  <span>📊 {shiftDetails.totalShifts} shift{shiftDetails.totalShifts !== 1 ? 's' : ''}</span>
+                                  <span>📅 Created: {createdDate}</span>
+                                </div>
+                              </div>
+                              <div className="flex space-x-2 ml-4">
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => {
+                                    setSelectedRosterTemplate(template.id);
+                                    setShowManageTemplatesDialog(false);
+                                    setShowGenerateFromTemplateDialog(true);
+                                  }}
+                                  className="text-green-600 hover:text-green-700 border-green-200 hover:border-green-300"
+                                >
+                                  Load
+                                </Button>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => editRosterTemplate(template.id)}
+                                  className="text-blue-600 hover:text-blue-700 border-blue-200 hover:border-blue-300"
+                                >
+                                  <Edit className="w-4 h-4" />
+                                </Button>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => deleteRosterTemplate(template.id)}
+                                  className="text-red-600 hover:text-red-700 border-red-200 hover:border-red-300"
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </Button>
+                              </div>
+                            </div>
+                          </CardHeader>
+                          
+                          {shiftDetails.details.length > 0 && (
+                            <CardContent className="pt-0">
+                              <div className="bg-slate-50 rounded-lg p-3">
+                                <h4 className="text-sm font-medium text-slate-700 mb-2">📋 Shift Schedule:</h4>
+                                <div className="space-y-1 text-sm text-slate-600">
+                                  {shiftDetails.details.map((detail, index) => (
+                                    <div key={index} className="flex items-start">
+                                      <span className="w-20 flex-shrink-0 font-medium">
+                                        {detail.split(':')[0]}:
+                                      </span>
+                                      <span className="flex-1">
+                                        {detail.split(':').slice(1).join(':').trim()}
+                                      </span>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            </CardContent>
+                          )}
+                        </Card>
+                      );
+                    })}
+                  </div>
+                </>
+              )}
+              
+              <div className="flex items-center justify-between pt-4 border-t border-slate-200">
+                <div className="text-sm text-slate-500">
+                  💡 Tip: Templates save shift patterns but not staff assignments
+                </div>
+                <div className="flex space-x-2">
+                  <Button 
+                    variant="outline" 
+                    onClick={() => {
+                      setShowManageTemplatesDialog(false);
+                      setShowSaveTemplateDialog(true);
+                    }}
+                  >
+                    Save Current Roster
+                  </Button>
+                  <Button variant="outline" onClick={() => setShowManageTemplatesDialog(false)}>
+                    Close
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+
         {/* Day Template Dialog */}
         <Dialog open={showDayTemplateDialog} onOpenChange={setShowDayTemplateDialog}>
           <DialogContent className="max-w-md">
