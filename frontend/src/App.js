@@ -1704,7 +1704,7 @@ function App() {
   const renderCalendarDay = (date) => {
     const dayEntries = getDayEntries(date);
     const dayEvents = getDayEvents(date);
-    const dayTotal = dayEntries.reduce((sum, entry) => sum + entry.total_pay, 0);
+    const dailyTotals = getDailyTotals(date);
     
     // Check if this date is from a different month (previous or next)
     const isCurrentMonth = date.getMonth() === currentDate.getMonth();
@@ -1852,16 +1852,24 @@ function App() {
                     <Edit className="w-3 h-3 opacity-0 group-hover/shift:opacity-100 transition-opacity" />
                   )}
                 </div>
-                <div className={`text-slate-600 mt-1 ${isCurrentMonth ? '' : 'opacity-75'}`}>
-                  {entry.staff_name || 'Unassigned'}
-                </div>
-                <div className="flex items-center justify-between mt-1">
-                  <div className={isCurrentMonth ? '' : 'opacity-75'}>
-                    {getShiftTypeBadge(entry)}
+                
+                {/* Enhanced shift details with hours */}
+                <div className="mt-1 space-y-1">
+                  <div className={`text-slate-600 ${isCurrentMonth ? '' : 'opacity-75'} flex items-center justify-between`}>
+                    <span>{entry.staff_name || 'Unassigned'}</span>
+                    <span className="text-xs font-medium text-blue-600">
+                      {entry.hours_worked ? `${entry.hours_worked.toFixed(1)}h` : '0h'}
+                    </span>
                   </div>
-                  <span className={`font-medium text-emerald-600 ${isCurrentMonth ? '' : 'opacity-75'}`}>
-                    {formatCurrency(entry.total_pay)}
-                  </span>
+                  
+                  <div className="flex items-center justify-between">
+                    <div className={isCurrentMonth ? '' : 'opacity-75'}>
+                      {getShiftTypeBadge(entry)}
+                    </div>
+                    <span className={`font-medium text-emerald-600 ${isCurrentMonth ? '' : 'opacity-75'}`}>
+                      {formatCurrency(entry.total_pay)}
+                    </span>
+                  </div>
                 </div>
               </div>
               {!bulkSelectionMode && (
@@ -1873,24 +1881,33 @@ function App() {
                     deleteShift(entry.id);
                   }}
                   title="Delete shift"
-                  style={{ fontSize: '8px', lineHeight: '1' }}
+                  style={{ fontSize: '8px' }}
                 >
-                  ×
+                  ✕
                 </button>
               )}
             </div>
           ))}
         </div>
-        
-        {dayTotal > 0 && (
-          <div className={`mt-3 pt-2 border-t border-slate-200 text-xs font-bold text-emerald-700 ${isCurrentMonth ? '' : 'opacity-75'}`}>
-            Total: ${dayTotal.toFixed(0)}
-          </div>
-        )}
-        
-        {!isCurrentMonth && dayEntries.length === 0 && dayEvents.length === 0 && (
-          <div className="text-xs text-slate-400 italic mt-2">
-            {isPreviousMonth ? 'Previous month' : 'Next month'}
+
+        {/* Daily totals footer - only show for current month with shifts */}
+        {isCurrentMonth && dayEntries.length > 0 && (
+          <div className="absolute bottom-1 left-2 right-2 text-xs bg-slate-50 rounded px-1 py-0.5 border border-slate-200">
+            <div className="flex justify-between items-center">
+              <span className="font-medium text-slate-600">
+                📊 {dailyTotals.totalShifts} shift{dailyTotals.totalShifts !== 1 ? 's' : ''}
+              </span>
+              <div className="flex items-center space-x-2">
+                <span className="text-blue-600 font-medium">
+                  {dailyTotals.totalHours.toFixed(1)}h
+                </span>
+                {dailyTotals.assignedShifts > 0 && (
+                  <span className="text-emerald-600 font-medium">
+                    {formatCurrency(dailyTotals.totalPay)}
+                  </span>
+                )}
+              </div>
+            </div>
           </div>
         )}
       </div>
