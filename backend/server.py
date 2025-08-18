@@ -50,10 +50,10 @@ class UserRole(str, Enum):
 
 # Pydantic models
 class Staff(BaseModel):
-    id: str
+    id: Optional[str] = None
     name: str
     active: bool = True
-    created_at: datetime = None
+    created_at: Optional[datetime] = None
 
 class ShiftTemplate(BaseModel):
     id: str
