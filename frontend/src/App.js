@@ -829,19 +829,28 @@ function App() {
   };
 
   const addStaff = async () => {
-    if (!newStaffName.trim()) return;
+    if (!newStaffName.trim()) {
+      alert('Please enter a staff name');
+      return;
+    }
     
     try {
+      console.log('Adding staff member:', newStaffName);
       const newStaff = {
-        name: newStaffName,
+        name: newStaffName.trim(),
         active: true
       };
-      await axios.post(`${API_BASE_URL}/api/staff`, newStaff);
+      
+      const response = await axios.post(`${API_BASE_URL}/api/staff`, newStaff);
+      console.log('Staff added successfully:', response.data);
+      
       setNewStaffName('');
       setShowStaffDialog(false);
       fetchInitialData();
+      alert(`✅ Staff member "${newStaffName}" added successfully!`);
     } catch (error) {
       console.error('Error adding staff:', error);
+      alert(`❌ Error adding staff: ${error.response?.data?.detail || error.message}`);
     }
   };
 
