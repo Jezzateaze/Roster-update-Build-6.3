@@ -1733,10 +1733,16 @@ function App() {
       endDate = new Date(currentYear, 11, 31); // December 31
     }
 
-    const ytdEntries = rosterEntries.filter(entry => {
+    // Filter entries for date range
+    let ytdEntries = rosterEntries.filter(entry => {
       const entryDate = new Date(entry.date);
       return entryDate >= startDate && entryDate <= endDate;
     });
+
+    // Apply privacy filter for staff users
+    if (isStaff() && currentUser?.staff_id) {
+      ytdEntries = ytdEntries.filter(entry => entry.staff_id === currentUser.staff_id);
+    }
 
     const staffTotals = {};
     let totalHours = 0;
