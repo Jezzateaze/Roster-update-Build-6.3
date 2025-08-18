@@ -3151,14 +3151,17 @@ function App() {
                         <div key={day} className="border rounded-lg p-4">
                           <div className="flex items-center justify-between mb-4">
                             <h3 className="font-semibold text-lg">{day}</h3>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => createShiftTemplateForDay(dayIndex)}
-                            >
-                              <Plus className="w-3 h-3 mr-1" />
-                              Add Shift
-                            </Button>
+                            {/* Admin-only Add Shift button */}
+                            {currentUser?.role === 'admin' && (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => createShiftTemplateForDay(dayIndex)}
+                              >
+                                <Plus className="w-3 h-3 mr-1" />
+                                Add Shift
+                              </Button>
+                            )}
                           </div>
                           {dayTemplates.length === 0 ? (
                             <div className="text-center py-4 text-slate-500">
