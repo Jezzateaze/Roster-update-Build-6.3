@@ -2869,6 +2869,13 @@ function App() {
                           >
                             Manage Templates
                           </Button>
+                          <Button 
+                            variant="outline" 
+                            onClick={() => setShowYTDReportDialog(true)}
+                            className="text-purple-600 hover:text-purple-700 border-purple-200 hover:border-purple-300"
+                          >
+                            📊 YTD Report
+                          </Button>
                           <Button variant="outline" onClick={clearMonthlyRoster}>
                             Clear Roster
                           </Button>
