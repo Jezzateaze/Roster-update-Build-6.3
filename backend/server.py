@@ -64,6 +64,7 @@ class ShiftTemplate(BaseModel):
     day_of_week: int  # 0=Monday, 6=Sunday
     manual_shift_type: Optional[str] = None  # Override automatic shift type detection
     manual_hourly_rate: Optional[float] = None  # Override automatic hourly rate calculation
+    allow_overlap: Optional[bool] = False  # Allow 2:1 shift overlapping
 
 class RosterEntry(BaseModel):
     id: str
