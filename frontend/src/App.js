@@ -2858,14 +2858,28 @@ function App() {
                   {staff
                     .sort((a, b) => a.name.localeCompare(b.name))
                     .map(member => (
-                    <Card key={member.id} className="p-4">
+                    <Card 
+                      key={member.id} 
+                      className="p-4 cursor-pointer hover:shadow-md transition-shadow"
+                      onClick={() => {
+                        if (currentUser?.role === 'admin') {
+                          setSelectedStaffForProfile(member);
+                          setShowStaffProfileDialog(true);
+                        }
+                      }}
+                    >
                       <div className="flex items-center justify-between">
                         <div>
-                          <h3 className="font-semibold">{member.name}</h3>
+                          <h3 className="font-semibold text-blue-600 hover:text-blue-800">{member.name}</h3>
                           <Badge variant={member.active ? "default" : "secondary"}>
                             {member.active ? "Active" : "Inactive"}
                           </Badge>
                         </div>
+                        {currentUser?.role === 'admin' && (
+                          <div className="text-slate-400">
+                            <Settings className="w-4 h-4" />
+                          </div>
+                        )}
                       </div>
                     </Card>
                   ))}
