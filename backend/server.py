@@ -1451,24 +1451,19 @@ def initialize_admin():
         default_admin = User(
             id=str(uuid.uuid4()),
             username="Admin",
-            pin_hash=hash_pin("0000"),  # Default PIN: 0000
+            pin_hash=hash_pin("0000"),  # Default PIN: 0000 (user can change this)
             role=UserRole.ADMIN,
             email="admin@company.com",
             first_name="System",
             last_name="Administrator",
             created_at=datetime.utcnow(),
             is_active=True,
-            is_first_login=False  # Don't require PIN change for admin
+            is_first_login=False  # Admin doesn't need to change PIN immediately
         )
         db.users.insert_one(default_admin.dict())
         print("✅ Default admin user created: Username=Admin, PIN=0000")
     else:
-        # Update existing admin user to not require PIN change
-        db.users.update_one(
-            {"username": "Admin"},
-            {"$set": {"is_first_login": False}}
-        )
-        print("✅ Admin user already exists - updated to not require PIN change")
+        print("✅ Admin user already exists - preserving existing PIN")
 
 # Initialize admin on startup
 initialize_admin()
