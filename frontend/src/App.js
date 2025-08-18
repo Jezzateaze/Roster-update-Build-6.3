@@ -8070,6 +8070,133 @@ function App() {
             </div>
           </div>
         </DialogContent>
+      {/* Comprehensive Overlap Management Dialog */}
+      <Dialog open={showOverlapDialog} onOpenChange={setShowOverlapDialog}>
+        <DialogContent className="max-w-4xl max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-bold text-slate-800 flex items-center space-x-2">
+              ⚠️ <span>Overlapping Shifts Detected</span>
+            </DialogTitle>
+          </DialogHeader>
+          {overlapData && (
+            <div className="space-y-6">
+              {/* Summary Information */}
+              <div className="p-4 bg-amber-50 rounded-lg border border-amber-200">
+                <h3 className="text-lg font-semibold text-amber-800 mb-2">📊 Generation Summary</h3>
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <p><strong>Month:</strong> {new Date(overlapData.month + '-01').toLocaleString('default', { month: 'long', year: 'numeric' })}</p>
+                    <p><strong>Type:</strong> {overlapData.type === 'shift-templates' ? 'Shift Times Templates' : 'Roster Template'}</p>
+                  </div>
+                  <div>
+                    <p><strong>Shifts Created:</strong> {overlapData.response.entries_created || 0}</p>
+                    <p><strong>Overlaps Detected:</strong> {overlapData.response.overlaps_detected || 0}</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Overlap Details */}
+              {overlapData.response.overlap_details && overlapData.response.overlap_details.length > 0 && (
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold text-slate-800">⚠️ Overlapping Shifts Details</h3>
+                  <div className="max-h-60 overflow-y-auto space-y-2">
+                    {overlapData.response.overlap_details.map((overlap, index) => (
+                      <div key={index} className="p-3 bg-red-50 rounded-lg border border-red-200">
+                        <div className="flex items-center justify-between">
+                          <div className="flex-1">
+                            <p className="font-medium text-red-800">
+                              📅 {formatDateString(overlap.date)} • 
+                              🕐 {formatTime(overlap.start_time)} - {formatTime(overlap.end_time)}
+                            </p>
+                            {overlap.name && (
+                              <p className="text-sm text-red-600 mt-1">Shift: {overlap.name}</p>
+                            )}
+                            {overlap.reason && (
+                              <p className="text-xs text-red-500 mt-1">Reason: {overlap.reason}</p>
+                            )}
+                          </div>
+                          <Badge variant="destructive" className="ml-3">
+                            Overlap
+                          </Badge>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  {overlapData.response.overlaps_detected > overlapData.response.overlap_details.length && (
+                    <p className="text-sm text-slate-600 text-center">
+                      ... and {overlapData.response.overlaps_detected - overlapData.response.overlap_details.length} more overlapping shifts
+                    </p>
+                  )}
+                </div>
+              )}
+
+              {/* Template Configuration Display */}
+              {overlapData.response.template_config && (
+                <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
+                  <h4 className="text-md font-semibold text-blue-800 mb-2">🎯 Template Configuration</h4>
+                  <div className="text-sm text-blue-700 space-y-1">
+                    <p>• <strong>2:1 Support:</strong> {overlapData.response.template_config.enable_2_1_shift ? '✅ Enabled - Multiple staff can work same shift' : '❌ Disabled - Single staff per shift'}</p>
+                    <p>• <strong>Overlap Override:</strong> {overlapData.response.template_config.allow_overlap_override ? '✅ Enabled - Manual conflicts allowed' : '❌ Disabled - Strict overlap detection'}</p>
+                    <p>• <strong>Unassigned Duplicates:</strong> {overlapData.response.template_config.prevent_duplicate_unassigned ? '🚫 Prevented' : '✅ Allowed'}</p>
+                    <p>• <strong>Assigned Duplicates:</strong> {overlapData.response.template_config.allow_different_staff_only ? '👥 Different Staff Only' : '🔓 All Duplicates Allowed'}</p>
+                  </div>
+                </div>
+              )}
+
+              {/* Action Explanation */}
+              <div className="p-4 bg-slate-50 rounded-lg border border-slate-200">
+                <h4 className="text-md font-semibold text-slate-800 mb-2">🤔 What would you like to do?</h4>
+                <div className="space-y-3 text-sm text-slate-600">
+                  <div className="flex items-start space-x-3">
+                    <div className="w-6 h-6 bg-green-500 text-white rounded-full flex items-center justify-center text-xs font-bold mt-0.5">
+                      ✓
+                    </div>
+                    <div>
+                      <p className="font-medium text-green-700">Publish All Shifts (Including Overlaps)</p>
+                      <p>This will create <strong>ALL</strong> shifts from the template, including the {overlapData.response.overlaps_detected} overlapping ones. Useful for 2:1 support scenarios or when you want to manually manage overlaps later.</p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-start space-x-3">
+                    <div className="w-6 h-6 bg-orange-500 text-white rounded-full flex items-center justify-center text-xs font-bold mt-0.5">
+                      ⚠
+                    </div>
+                    <div>
+                      <p className="font-medium text-orange-700">Skip Overlapping Shifts</p>
+                      <p>This will publish only the <strong>{overlapData.response.entries_created}</strong> non-overlapping shifts that were successfully created. The {overlapData.response.overlaps_detected} overlapping shifts will be skipped to prevent conflicts.</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex justify-end space-x-3 pt-4 border-t">
+                <Button 
+                  variant="outline" 
+                  onClick={() => {
+                    setShowOverlapDialog(false);
+                    setOverlapData(null);
+                  }}
+                >
+                  Cancel
+                </Button>
+                <Button 
+                  variant="secondary"
+                  onClick={handleSkipOverlapShifts}
+                  className="bg-orange-500 hover:bg-orange-600 text-white"
+                >
+                  ⚠️ Skip Overlaps & Publish ({overlapData.response.entries_created} shifts)
+                </Button>
+                <Button 
+                  onClick={handlePublishAllShifts}
+                  className="bg-green-600 hover:bg-green-700 text-white"
+                >
+                  ✅ Publish All Including Overlaps ({(overlapData.response.entries_created || 0) + (overlapData.response.overlaps_detected || 0)} shifts)
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
       </Dialog>
       
     </div>
