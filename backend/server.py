@@ -1314,6 +1314,54 @@ async def create_user(user_data: dict, current_user: dict = Depends(get_current_
     user_response = {k: v for k, v in new_user.dict().items() if k != "pin_hash"}
     return user_response
 
+# Address autocomplete endpoint using free Nominatim API
+@app.get("/api/address/search")
+async def search_addresses(q: str, limit: int = 5):
+    """Search addresses using OpenStreetMap Nominatim API (free)"""
+    import httpx
+    
+    try:
+        async with httpx.AsyncClient() as client:
+            response = await client.get(
+                "https://nominatim.openstreetmap.org/search",
+                params={
+                    "q": q,
+                    "format": "json",
+                    "addressdetails": 1,
+                    "limit": limit,
+                    "countrycodes": "au,us,gb,ca,nz"  # Limit to common English-speaking countries
+                },
+                headers={
+                    "User-Agent": "RosterSync-AddressAutocomplete/1.0"
+                }
+            )
+            
+            if response.status_code == 200:
+                results = response.json()
+                formatted_results = []
+                
+                for result in results:
+                    address = result.get("address", {})
+                    formatted_results.append({
+                        "display_name": result.get("display_name", ""),
+                        "street_number": address.get("house_number", ""),
+                        "route": address.get("road", ""),
+                        "locality": address.get("city") or address.get("town") or address.get("village", ""),
+                        "administrative_area_level_1": address.get("state", ""),
+                        "country": address.get("country", ""),
+                        "postal_code": address.get("postcode", ""),
+                        "latitude": float(result.get("lat", 0)),
+                        "longitude": float(result.get("lon", 0))
+                    })
+                
+                return formatted_results
+            else:
+                return []
+                
+    except Exception as e:
+        print(f"Address search error: {e}")
+        return []
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8001)
