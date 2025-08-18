@@ -1014,7 +1014,7 @@ async def save_current_roster_as_template(template_name: str, month: str):
     return roster_template
 
 @app.post("/api/generate-roster-from-template/{template_id}/{month}")
-async def generate_roster_from_template(template_id: str, month: str):
+async def generate_roster_from_template(template_id: str, month: str, force_overlaps: bool = False):
     """Generate roster entries for a month using a roster template with advanced 2:1 shift support"""
     # Get the roster template
     template_doc = db.roster_templates.find_one({"id": template_id, "is_active": True})
@@ -1057,8 +1057,8 @@ async def generate_roster_from_template(template_id: str, month: str):
             should_skip = False
             skip_reason = ""
             
-            # Apply duplicate prevention rules based on template configuration
-            if existing_entries:
+            # Apply duplicate prevention rules based on template configuration (unless forcing overlaps)
+            if existing_entries and not force_overlaps:
                 # Check if any existing entries are unassigned
                 unassigned_exists = any(not entry.get("staff_id") and not entry.get("staff_name") for entry in existing_entries)
                 
@@ -1089,8 +1089,8 @@ async def generate_roster_from_template(template_id: str, month: str):
             if should_skip:
                 continue
             
-            # Check for overlaps if not overridden
-            if not template.allow_overlap_override:
+            # Check for overlaps if not overridden and not forcing overlaps
+            if not template.allow_overlap_override and not force_overlaps:
                 overlap_check = check_shift_overlap(date_str, shift_data["start_time"], shift_data["end_time"], shift_name=shift_name)
                 if overlap_check and not template.enable_2_1_shift:
                     overlaps_detected.append({
@@ -1100,7 +1100,8 @@ async def generate_roster_from_template(template_id: str, month: str):
                         "name": shift_name,
                         "reason": "Overlap detected and not overridden"
                     })
-                    continue
+                    if not force_overlaps:
+                        continue  # Skip overlapping shifts unless forced
             
             # Create new entry
             entry = RosterEntry(
@@ -1110,7 +1111,7 @@ async def generate_roster_from_template(template_id: str, month: str):
                 start_time=shift_data["start_time"],
                 end_time=shift_data["end_time"],
                 is_sleepover=shift_data.get("is_sleepover", False),
-                allow_overlap=template.enable_2_1_shift or template.allow_overlap_override
+                allow_overlap=template.enable_2_1_shift or template.allow_overlap_override or force_overlaps
             )
             
             # Calculate pay
@@ -1127,12 +1128,13 @@ async def generate_roster_from_template(template_id: str, month: str):
                     "date": date_str,
                     "start_time": shift_data["start_time"],
                     "end_time": shift_data["end_time"],
-                    "reason": "2:1 shift or different staff allowed"
+                    "reason": "2:1 shift, different staff allowed, or forced overlaps"
                 })
     
     result = {
         "message": f"Generated {entries_created} roster entries for {month} using template '{template.name}'",
         "entries_created": entries_created,
+        "force_overlaps": force_overlaps,
         "template_config": {
             "enable_2_1_shift": template.enable_2_1_shift,
             "allow_overlap_override": template.allow_overlap_override,
@@ -1152,6 +1154,9 @@ async def generate_roster_from_template(template_id: str, month: str):
     if duplicates_allowed:
         result["duplicates_allowed"] = len(duplicates_allowed)
         result["allowance_details"] = duplicates_allowed[:5]
+    
+    if force_overlaps:
+        result["message"] += " (overlaps forced)"
     
     return result
 
