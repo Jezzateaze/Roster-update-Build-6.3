@@ -713,7 +713,7 @@ class ShiftAvailabilityAPITester:
             # Create a scenario where staff might have conflicting availability
             overlapping_shift = self.test_data['unassigned_shifts'][1]
             overlap_check_data = {
-                "staff_id": self.staff_user_id,
+                "staff_id": self.staff_id,  # Use actual staff_id
                 "roster_entry_id": overlapping_shift['id'],
                 "date": overlapping_shift['date'],
                 "start_time": overlapping_shift['start_time'],
