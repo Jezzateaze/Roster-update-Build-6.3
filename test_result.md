@@ -292,12 +292,12 @@ backend:
           comment: "🎉 CRITICAL OVERLAP HANDLING FIX VERIFIED AND WORKING! Comprehensive testing of the PUT endpoint fix completed successfully: ✅ CRITICAL TEST 1 PASSED: PUT /api/roster/{id} with allow_overlap=True now succeeds (200 status) - shift update from 18:00-22:00 to 15:00-20:00 allowed to overlap with existing 09:00-17:00 shift, ✅ CRITICAL TEST 2 PASSED: PUT /api/roster/{id} with allow_overlap=False correctly blocked (409 Conflict) - overlap prevention working as expected, ✅ CRITICAL TEST 3 PASSED: 2:1 shift functionality with allow_overlap=True works perfectly - enables overlap bypass for 2:1 shifts. 🎯 FIX CONFIRMATION: The backend now correctly implements 'if not entry.allow_overlap and check_shift_overlap(...)' logic in the PUT endpoint (line 1046). All three critical test scenarios passed, confirming that the PUT endpoint now respects the allow_overlap flag exactly as the POST endpoint does. Frontend can now successfully update shifts with allow_overlap=True to enable 2:1 shift overlaps."
 
   - task: "Pay Calculation Bug Fix - 12PM-8PM Shifts"
-    implemented: false
-    working: false
+    implemented: true
+    working: true
     file: "server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
         - working: false
           agent: "user"
@@ -305,6 +305,9 @@ backend:
         - working: false
           agent: "main"
           comment: "Bug identified: Backend determine_shift_type() uses 'end_minutes >= 20 * 60' (includes 8PM as evening) while frontend badge uses 'endMinutes > 20 * 60' (excludes 8PM from evening). Fixed backend line 258 to match frontend logic: changed '>= 20 * 60' to '> 20 * 60'. Now 12PM-8PM shifts should calculate at day rate ($42/hr × 8hrs = $336)."
+        - working: true
+          agent: "testing"
+          comment: "✅ CRITICAL PAY CALCULATION FIX VERIFIED AND WORKING! Comprehensive testing completed successfully: 1) 12:00PM-8:00PM weekday shift now correctly calculates at DAY rate ($42.00/hr × 8hrs = $336.00) instead of evening rate, 2) Edge case 12:00PM-7:59PM correctly uses DAY rate ($335.30 for 7.98hrs), 3) Edge case 12:00PM-8:01PM correctly uses EVENING rate ($356.74 for 8.02hrs), 4) Control test 8:00PM-10:00PM correctly uses EVENING rate ($89.00 for 2hrs), 5) Regression test 7:30AM-3:30PM maintains DAY rate ($336.00 for 8hrs). All 5/5 tests passed including 3/3 critical tests. The backend fix from 'end_minutes >= 20 * 60' to 'end_minutes > 20 * 60' is working correctly and matches frontend badge logic. No regression detected in other pay calculations."
 
   - task: "Pay Summary Display Fix"
     implemented: false
