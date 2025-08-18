@@ -3027,8 +3027,19 @@ function App() {
                   </div>
                 </div>
                 
-                <div className="text-sm text-slate-600">
-                  Date: {new Date(selectedShift.date).toLocaleDateString()}
+                <div>
+                  <Label htmlFor="shift-date">Date</Label>
+                  <Input
+                    id="shift-date"
+                    type="date"
+                    value={selectedShift.date}
+                    onChange={(e) => {
+                      setSelectedShift({
+                        ...selectedShift,
+                        date: e.target.value
+                      });
+                    }}
+                  />
                 </div>
                 
                 <div>
