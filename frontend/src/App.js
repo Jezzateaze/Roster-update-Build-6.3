@@ -1287,26 +1287,7 @@ function App() {
     }
   };
 
-  // Check for stored authentication on app load
-  useEffect(() => {
-    const storedToken = localStorage.getItem('authToken');
-    const storedUser = localStorage.getItem('currentUser');
-    
-    if (storedToken && storedUser) {
-      try {
-        const user = JSON.parse(storedUser);
-        setCurrentUser(user);
-        setAuthToken(storedToken);
-        setIsAuthenticated(true);
-        setShowLoginDialog(false);
-        axios.defaults.headers.common['Authorization'] = `Bearer ${storedToken}`;
-      } catch (error) {
-        // Clear invalid stored data
-        localStorage.removeItem('authToken');
-        localStorage.removeItem('currentUser');
-      }
-    }
-  }, []);
+
 
   // Helper to navigate dates with timezone awareness
   const navigateDate = (direction) => {
