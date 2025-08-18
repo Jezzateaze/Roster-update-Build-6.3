@@ -488,8 +488,8 @@ class ShiftAvailabilityAPITester:
         
         # Test 4: Create preferred shifts record
         preferred_data = {
-            "staff_id": self.staff_user_id,
-            "staff_name": "Test Staff",
+            "staff_id": self.staff_id,  # Use actual staff_id
+            "staff_name": "Angela",
             "availability_type": "preferred_shifts",
             "day_of_week": 1,  # Tuesday
             "start_time": "15:00",
