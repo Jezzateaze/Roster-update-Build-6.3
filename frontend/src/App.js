@@ -1879,8 +1879,8 @@ function App() {
                 {isPreviousMonth ? 'Prev' : 'Next'}
               </span>
             )}
-            {/* Day Template Buttons and Add Shift - Only show for current month */}
-            {isCurrentMonth && (
+            {/* Day Template Buttons and Add Shift - Admin only */}
+            {isCurrentMonth && isAdmin() && (
               <div className="opacity-0 group-hover:opacity-100 transition-opacity flex space-x-1">
                 <button
                   className="w-4 h-4 bg-blue-500 text-white rounded text-xs hover:bg-blue-600 transition-colors flex items-center justify-center"
