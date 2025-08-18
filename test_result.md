@@ -582,7 +582,7 @@ metadata:
 
 test_plan:
   current_focus:
-    - "All three main functionalities now working"
+    - "Pay Information Privacy Controls"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
