@@ -3301,6 +3301,84 @@ function App() {
                                         );
                                       })()}
                                     </div>
+
+                                    {/* Pay Information - Enhanced for all users */}
+                                    <div className="text-sm space-y-2 p-3 bg-slate-50 rounded-lg">
+                                      {(() => {
+                                        // Calculate shift details for pay display
+                                        const startMinutes = parseInt(template.start_time.split(':')[0]) * 60 + parseInt(template.start_time.split(':')[1]);
+                                        const endMinutes = parseInt(template.end_time.split(':')[0]) * 60 + parseInt(template.end_time.split(':')[1]);
+                                        let totalMinutes = endMinutes - startMinutes;
+                                        if (totalMinutes < 0) totalMinutes += 24 * 60; // Handle overnight shifts
+                                        const totalHours = totalMinutes / 60;
+                                        
+                                        // Determine shift type (assuming weekday for template display)
+                                        let shiftType = 'weekday_day';
+                                        let shiftTypeBadge = 'Day';
+                                        let badgeColor = 'bg-blue-100 text-blue-800';
+                                        
+                                        if (template.manual_shift_type) {
+                                          shiftType = template.manual_shift_type;
+                                          const typeMapping = {
+                                            'weekday_day': { badge: 'Day', color: 'bg-blue-100 text-blue-800' },
+                                            'weekday_evening': { badge: 'Evening', color: 'bg-purple-100 text-purple-800' },
+                                            'weekday_night': { badge: 'Night', color: 'bg-slate-100 text-slate-800' },
+                                            'saturday': { badge: 'Saturday', color: 'bg-orange-100 text-orange-800' },
+                                            'sunday': { badge: 'Sunday', color: 'bg-red-100 text-red-800' },
+                                            'public_holiday': { badge: 'Holiday', color: 'bg-green-100 text-green-800' }
+                                          };
+                                          if (typeMapping[shiftType]) {
+                                            shiftTypeBadge = typeMapping[shiftType].badge;
+                                            badgeColor = typeMapping[shiftType].color;
+                                          }
+                                        } else {
+                                          // Auto-determine based on time
+                                          if (endMinutes > 20 * 60) { // After 8 PM
+                                            shiftType = 'weekday_evening';
+                                            shiftTypeBadge = 'Evening';
+                                            badgeColor = 'bg-purple-100 text-purple-800';
+                                          } else if (startMinutes < 6 * 60 || endMinutes <= 6 * 60) { // Before 6 AM or ends at/before 6 AM
+                                            shiftType = 'weekday_night'; 
+                                            shiftTypeBadge = 'Night';
+                                            badgeColor = 'bg-slate-100 text-slate-800';
+                                          }
+                                        }
+                                        
+                                        // Get hourly rate
+                                        const hourlyRate = template.manual_hourly_rate || settings.rates[shiftType] || 42.00;
+                                        const totalPay = template.is_sleepover ? 
+                                          (settings.rates.sleepover_default || 175.00) : 
+                                          (totalHours * hourlyRate);
+                                        
+                                        return (
+                                          <div className="space-y-2">
+                                            {/* Shift Type Badge */}
+                                            <div className="flex justify-between items-center">
+                                              <span className="text-slate-600">Shift Type:</span>
+                                              <Badge variant="secondary" className={`text-xs ${badgeColor}`}>
+                                                {shiftTypeBadge}
+                                              </Badge>
+                                            </div>
+                                            
+                                            {/* Hourly Rate */}
+                                            <div className="flex justify-between">
+                                              <span className="text-slate-600">Rate:</span>
+                                              <span className="font-medium text-emerald-600">
+                                                {template.is_sleepover ? 'Sleepover' : `$${hourlyRate.toFixed(2)}/hr`}
+                                              </span>
+                                            </div>
+                                            
+                                            {/* Total Pay */}
+                                            <div className="flex justify-between border-t border-slate-200 pt-2">
+                                              <span className="text-slate-700 font-medium">Total Pay:</span>
+                                              <span className="font-bold text-emerald-600">
+                                                {formatCurrency(totalPay)}
+                                              </span>
+                                            </div>
+                                          </div>
+                                        );
+                                      })()}
+                                    </div>
                                     
                                     {/* Badges for overrides */}
                                     <div className="flex flex-wrap gap-1">
