@@ -3384,7 +3384,7 @@ function App() {
                     Cancel
                   </Button>
                   <Button onClick={() => {
-                    // Include all manual overrides in the update
+                    // Include all manual overrides and overlap controls in the update
                     const updates = {
                       date: selectedShift.date,
                       staff_id: selectedShift.staff_id,
@@ -3394,7 +3394,10 @@ function App() {
                       manual_shift_type: selectedShift.manual_shift_type || null,
                       manual_hourly_rate: selectedShift.manual_hourly_rate || null,
                       manual_sleepover: selectedShift.manual_sleepover,
-                      wake_hours: selectedShift.wake_hours || null
+                      wake_hours: selectedShift.wake_hours || null,
+                      // 2:1 and overlap controls
+                      is_2_to_1: selectedShift.is_2_to_1 || false,
+                      allow_overlap: selectedShift.allow_overlap || false
                     };
                     
                     console.log('Saving shift with updates:', updates);
