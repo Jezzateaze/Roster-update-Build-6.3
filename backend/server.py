@@ -1527,6 +1527,333 @@ async def search_addresses(q: str, limit: int = 5):
         print(f"Address search error: {e}")
         return []
 
+# Shift Request and Availability API Endpoints
+
+@app.get("/api/unassigned-shifts")
+async def get_unassigned_shifts(current_user: dict = Depends(get_current_user)):
+    """Get all unassigned shifts (shifts without staff assigned)"""
+    unassigned_shifts = list(db.roster.find({
+        "$or": [
+            {"staff_id": None},
+            {"staff_id": ""},
+            {"staff_name": None},
+            {"staff_name": ""}
+        ]
+    }, {"_id": 0}))
+    
+    return sorted(unassigned_shifts, key=lambda x: (x['date'], x['start_time']))
+
+@app.get("/api/shift-requests")
+async def get_shift_requests(current_user: dict = Depends(get_current_user)):
+    """Get shift requests - staff see their own, admin sees all"""
+    query = {}
+    if current_user["role"] == "staff":
+        query["staff_id"] = current_user.get("staff_id", current_user["id"])
+    
+    shift_requests = list(db.shift_requests.find(query, {"_id": 0}))
+    return sorted(shift_requests, key=lambda x: x.get('request_date', datetime.min), reverse=True)
+
+@app.post("/api/shift-requests")
+async def create_shift_request(request: ShiftRequest, current_user: dict = Depends(get_current_user)):
+    """Create a new shift request"""
+    if current_user["role"] != "staff":
+        raise HTTPException(status_code=403, detail="Only staff can create shift requests")
+    
+    # Check if shift exists and is unassigned
+    roster_entry = db.roster.find_one({"id": request.roster_entry_id})
+    if not roster_entry:
+        raise HTTPException(status_code=404, detail="Shift not found")
+    
+    if roster_entry.get("staff_id") or roster_entry.get("staff_name"):
+        raise HTTPException(status_code=400, detail="Shift is already assigned")
+    
+    # Check for existing request from same staff for same shift
+    existing_request = db.shift_requests.find_one({
+        "roster_entry_id": request.roster_entry_id,
+        "staff_id": current_user.get("staff_id", current_user["id"]),
+        "status": {"$in": ["pending", "approved"]}
+    })
+    if existing_request:
+        raise HTTPException(status_code=400, detail="You have already requested this shift")
+    
+    # Create the request
+    request.id = str(uuid.uuid4())
+    request.staff_id = current_user.get("staff_id", current_user["id"])
+    request.staff_name = current_user.get("first_name") or current_user.get("username")
+    request.request_date = datetime.utcnow()
+    request.created_at = datetime.utcnow()
+    
+    db.shift_requests.insert_one(request.dict())
+    return request
+
+@app.put("/api/shift-requests/{request_id}/approve")
+async def approve_shift_request(request_id: str, admin_notes: Optional[str] = None, current_user: dict = Depends(get_current_user)):
+    """Approve a shift request (Admin only)"""
+    if current_user["role"] != "admin":
+        raise HTTPException(status_code=403, detail="Admin access required")
+    
+    # Find the request
+    shift_request = db.shift_requests.find_one({"id": request_id})
+    if not shift_request:
+        raise HTTPException(status_code=404, detail="Shift request not found")
+    
+    if shift_request["status"] != "pending":
+        raise HTTPException(status_code=400, detail="Request is not pending")
+    
+    # Check if shift is still unassigned
+    roster_entry = db.roster.find_one({"id": shift_request["roster_entry_id"]})
+    if not roster_entry:
+        raise HTTPException(status_code=404, detail="Shift no longer exists")
+    
+    if roster_entry.get("staff_id") or roster_entry.get("staff_name"):
+        raise HTTPException(status_code=400, detail="Shift has already been assigned")
+    
+    # Check for availability conflicts
+    availability_conflicts = check_availability_conflicts(
+        shift_request["staff_id"], 
+        roster_entry["date"], 
+        roster_entry["start_time"], 
+        roster_entry["end_time"]
+    )
+    
+    # Assign the shift
+    db.roster.update_one(
+        {"id": shift_request["roster_entry_id"]},
+        {"$set": {
+            "staff_id": shift_request["staff_id"],
+            "staff_name": shift_request["staff_name"]
+        }}
+    )
+    
+    # Update request status
+    db.shift_requests.update_one(
+        {"id": request_id},
+        {"$set": {
+            "status": "approved",
+            "admin_notes": admin_notes,
+            "approved_by": current_user["id"],
+            "approved_date": datetime.utcnow()
+        }}
+    )
+    
+    # Create notification for staff
+    notification = Notification(
+        id=str(uuid.uuid4()),
+        user_id=shift_request["staff_id"],
+        notification_type=NotificationType.SHIFT_REQUEST_APPROVED,
+        title="Shift Request Approved",
+        message=f"Your request for shift on {roster_entry['date']} from {roster_entry['start_time']}-{roster_entry['end_time']} has been approved!",
+        related_id=request_id,
+        created_at=datetime.utcnow()
+    )
+    db.notifications.insert_one(notification.dict())
+    
+    return {"message": "Shift request approved successfully", "conflicts": availability_conflicts}
+
+@app.put("/api/shift-requests/{request_id}/reject")
+async def reject_shift_request(request_id: str, admin_notes: Optional[str] = None, current_user: dict = Depends(get_current_user)):
+    """Reject a shift request (Admin only)"""
+    if current_user["role"] != "admin":
+        raise HTTPException(status_code=403, detail="Admin access required")
+    
+    # Find and update the request
+    result = db.shift_requests.update_one(
+        {"id": request_id, "status": "pending"},
+        {"$set": {
+            "status": "rejected",
+            "admin_notes": admin_notes,
+            "approved_by": current_user["id"],
+            "approved_date": datetime.utcnow()
+        }}
+    )
+    
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Shift request not found or not pending")
+    
+    # Get the request details for notification
+    shift_request = db.shift_requests.find_one({"id": request_id})
+    roster_entry = db.roster.find_one({"id": shift_request["roster_entry_id"]})
+    
+    # Create notification for staff
+    notification = Notification(
+        id=str(uuid.uuid4()),
+        user_id=shift_request["staff_id"],
+        notification_type=NotificationType.SHIFT_REQUEST_REJECTED,
+        title="Shift Request Rejected",
+        message=f"Your request for shift on {roster_entry['date'] if roster_entry else 'N/A'} has been rejected. {admin_notes or ''}",
+        related_id=request_id,
+        created_at=datetime.utcnow()
+    )
+    db.notifications.insert_one(notification.dict())
+    
+    return {"message": "Shift request rejected"}
+
+@app.get("/api/staff-availability")
+async def get_staff_availability(current_user: dict = Depends(get_current_user)):
+    """Get staff availability - staff see their own, admin sees all"""
+    query = {"is_active": True}
+    if current_user["role"] == "staff":
+        query["staff_id"] = current_user.get("staff_id", current_user["id"])
+    
+    availability_records = list(db.staff_availability.find(query, {"_id": 0}))
+    return sorted(availability_records, key=lambda x: x.get('created_at', datetime.min), reverse=True)
+
+@app.post("/api/staff-availability")
+async def create_staff_availability(availability: StaffAvailability, current_user: dict = Depends(get_current_user)):
+    """Create staff availability record"""
+    # Staff can only create their own records
+    if current_user["role"] == "staff":
+        availability.staff_id = current_user.get("staff_id", current_user["id"])
+        availability.staff_name = current_user.get("first_name") or current_user.get("username")
+    
+    availability.id = str(uuid.uuid4())
+    availability.created_at = datetime.utcnow()
+    
+    db.staff_availability.insert_one(availability.dict())
+    return availability
+
+@app.put("/api/staff-availability/{availability_id}")
+async def update_staff_availability(availability_id: str, availability: StaffAvailability, current_user: dict = Depends(get_current_user)):
+    """Update staff availability record"""
+    # Check if record exists and user has permission
+    existing_record = db.staff_availability.find_one({"id": availability_id})
+    if not existing_record:
+        raise HTTPException(status_code=404, detail="Availability record not found")
+    
+    # Staff can only update their own records
+    if current_user["role"] == "staff" and existing_record["staff_id"] != current_user.get("staff_id", current_user["id"]):
+        raise HTTPException(status_code=403, detail="You can only update your own availability")
+    
+    result = db.staff_availability.update_one(
+        {"id": availability_id},
+        {"$set": availability.dict()}
+    )
+    
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Availability record not found")
+    
+    return availability
+
+@app.delete("/api/staff-availability/{availability_id}")
+async def delete_staff_availability(availability_id: str, current_user: dict = Depends(get_current_user)):
+    """Delete staff availability record"""
+    existing_record = db.staff_availability.find_one({"id": availability_id})
+    if not existing_record:
+        raise HTTPException(status_code=404, detail="Availability record not found")
+    
+    # Staff can only delete their own records
+    if current_user["role"] == "staff" and existing_record["staff_id"] != current_user.get("staff_id", current_user["id"]):
+        raise HTTPException(status_code=403, detail="You can only delete your own availability")
+    
+    result = db.staff_availability.update_one(
+        {"id": availability_id},
+        {"$set": {"is_active": False}}
+    )
+    
+    return {"message": "Availability record deleted"}
+
+@app.get("/api/notifications")
+async def get_notifications(current_user: dict = Depends(get_current_user)):
+    """Get notifications for current user"""
+    notifications = list(db.notifications.find(
+        {"user_id": current_user["id"]},
+        {"_id": 0}
+    ))
+    return sorted(notifications, key=lambda x: x.get('created_at', datetime.min), reverse=True)
+
+@app.put("/api/notifications/{notification_id}/read")
+async def mark_notification_read(notification_id: str, current_user: dict = Depends(get_current_user)):
+    """Mark notification as read"""
+    result = db.notifications.update_one(
+        {"id": notification_id, "user_id": current_user["id"]},
+        {"$set": {"is_read": True}}
+    )
+    
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Notification not found")
+    
+    return {"message": "Notification marked as read"}
+
+def check_availability_conflicts(staff_id: str, date: str, start_time: str, end_time: str) -> List[Dict]:
+    """Check for availability conflicts when assigning a shift"""
+    conflicts = []
+    
+    # Convert times to minutes for comparison
+    start_minutes = int(start_time.split(':')[0]) * 60 + int(start_time.split(':')[1])
+    end_minutes = int(end_time.split(':')[0]) * 60 + int(end_time.split(':')[1])
+    if end_minutes <= start_minutes:
+        end_minutes += 24 * 60  # Handle overnight shifts
+    
+    # Parse date
+    shift_date = datetime.strptime(date, "%Y-%m-%d")
+    day_of_week = shift_date.weekday()
+    
+    # Check for unavailability or time off requests
+    unavailable_records = list(db.staff_availability.find({
+        "staff_id": staff_id,
+        "is_active": True,
+        "availability_type": {"$in": ["unavailable", "time_off_request"]},
+        "$or": [
+            # Specific date match
+            {"date_from": {"$lte": date}, "date_to": {"$gte": date}},
+            # Single date match
+            {"date_from": date, "date_to": None},
+            # Recurring weekly unavailability
+            {"is_recurring": True, "day_of_week": day_of_week}
+        ]
+    }))
+    
+    for record in unavailable_records:
+        conflict_times = []
+        
+        # Check time overlap if times are specified
+        if record.get("start_time") and record.get("end_time"):
+            rec_start = int(record["start_time"].split(':')[0]) * 60 + int(record["start_time"].split(':')[1])
+            rec_end = int(record["end_time"].split(':')[0]) * 60 + int(record["end_time"].split(':')[1])
+            if rec_end <= rec_start:
+                rec_end += 24 * 60
+            
+            # Check for time overlap
+            if not (end_minutes <= rec_start or start_minutes >= rec_end):
+                conflict_times = [record["start_time"], record["end_time"]]
+        else:
+            # All day unavailability
+            conflict_times = ["All Day"]
+        
+        if conflict_times or not record.get("start_time"):
+            conflicts.append({
+                "type": record["availability_type"],
+                "date_range": f"{record.get('date_from', date)} to {record.get('date_to', date)}",
+                "times": conflict_times,
+                "notes": record.get("notes", ""),
+                "is_recurring": record.get("is_recurring", False)
+            })
+    
+    return conflicts
+
+@app.post("/api/check-assignment-conflicts")
+async def check_assignment_conflicts(data: dict, current_user: dict = Depends(get_current_user)):
+    """Check for conflicts when admin tries to assign staff to a shift"""
+    if current_user["role"] != "admin":
+        raise HTTPException(status_code=403, detail="Admin access required")
+    
+    staff_id = data.get("staff_id")
+    date = data.get("date")
+    start_time = data.get("start_time")
+    end_time = data.get("end_time")
+    
+    if not all([staff_id, date, start_time, end_time]):
+        raise HTTPException(status_code=400, detail="Missing required fields")
+    
+    conflicts = check_availability_conflicts(staff_id, date, start_time, end_time)
+    
+    return {
+        "has_conflicts": len(conflicts) > 0,
+        "conflicts": conflicts,
+        "can_override": True,  # Admin can always override
+        "message": f"Found {len(conflicts)} potential conflicts" if conflicts else "No conflicts found"
+    }
+
 # Initialize database with default admin user if not exists
 def initialize_admin():
     """Initialize default admin user if not exists"""
