@@ -283,11 +283,8 @@ class PinResetStaffTester:
             print("   ⚠️  No admin token available - skipping PIN reset tests")
             return False
         
-        # Test with a real-looking email for Jane Doe (second created staff)
-        real_email = "jane.doe@example.com"
-        
-        # First, we need to create a user account with this email for testing
-        # Since we can't directly create users via API, we'll test with generated email pattern
+        # Test with Jane Doe (second created staff) using generated email pattern
+        # The backend auto-creates user accounts for staff with generated emails
         staff_email = "janedoe@company.com"
         
         reset_request = {
@@ -295,7 +292,7 @@ class PinResetStaffTester:
         }
         
         success, response = self.run_test(
-            "Reset PIN with Generated Email Pattern",
+            "Reset PIN with Generated Email Pattern for Jane Doe",
             "POST",
             "api/admin/reset_pin",
             200,
@@ -312,6 +309,20 @@ class PinResetStaffTester:
             print(f"   Message: {message}")
             print(f"   Username: {username}")
             print(f"   Temp PIN: {temp_pin}")
+            
+            # Verify temp PIN is 4 digits
+            if temp_pin and len(temp_pin) == 4 and temp_pin.isdigit():
+                print(f"   ✅ Temp PIN format is correct (4 digits)")
+            else:
+                print(f"   ❌ Temp PIN format is incorrect: {temp_pin}")
+                return False
+            
+            # Verify username was generated correctly
+            if username and username == "janedoe":
+                print(f"   ✅ Username generated correctly from staff name")
+            else:
+                print(f"   ❌ Username generation incorrect: {username}")
+                return False
             
             return True
         else:
