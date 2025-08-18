@@ -195,7 +195,7 @@ class EnhancedStaffDeletionTester:
                 "date": shift_date.strftime("%Y-%m-%d"),
                 "shift_template_id": "test-template",
                 "staff_id": self.test_staff_id,
-                "staff_name": "Test Staff Delete",
+                "staff_name": self.test_staff_name,
                 "start_time": "09:00",
                 "end_time": "17:00",
                 "is_sleepover": False,
