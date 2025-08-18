@@ -3060,33 +3060,39 @@ function App() {
                       <span>Default Shift Times</span>
                     </CardTitle>
                     <p className="text-slate-600">
-                      Adjust the default start and end times for each shift. These times will be used when generating new rosters.
+                      {currentUser?.role === 'admin' 
+                        ? 'Adjust the default start and end times for each shift. These times will be used when generating new rosters.'
+                        : 'View the default start and end times for each shift type, including hours worked and pay rates.'
+                      }
                     </p>
                   </div>
-                  <div className="flex items-center space-x-2">
-                    {shiftTemplates.length > 0 && (
-                      <Button 
-                        variant={bulkEditMode ? 'default' : 'outline'}
-                        size="sm"
-                        onClick={() => {
-                          setBulkEditMode(!bulkEditMode);
-                          setSelectedTemplates(new Set());
-                        }}
-                      >
-                        {bulkEditMode ? 'Exit Bulk Edit' : 'Bulk Edit'}
-                      </Button>
-                    )}
-                    {shiftTemplates.length === 0 && (
-                      <Button onClick={createDefaultShiftTemplates}>
-                        <Plus className="w-4 h-4 mr-2" />
-                        Create Default Templates
-                      </Button>
-                    )}
-                  </div>
+                  {/* Admin-only editing controls */}
+                  {currentUser?.role === 'admin' && (
+                    <div className="flex items-center space-x-2">
+                      {shiftTemplates.length > 0 && (
+                        <Button 
+                          variant={bulkEditMode ? 'default' : 'outline'}
+                          size="sm"
+                          onClick={() => {
+                            setBulkEditMode(!bulkEditMode);
+                            setSelectedTemplates(new Set());
+                          }}
+                        >
+                          {bulkEditMode ? 'Exit Bulk Edit' : 'Bulk Edit'}
+                        </Button>
+                      )}
+                      {shiftTemplates.length === 0 && (
+                        <Button onClick={createDefaultShiftTemplates}>
+                          <Plus className="w-4 h-4 mr-2" />
+                          Create Default Templates
+                        </Button>
+                      )}
+                    </div>
+                  )}
                 </div>
                 
-                {/* Bulk Action Toolbar */}
-                {bulkEditMode && (
+                {/* Bulk Action Toolbar - Admin only */}
+                {currentUser?.role === 'admin' && bulkEditMode && (
                   <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-4">
