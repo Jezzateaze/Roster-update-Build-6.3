@@ -321,6 +321,30 @@ backend:
           agent: "testing"
           comment: "✅ CRITICAL BUG FIX VERIFIED AND WORKING: After proper backend restart and deployment fix, comprehensive testing with FRESH data creation confirms: 12:00PM-8:00PM Monday shift correctly calculates at DAY rate (8.0h × $42/hr = $336.00, NOT $356). Edge cases all working: 12:00PM-7:59PM DAY rate ($335.30), 12:00PM-8:01PM EVENING rate ($356.74). All boundary tests passed - shifts ending AT 8:00 PM use DAY rate, shifts ending AFTER 8:00 PM use EVENING rate. Backend determine_shift_type() function now correctly using 'end_minutes > 20 * 60' logic. No regression detected. Production deployment issue resolved."
 
+  - task: "Admin PIN Reset Functionality"
+    implemented: true
+    working: true
+    file: "server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "testing"
+          comment: "✅ COMPREHENSIVE PIN RESET TESTING COMPLETED: All PIN reset functionality working perfectly. VERIFIED FEATURES: 1) ✅ POST /api/admin/reset_pin endpoint accepts JSON body with 'email' field, 2) ✅ Handles existing users with email (Admin user PIN reset successful with 4-digit temp PIN), 3) ✅ Auto-creates user accounts for staff members without user accounts (tested with 'johnsmith@company.com' pattern), 4) ✅ Generates 4-digit temporary PIN and returns it in response (format validation passed), 5) ✅ Handles both real emails and generated emails like 'alicejohnson@company.com', 6) ✅ Returns 400 error for missing email field, 7) ✅ Returns 403 error without admin token, 8) ✅ Returns 404 error for non-existent emails. All 7/7 PIN reset test scenarios passed. Auto-creation logic working correctly - staff members get usernames generated from names (spaces removed, lowercase). Production-ready."
+
+  - task: "Staff Management API Enhancement"
+    implemented: true
+    working: true
+    file: "server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "testing"
+          comment: "✅ STAFF MANAGEMENT TESTING COMPLETED: POST /api/staff endpoint working perfectly. VERIFIED FEATURES: 1) ✅ Accepts JSON body with 'name' and 'active' fields, 2) ✅ Returns created staff member with auto-generated ID, 3) ✅ Successfully created 'John Smith' (active=true) and 'Jane Doe' (active=false), 4) ✅ Proper validation - returns 422 error for missing required 'name' field, 5) ✅ Staff data matches input (name and active status preserved), 6) ✅ Integration with PIN reset system working (staff members can have user accounts auto-created). All 4/4 staff creation test scenarios passed. API ready for production use."
+
   - task: "Roster Templates Management Interface"
     implemented: true
     working: true
