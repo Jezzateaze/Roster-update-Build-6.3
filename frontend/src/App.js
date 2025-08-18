@@ -4431,6 +4431,8 @@ function App() {
                         step="0.01"
                         min="0"
                         value={settings.rates.weekday_night}
+                        disabled={!isAdmin()}
+                        readOnly={!isAdmin()}
                         onChange={(e) => {
                           const newSettings = {
                             ...settings,
@@ -4454,6 +4456,8 @@ function App() {
                         step="0.01"
                         min="0"
                         value={settings.rates.saturday}
+                        disabled={!isAdmin()}
+                        readOnly={!isAdmin()}
                         onChange={(e) => {
                           const newSettings = {
                             ...settings,
@@ -4476,6 +4480,8 @@ function App() {
                         step="0.01"
                         min="0"
                         value={settings.rates.sunday}
+                        disabled={!isAdmin()}
+                        readOnly={!isAdmin()}
                         onChange={(e) => {
                           const newSettings = {
                             ...settings,
@@ -4498,6 +4504,8 @@ function App() {
                         step="0.01"
                         min="0"
                         value={settings.rates.public_holiday}
+                        disabled={!isAdmin()}
+                        readOnly={!isAdmin()}
                         onChange={(e) => {
                           const newSettings = {
                             ...settings,
