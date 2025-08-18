@@ -2203,8 +2203,9 @@ function App() {
                       )}
                       
                       <div 
-                        className={`flex-1 cursor-pointer ${bulkSelectionMode ? 'ml-6' : ''}`}
+                        className={`flex-1 ${isAdmin() ? 'cursor-pointer' : 'cursor-default'} ${bulkSelectionMode ? 'ml-6' : ''}`}
                         onClick={() => {
+                          if (!isAdmin()) return; // Staff cannot edit shifts
                           if (bulkSelectionMode) {
                             toggleShiftSelection(entry.id);
                           } else {
