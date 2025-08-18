@@ -4666,7 +4666,9 @@ function App() {
                               </div>
                               <div className="flex justify-between text-sm">
                                 <span className="text-slate-600">Total Pay:</span>
-                                <span className="font-medium text-emerald-600">{formatCurrency(weeklyTotals.totalPay)}</span>
+                                {currentUser?.role === 'admin' && (
+                                  <span className="font-medium text-emerald-600">{formatCurrency(weeklyTotals.totalPay)}</span>
+                                )}
                               </div>
                               <div className="pt-2 border-t border-slate-200">
                                 <div className="text-xs text-slate-500 mb-1">Staff Breakdown:</div>
