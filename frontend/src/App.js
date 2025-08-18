@@ -3825,15 +3825,31 @@ function App() {
                       }}
                     >
                       <div className="flex items-center justify-between">
-                        <div>
+                        <div className="flex-1">
                           <h3 className="font-semibold text-blue-600 hover:text-blue-800">{member.name}</h3>
                           <Badge variant={member.active ? "default" : "secondary"}>
                             {member.active ? "Active" : "Inactive"}
                           </Badge>
                         </div>
                         {currentUser?.role === 'admin' && (
-                          <div className="text-slate-400">
-                            <Settings className="w-4 h-4" />
+                          <div className="flex items-center space-x-2">
+                            <div className="text-slate-400">
+                              <Settings className="w-4 h-4" />
+                            </div>
+                            {member.active && (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={(e) => {
+                                  e.stopPropagation(); // Prevent opening the profile dialog
+                                  handleDeleteStaff(member);
+                                }}
+                                className="text-red-500 hover:text-red-700 hover:bg-red-50 p-2"
+                                title="Delete Staff Member"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </Button>
+                            )}
                           </div>
                         )}
                       </div>
