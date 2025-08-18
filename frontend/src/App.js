@@ -4381,6 +4381,8 @@ function App() {
                         step="0.01"
                         min="0"
                         value={settings.rates.weekday_day}
+                        disabled={!isAdmin()}
+                        readOnly={!isAdmin()}
                         onChange={(e) => {
                           const newSettings = {
                             ...settings,
