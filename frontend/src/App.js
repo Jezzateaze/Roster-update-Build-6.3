@@ -4090,7 +4090,7 @@ function App() {
                 <CardContent>
                   {staffAvailability.length === 0 ? (
                     <div className="text-center py-8 text-slate-500">
-                      <Calendar className="w-12 h-12 mx-auto mb-3 opacity-50" />
+                      <CalendarViewIcon className="w-12 h-12 mx-auto mb-3 opacity-50" />
                       <p>No availability records</p>
                     </div>
                   ) : (
