@@ -287,6 +287,26 @@ function App() {
     attendees: [],
     reminder_minutes: 15
   });
+
+  // Availability and Shift Request states
+  const [unassignedShifts, setUnassignedShifts] = useState([]);
+  const [shiftRequests, setShiftRequests] = useState([]);
+  const [staffAvailability, setStaffAvailability] = useState([]);
+  const [notifications, setNotifications] = useState([]);
+  const [showShiftRequestDialog, setShowShiftRequestDialog] = useState(false);
+  const [selectedUnassignedShift, setSelectedUnassignedShift] = useState(null);
+  const [showAvailabilityDialog, setShowAvailabilityDialog] = useState(false);
+  const [newAvailability, setNewAvailability] = useState({
+    availability_type: 'available',
+    date_from: '',
+    date_to: '',
+    day_of_week: null,
+    start_time: '',
+    end_time: '',
+    is_recurring: false,
+    notes: ''
+  });
+  const [showNotifications, setShowNotifications] = useState(false);
   
   // Touch/swipe handling for mobile
   const [touchStart, setTouchStart] = useState(null);
