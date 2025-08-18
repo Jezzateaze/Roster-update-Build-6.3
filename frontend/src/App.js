@@ -2681,6 +2681,12 @@ function App() {
                           >
                             Load Template
                           </Button>
+                          <Button 
+                            variant="outline" 
+                            onClick={() => setShowManageTemplatesDialog(true)}
+                          >
+                            Manage Templates
+                          </Button>
                           <Button variant="outline" onClick={clearMonthlyRoster}>
                             Clear Roster
                           </Button>
