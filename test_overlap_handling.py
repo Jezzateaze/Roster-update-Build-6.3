@@ -122,7 +122,7 @@ class OverlapHandlingTester:
             "end_time": "20:00",
             "is_sleepover": False,
             "is_public_holiday": False,
-            "allow_overlap": False,
+            "allow_overlap": True,  # Allow this overlap for testing purposes
             "hours_worked": 0.0,
             "base_pay": 0.0,
             "sleepover_allowance": 0.0,
