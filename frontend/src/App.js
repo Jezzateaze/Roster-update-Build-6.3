@@ -3249,6 +3249,7 @@ function App() {
                   <Button onClick={() => {
                     // Include all manual overrides in the update
                     const updates = {
+                      date: selectedShift.date,
                       staff_id: selectedShift.staff_id,
                       staff_name: selectedShift.staff_name,
                       start_time: selectedShift.start_time,
