@@ -1042,8 +1042,8 @@ async def update_roster_entry(entry_id: str, entry: RosterEntry):
         if template:
             shift_name = template.get("name", "")
     
-    # Check for overlaps (excluding current entry, allows 2:1 shifts)
-    if check_shift_overlap(entry.date, entry.start_time, entry.end_time, exclude_id=entry_id, shift_name=shift_name):
+    # Check for overlaps (excluding current entry, allows 2:1 shifts and manual override)
+    if not entry.allow_overlap and check_shift_overlap(entry.date, entry.start_time, entry.end_time, exclude_id=entry_id, shift_name=shift_name):
         raise HTTPException(
             status_code=409, 
             detail=f"Updated shift would overlap with existing shift on {entry.date}"
