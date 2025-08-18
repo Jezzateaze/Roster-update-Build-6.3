@@ -1426,6 +1426,31 @@ async def search_addresses(q: str, limit: int = 5):
         print(f"Address search error: {e}")
         return []
 
+# Initialize database with default admin user if not exists
+def initialize_admin():
+    """Initialize default admin user if not exists"""
+    admin_user = db.users.find_one({"username": "Admin"})
+    if not admin_user:
+        print("Creating default admin user...")
+        default_admin = User(
+            id=str(uuid.uuid4()),
+            username="Admin",
+            pin_hash=hash_pin("0000"),  # Default PIN: 0000
+            role=UserRole.ADMIN,
+            email="admin@company.com",
+            first_name="System",
+            last_name="Administrator",
+            created_at=datetime.utcnow(),
+            is_active=True
+        )
+        db.users.insert_one(default_admin.dict())
+        print("✅ Default admin user created: Username=Admin, PIN=0000")
+    else:
+        print("✅ Admin user already exists")
+
+# Initialize admin on startup
+initialize_admin()
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8001)
