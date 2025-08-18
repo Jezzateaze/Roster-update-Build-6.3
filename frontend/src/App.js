@@ -303,6 +303,16 @@ function App() {
   const [bulkSelectionMode, setBulkSelectionMode] = useState(false);
   const [showBulkActionsDialog, setShowBulkActionsDialog] = useState(false);
 
+  // Helper function to check if current user is admin
+  const isAdmin = () => {
+    return currentUser && currentUser.role === 'admin';
+  };
+
+  // Helper function to check if current user is staff
+  const isStaff = () => {
+    return currentUser && currentUser.role === 'staff';
+  };
+
   // Fetch available users for login dropdown
   const fetchAvailableUsers = async () => {
     try {
