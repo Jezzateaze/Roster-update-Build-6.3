@@ -4114,25 +4114,241 @@ class ShiftRosterAPITester:
         
         return True
 
+    def test_critical_overlap_handling_fix(self):
+        """Test the critical fix for overlap handling in the PUT endpoint"""
+        print(f"\n🎯 CRITICAL TEST: Testing Overlap Handling Fix in PUT Endpoint...")
+        print("   This test verifies that PUT /api/roster/{id} now respects the allow_overlap flag")
+        
+        # Test date for overlap testing
+        test_date = "2025-12-20"
+        
+        # Step 1: Create first shift
+        shift1 = {
+            "id": "",  # Will be auto-generated
+            "date": test_date,
+            "shift_template_id": "overlap-test-1",
+            "staff_id": None,
+            "staff_name": None,
+            "start_time": "09:00",
+            "end_time": "17:00",
+            "is_sleepover": False,
+            "is_public_holiday": False,
+            "allow_overlap": False,
+            "hours_worked": 0.0,
+            "base_pay": 0.0,
+            "sleepover_allowance": 0.0,
+            "total_pay": 0.0
+        }
+        
+        success, created_shift1 = self.run_test(
+            "Create First Shift for Overlap Testing",
+            "POST",
+            "api/roster/add-shift",
+            200,
+            data=shift1
+        )
+        
+        if not success:
+            print("   ❌ Could not create first shift for overlap testing")
+            return False
+        
+        shift1_id = created_shift1.get('id')
+        print(f"   ✅ Created first shift: {shift1['start_time']}-{shift1['end_time']} (ID: {shift1_id})")
+        
+        # Step 2: Create second shift that will be updated to overlap
+        shift2 = {
+            "id": "",  # Will be auto-generated
+            "date": test_date,
+            "shift_template_id": "overlap-test-2",
+            "staff_id": None,
+            "staff_name": None,
+            "start_time": "18:00",  # Non-overlapping initially
+            "end_time": "22:00",
+            "is_sleepover": False,
+            "is_public_holiday": False,
+            "allow_overlap": False,
+            "hours_worked": 0.0,
+            "base_pay": 0.0,
+            "sleepover_allowance": 0.0,
+            "total_pay": 0.0
+        }
+        
+        success, created_shift2 = self.run_test(
+            "Create Second Shift (Non-overlapping)",
+            "POST",
+            "api/roster/add-shift",
+            200,
+            data=shift2
+        )
+        
+        if not success:
+            print("   ❌ Could not create second shift for overlap testing")
+            return False
+        
+        shift2_id = created_shift2.get('id')
+        print(f"   ✅ Created second shift: {shift2['start_time']}-{shift2['end_time']} (ID: {shift2_id})")
+        
+        # Step 3: Test updating shift with allow_overlap=True (should succeed)
+        print(f"\n   🎯 CRITICAL TEST 1: Update shift with allow_overlap=True")
+        updated_shift2_allow = {
+            **created_shift2,
+            "start_time": "15:00",  # This would overlap with first shift (09:00-17:00)
+            "end_time": "20:00",
+            "allow_overlap": True  # This should allow the overlap
+        }
+        
+        success, response = self.run_test(
+            "Update Shift with allow_overlap=True (Should Succeed)",
+            "PUT",
+            f"api/roster/{shift2_id}",
+            200,  # Should succeed with 200
+            data=updated_shift2_allow
+        )
+        
+        test1_passed = success
+        if success:
+            print(f"   ✅ CRITICAL TEST 1 PASSED: Shift update with allow_overlap=True succeeded")
+            print(f"      Updated shift now: {updated_shift2_allow['start_time']}-{updated_shift2_allow['end_time']}")
+        else:
+            print(f"   ❌ CRITICAL TEST 1 FAILED: Shift update with allow_overlap=True was blocked")
+            print(f"      This indicates the PUT endpoint fix is not working correctly")
+        
+        # Step 4: Test updating shift with allow_overlap=False (should fail)
+        print(f"\n   🎯 CRITICAL TEST 2: Update shift with allow_overlap=False")
+        updated_shift2_no_allow = {
+            **created_shift2,
+            "start_time": "14:00",  # This would overlap with first shift (09:00-17:00)
+            "end_time": "19:00",
+            "allow_overlap": False  # This should prevent the overlap
+        }
+        
+        success, response = self.run_test(
+            "Update Shift with allow_overlap=False (Should Fail)",
+            "PUT",
+            f"api/roster/{shift2_id}",
+            409,  # Should fail with 409 Conflict
+            data=updated_shift2_no_allow
+        )
+        
+        test2_passed = success
+        if success:  # Success here means we got the expected 409 status
+            print(f"   ✅ CRITICAL TEST 2 PASSED: Shift update with allow_overlap=False correctly blocked")
+        else:
+            print(f"   ❌ CRITICAL TEST 2 FAILED: Shift update with allow_overlap=False was not blocked")
+            print(f"      This indicates overlap detection is not working properly")
+        
+        # Step 5: Test 2:1 functionality with both is_2_to_1=True and allow_overlap=True
+        print(f"\n   🎯 CRITICAL TEST 3: Test 2:1 shift with allow_overlap=True")
+        
+        # Create a shift with "2:1" in the name
+        shift_2to1 = {
+            "id": "",  # Will be auto-generated
+            "date": test_date,
+            "shift_template_id": "2to1-test",
+            "staff_id": None,
+            "staff_name": None,
+            "start_time": "20:00",  # Non-overlapping initially
+            "end_time": "23:00",
+            "is_sleepover": False,
+            "is_public_holiday": False,
+            "allow_overlap": False,
+            "hours_worked": 0.0,
+            "base_pay": 0.0,
+            "sleepover_allowance": 0.0,
+            "total_pay": 0.0
+        }
+        
+        success, created_2to1_shift = self.run_test(
+            "Create 2:1 Shift for Testing",
+            "POST",
+            "api/roster/add-shift",
+            200,
+            data=shift_2to1
+        )
+        
+        if not success:
+            print("   ❌ Could not create 2:1 shift for testing")
+            return False
+        
+        shift_2to1_id = created_2to1_shift.get('id')
+        
+        # Now update it to overlap with both allow_overlap=True and 2:1 name
+        # First, we need to get a shift template with "2:1" in the name
+        success, shift_templates = self.run_test(
+            "Get Shift Templates to Find 2:1 Template",
+            "GET",
+            "api/shift-templates",
+            200
+        )
+        
+        template_2to1_id = None
+        if success:
+            for template in shift_templates:
+                if "2:1" in template.get('name', '').lower():
+                    template_2to1_id = template.get('id')
+                    print(f"   Found 2:1 template: {template.get('name')} (ID: {template_2to1_id})")
+                    break
+        
+        if not template_2to1_id:
+            print("   ⚠️  No 2:1 shift template found, creating manual test")
+            template_2to1_id = "manual-2to1-test"
+        
+        updated_2to1_shift = {
+            **created_2to1_shift,
+            "shift_template_id": template_2to1_id,
+            "start_time": "16:00",  # This would overlap with first shift (09:00-17:00)
+            "end_time": "21:00",
+            "allow_overlap": True  # Both 2:1 and allow_overlap should enable overlap
+        }
+        
+        success, response = self.run_test(
+            "Update 2:1 Shift with allow_overlap=True (Should Succeed)",
+            "PUT",
+            f"api/roster/{shift_2to1_id}",
+            200,  # Should succeed
+            data=updated_2to1_shift
+        )
+        
+        test3_passed = success
+        if success:
+            print(f"   ✅ CRITICAL TEST 3 PASSED: 2:1 shift with allow_overlap=True succeeded")
+            print(f"      This confirms both 2:1 detection and allow_overlap flag work together")
+        else:
+            print(f"   ❌ CRITICAL TEST 3 FAILED: 2:1 shift with allow_overlap=True was blocked")
+        
+        # Summary of critical tests
+        print(f"\n   📊 CRITICAL OVERLAP HANDLING FIX SUMMARY:")
+        test1_status = "✅ PASSED" if test1_passed else "❌ FAILED"
+        test2_status = "✅ PASSED" if test2_passed else "❌ FAILED"
+        test3_status = "✅ PASSED" if test3_passed else "❌ FAILED"
+        
+        print(f"      Test 1 (allow_overlap=True): {test1_status}")
+        print(f"      Test 2 (allow_overlap=False): {test2_status}")
+        print(f"      Test 3 (2:1 + allow_overlap=True): {test3_status}")
+        
+        # The fix is working if all tests passed
+        fix_working = test1_passed and test2_passed and test3_passed
+        
+        if fix_working:
+            print(f"   🎉 CRITICAL FIX VERIFICATION: PUT endpoint now correctly respects allow_overlap flag!")
+        else:
+            print(f"   🚨 CRITICAL ISSUE: PUT endpoint fix may not be working correctly")
+            print(f"      Required fix: Update line 1046 to check 'if not entry.allow_overlap and check_shift_overlap(...)'")
+        
+        return fix_working
+
 def main():
     print("🚀 Starting Shift Roster & Pay Calculator API Tests")
-    print("🎯 FOCUS: Review Request - Staff Profile Updates, Shift Assignment, Pay Summary Data, Active Staff Filter")
+    print("🎯 FOCUS: Critical Overlap Handling Fix in PUT Endpoint")
     print("=" * 80)
     
     tester = ShiftRosterAPITester()
     
-    # Run core setup tests first
-    print("\n📋 Running Core Setup Tests...")
-    tester.test_health_check()
-    tester.test_authentication_system()
-    tester.test_get_staff()
-    tester.test_get_shift_templates()
-    tester.test_get_settings()
-    tester.test_generate_roster()
-    tester.test_get_roster()
+    # Run the critical overlap handling fix test
+    success = tester.test_critical_overlap_handling_fix()
     
-    # Run the specific review request tests
-    success = tester.run_review_request_tests()
+    print(f"\n🏁 Critical Test Complete!")
+    print(f"Result: {'✅ PASSED' if success else '❌ FAILED'}")
     
     return 0 if success else 1
 
