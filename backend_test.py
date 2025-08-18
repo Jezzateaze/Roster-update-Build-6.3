@@ -222,6 +222,275 @@ class ShiftRosterAPITester:
                 print(f"   Hours: {entry.get('hours_worked', 0)}, Pay: ${entry.get('total_pay', 0)}")
         return success
 
+    def test_user_profile_update(self):
+        """Test PUT /api/users/me endpoint for updating current user profile"""
+        print(f"\n👤 Testing User Profile Update (PUT /api/users/me)...")
+        
+        if not self.auth_token:
+            print("   ⚠️  No authentication token available - skipping profile update tests")
+            return False
+        
+        # Test 1: Get current user profile first
+        success, current_profile = self.run_test(
+            "Get Current User Profile",
+            "GET",
+            "api/users/me",
+            200,
+            use_auth=True
+        )
+        
+        if not success:
+            print("   ❌ Could not get current user profile")
+            return False
+        
+        print(f"   Current user: {current_profile.get('username')} ({current_profile.get('role')})")
+        print(f"   Current email: {current_profile.get('email', 'Not set')}")
+        
+        # Test 2: Update profile with valid data
+        profile_updates = {
+            "first_name": "John",
+            "last_name": "Administrator", 
+            "email": "john.admin@rostersync.com",
+            "phone": "+61 400 123 456",
+            "address": "123 Collins Street, Melbourne VIC 3000, Australia"
+        }
+        
+        success, updated_profile = self.run_test(
+            "Update User Profile with Valid Data",
+            "PUT",
+            "api/users/me",
+            200,
+            data=profile_updates,
+            use_auth=True
+        )
+        
+        if success:
+            print(f"   ✅ Profile updated successfully")
+            print(f"   Updated name: {updated_profile.get('first_name')} {updated_profile.get('last_name')}")
+            print(f"   Updated email: {updated_profile.get('email')}")
+            print(f"   Updated phone: {updated_profile.get('phone')}")
+            print(f"   Updated address: {updated_profile.get('address')}")
+            
+            # Verify the updates were applied correctly
+            updates_correct = True
+            for field, expected_value in profile_updates.items():
+                actual_value = updated_profile.get(field)
+                if actual_value != expected_value:
+                    print(f"   ❌ Field '{field}' mismatch: got '{actual_value}', expected '{expected_value}'")
+                    updates_correct = False
+                else:
+                    print(f"   ✅ Field '{field}' updated correctly: {actual_value}")
+            
+            if not updates_correct:
+                return False
+        else:
+            print("   ❌ Profile update failed")
+            return False
+        
+        # Test 3: Update profile with missing auth token (should fail with 401)
+        print(f"\n   Testing profile update without authentication...")
+        success, response = self.run_test(
+            "Update Profile Without Auth Token (Should Fail)",
+            "PUT", 
+            "api/users/me",
+            401,  # Expect unauthorized
+            data={"first_name": "Unauthorized"},
+            use_auth=False  # Don't use auth token
+        )
+        
+        if success:  # Success here means we got the expected 401 status
+            print(f"   ✅ Unauthorized access correctly blocked")
+        else:
+            print(f"   ❌ Unauthorized access was not blocked properly")
+            return False
+        
+        # Test 4: Update with partial data (should work)
+        partial_updates = {
+            "phone": "+61 400 999 888"
+        }
+        
+        success, partial_updated = self.run_test(
+            "Update Profile with Partial Data",
+            "PUT",
+            "api/users/me", 
+            200,
+            data=partial_updates,
+            use_auth=True
+        )
+        
+        if success:
+            if partial_updated.get('phone') == partial_updates['phone']:
+                print(f"   ✅ Partial update successful: phone = {partial_updated.get('phone')}")
+            else:
+                print(f"   ❌ Partial update failed: expected {partial_updates['phone']}, got {partial_updated.get('phone')}")
+                return False
+        
+        # Test 5: Update with empty data (should fail with 400)
+        success, response = self.run_test(
+            "Update Profile with Empty Data (Should Fail)",
+            "PUT",
+            "api/users/me",
+            400,  # Expect bad request
+            data={},
+            use_auth=True
+        )
+        
+        if success:  # Success here means we got the expected 400 status
+            print(f"   ✅ Empty update correctly rejected")
+        else:
+            print(f"   ❌ Empty update was not rejected properly")
+            return False
+        
+        print(f"   ✅ All user profile update tests passed")
+        return True
+
+    def test_address_search_autocomplete(self):
+        """Test GET /api/address/search endpoint for address autocomplete"""
+        print(f"\n🏠 Testing Address Search Autocomplete (GET /api/address/search)...")
+        
+        # Test 1: Valid address search with good query
+        test_queries = [
+            {
+                "query": "123 Collins Street Melbourne",
+                "description": "Melbourne CBD address",
+                "min_results": 1
+            },
+            {
+                "query": "Sydney Opera House",
+                "description": "Famous landmark",
+                "min_results": 1
+            },
+            {
+                "query": "10 Downing Street London",
+                "description": "International address",
+                "min_results": 1
+            },
+            {
+                "query": "Brisbane City Hall",
+                "description": "Brisbane landmark",
+                "min_results": 1
+            }
+        ]
+        
+        for test_case in test_queries:
+            success, results = self.run_test(
+                f"Search Address: {test_case['description']}",
+                "GET",
+                "api/address/search",
+                200,
+                params={"q": test_case["query"], "limit": 5}
+            )
+            
+            if success:
+                print(f"   ✅ Found {len(results)} results for '{test_case['query']}'")
+                
+                if len(results) >= test_case["min_results"]:
+                    print(f"   ✅ Minimum results requirement met ({len(results)} >= {test_case['min_results']})")
+                    
+                    # Verify result structure
+                    if results:
+                        first_result = results[0]
+                        required_fields = ["display_name", "street_number", "route", "locality", 
+                                         "administrative_area_level_1", "country", "postal_code", 
+                                         "latitude", "longitude"]
+                        
+                        structure_valid = True
+                        for field in required_fields:
+                            if field not in first_result:
+                                print(f"   ❌ Missing required field: {field}")
+                                structure_valid = False
+                        
+                        if structure_valid:
+                            print(f"   ✅ Result structure is valid")
+                            print(f"      Display name: {first_result.get('display_name', 'N/A')[:80]}...")
+                            print(f"      Country: {first_result.get('country', 'N/A')}")
+                            print(f"      Coordinates: {first_result.get('latitude', 0)}, {first_result.get('longitude', 0)}")
+                        else:
+                            print(f"   ❌ Result structure is invalid")
+                            return False
+                else:
+                    print(f"   ⚠️  Fewer results than expected ({len(results)} < {test_case['min_results']})")
+            else:
+                print(f"   ❌ Address search failed for '{test_case['query']}'")
+                return False
+        
+        # Test 2: Short query (less than 3 characters) - should return empty or handle gracefully
+        success, short_results = self.run_test(
+            "Search with Short Query (Should Return Empty)",
+            "GET",
+            "api/address/search",
+            200,
+            params={"q": "ab", "limit": 5}
+        )
+        
+        if success:
+            print(f"   ✅ Short query handled gracefully: {len(short_results)} results")
+            if len(short_results) == 0:
+                print(f"   ✅ Short query correctly returned empty results")
+            else:
+                print(f"   ⚠️  Short query returned {len(short_results)} results (may be valid)")
+        
+        # Test 3: Invalid/nonsense query - should handle gracefully
+        success, invalid_results = self.run_test(
+            "Search with Invalid Query (Should Handle Gracefully)",
+            "GET",
+            "api/address/search",
+            200,
+            params={"q": "xyzabc123nonexistentplace999", "limit": 5}
+        )
+        
+        if success:
+            print(f"   ✅ Invalid query handled gracefully: {len(invalid_results)} results")
+        else:
+            print(f"   ❌ Invalid query caused server error")
+            return False
+        
+        # Test 4: Empty query - should handle gracefully
+        success, empty_results = self.run_test(
+            "Search with Empty Query (Should Handle Gracefully)",
+            "GET",
+            "api/address/search",
+            200,
+            params={"q": "", "limit": 5}
+        )
+        
+        if success:
+            print(f"   ✅ Empty query handled gracefully: {len(empty_results)} results")
+        else:
+            print(f"   ❌ Empty query caused server error")
+            return False
+        
+        # Test 5: Test with different limit values
+        success, limited_results = self.run_test(
+            "Search with Custom Limit (limit=2)",
+            "GET",
+            "api/address/search",
+            200,
+            params={"q": "Melbourne", "limit": 2}
+        )
+        
+        if success:
+            if len(limited_results) <= 2:
+                print(f"   ✅ Limit parameter respected: {len(limited_results)} results (max 2)")
+            else:
+                print(f"   ❌ Limit parameter not respected: {len(limited_results)} results (expected max 2)")
+                return False
+        
+        # Test 6: Test without limit parameter (should use default)
+        success, default_results = self.run_test(
+            "Search without Limit Parameter (Should Use Default)",
+            "GET",
+            "api/address/search",
+            200,
+            params={"q": "Sydney"}
+        )
+        
+        if success:
+            print(f"   ✅ Default limit working: {len(default_results)} results")
+        
+        print(f"   ✅ All address search autocomplete tests passed")
+        return True
+
     def test_pay_calculations(self):
         """Test pay calculation accuracy - FOCUS ON SCHADS EVENING SHIFT RULES"""
         print(f"\n💰 Testing SCHADS Award Pay Calculations...")
