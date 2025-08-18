@@ -6333,8 +6333,8 @@ function App() {
                   <div>
                     <Label htmlFor="bulk-shift-type">Manual Shift Type Override</Label>
                     <Select
-                      value={bulkEditData.shift_type_override}
-                      onValueChange={(value) => setBulkEditData({...bulkEditData, shift_type_override: value})}
+                      value={bulkEditData.shift_type_override || 'auto'}
+                      onValueChange={(value) => setBulkEditData({...bulkEditData, shift_type_override: value === 'auto' ? '' : value})}
                     >
                       <SelectTrigger>
                         <SelectValue placeholder="Keep existing type" />
