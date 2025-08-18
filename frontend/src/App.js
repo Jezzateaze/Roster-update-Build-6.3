@@ -2697,8 +2697,9 @@ function App() {
                           </div>
                         )}
                         <div
-                          className={`${bulkSelectionMode ? 'ml-3' : ''}`}
+                          className={`${bulkSelectionMode ? 'ml-3' : ''} ${isAdmin() ? 'cursor-pointer' : 'cursor-default'}`}
                           onClick={() => {
+                            if (!isAdmin()) return; // Staff cannot edit shifts
                             if (bulkSelectionMode) {
                               toggleShiftSelection(entry.id);
                             } else {
