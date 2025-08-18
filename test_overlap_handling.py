@@ -78,6 +78,17 @@ class OverlapHandlingTester:
         # Test date for overlap testing
         test_date = "2025-12-20"
         
+        # Clear any existing shifts for this month first
+        success, response = self.run_test(
+            "Clear Roster for December 2025",
+            "DELETE",
+            "api/roster/month/2025-12",
+            200
+        )
+        
+        if success:
+            print(f"   ✅ Cleared existing roster for December 2025")
+        
         # Step 1: Create an initial roster entry to update
         initial_shift = {
             "id": "",  # Will be auto-generated
