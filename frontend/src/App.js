@@ -760,13 +760,26 @@ function App() {
       const monthString = currentDate.toISOString().slice(0, 7);
       const response = await axios.post(`${API_BASE_URL}/api/generate-roster-from-template/${selectedRosterTemplate}/${monthString}`);
       
+      // Check for overlaps and show dialog if any exist
+      if (response.data.overlaps_detected && response.data.overlaps_detected > 0) {
+        setOverlapData({
+          type: 'roster-template',
+          month: monthString,
+          templateId: selectedRosterTemplate,
+          response: response.data,
+          message: response.data.message
+        });
+        setShowOverlapDialog(true);
+        return; // Don't close dialog or show success message yet
+      }
+      
       setShowGenerateFromTemplateDialog(false);
       setSelectedRosterTemplate(null);
       fetchRosterData();
       
       let message = response.data.message;
-      if (response.data.overlaps_detected) {
-        message += `\n\nNote: ${response.data.overlaps_detected} overlapping shifts were skipped to prevent conflicts.`;
+      if (response.data.overlaps_detected === 0) {
+        message += `\n\nNo overlapping shifts detected - all shifts created successfully.`;
       }
       alert(message);
     } catch (error) {
