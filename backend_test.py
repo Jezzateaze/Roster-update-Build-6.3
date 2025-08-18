@@ -4941,6 +4941,225 @@ class ShiftRosterAPITester:
         
         return critical_tests_passed == critical_tests_total
 
+    def test_staff_creation_endpoint_fix(self):
+        """Test the fixed staff creation endpoint to ensure '[object Object]' error is resolved"""
+        print(f"\n👥 Testing Fixed Staff Creation Endpoint - REVIEW REQUEST TESTS...")
+        print("🎯 GOAL: Ensure no more '[object Object]' errors and proper error messages")
+        
+        # Test 1: Valid staff creation with name and active fields
+        print(f"\n   🎯 TEST 1: Valid staff creation with JSON body")
+        test_staff_data = {
+            "name": "Test User Fix",
+            "active": True
+        }
+        
+        success, response = self.run_test(
+            "Create Staff with Valid Data",
+            "POST",
+            "api/staff",
+            200,
+            data=test_staff_data
+        )
+        
+        created_staff_id = None
+        if success:
+            created_staff_id = response.get('id')
+            print(f"   ✅ Staff created successfully")
+            print(f"   Staff ID: {created_staff_id}")
+            print(f"   Staff Name: {response.get('name')}")
+            print(f"   Staff Active: {response.get('active')}")
+            
+            # Verify auto-generated UUID
+            if created_staff_id and len(created_staff_id) > 20:
+                print(f"   ✅ UUID auto-generated correctly (length: {len(created_staff_id)})")
+            else:
+                print(f"   ❌ UUID generation issue: {created_staff_id}")
+                return False
+        else:
+            print(f"   ❌ Valid staff creation failed")
+            return False
+        
+        # Test 2: Test duplicate staff creation (should return proper error message)
+        print(f"\n   🎯 TEST 2: Duplicate staff creation (should return proper error)")
+        duplicate_staff_data = {
+            "name": "Test User Fix",  # Same name as above
+            "active": True
+        }
+        
+        success, response = self.run_test(
+            "Create Duplicate Staff (Should Fail)",
+            "POST",
+            "api/staff",
+            400,  # Expect bad request
+            data=duplicate_staff_data
+        )
+        
+        if success:  # Success here means we got the expected 400 status
+            print(f"   ✅ Duplicate staff creation correctly rejected")
+            # Check if we get a proper error message (not '[object Object]')
+            try:
+                import requests
+                url = f"{self.base_url}/api/staff"
+                headers = {'Content-Type': 'application/json'}
+                response = requests.post(url, json=duplicate_staff_data, headers=headers)
+                
+                if response.status_code == 400:
+                    error_text = response.text
+                    if '[object Object]' in error_text:
+                        print(f"   ❌ '[object Object]' error still present: {error_text}")
+                        return False
+                    else:
+                        print(f"   ✅ Proper error message returned (no '[object Object]')")
+                        print(f"   Error message: {error_text[:100]}...")
+                else:
+                    print(f"   ❌ Unexpected status code: {response.status_code}")
+                    return False
+            except Exception as e:
+                print(f"   ❌ Error checking duplicate response: {e}")
+                return False
+        else:
+            print(f"   ❌ Duplicate staff creation was not properly rejected")
+            return False
+        
+        # Test 3: Test missing name field (should return validation error)
+        print(f"\n   🎯 TEST 3: Missing name field (should return validation error)")
+        missing_name_data = {
+            "active": True
+            # Missing "name" field
+        }
+        
+        success, response = self.run_test(
+            "Create Staff with Missing Name (Should Fail)",
+            "POST",
+            "api/staff",
+            422,  # Expect validation error
+            data=missing_name_data
+        )
+        
+        if success:  # Success here means we got the expected 422 status
+            print(f"   ✅ Missing name field correctly rejected with validation error")
+            
+            # Check error message format
+            try:
+                import requests
+                url = f"{self.base_url}/api/staff"
+                headers = {'Content-Type': 'application/json'}
+                response = requests.post(url, json=missing_name_data, headers=headers)
+                
+                if response.status_code == 422:
+                    error_text = response.text
+                    if '[object Object]' in error_text:
+                        print(f"   ❌ '[object Object]' error still present: {error_text}")
+                        return False
+                    else:
+                        print(f"   ✅ Proper validation error returned (no '[object Object]')")
+                        print(f"   Validation error: {error_text[:100]}...")
+                else:
+                    print(f"   ❌ Unexpected status code: {response.status_code}")
+                    return False
+            except Exception as e:
+                print(f"   ❌ Error checking validation response: {e}")
+                return False
+        else:
+            print(f"   ❌ Missing name field was not properly rejected")
+            return False
+        
+        # Test 4: Test staff creation without ID (confirm backend auto-generates UUID)
+        print(f"\n   🎯 TEST 4: Staff creation without ID (backend should auto-generate)")
+        no_id_staff_data = {
+            "name": "Auto ID Test User",
+            "active": True
+            # No "id" field provided
+        }
+        
+        success, response = self.run_test(
+            "Create Staff without ID (Auto-generate)",
+            "POST",
+            "api/staff",
+            200,
+            data=no_id_staff_data
+        )
+        
+        auto_generated_id = None
+        if success:
+            auto_generated_id = response.get('id')
+            print(f"   ✅ Staff created without providing ID")
+            print(f"   Auto-generated ID: {auto_generated_id}")
+            
+            # Verify UUID format and length
+            if auto_generated_id and len(auto_generated_id) > 20 and '-' in auto_generated_id:
+                print(f"   ✅ UUID auto-generation working correctly")
+            else:
+                print(f"   ❌ UUID auto-generation issue: {auto_generated_id}")
+                return False
+        else:
+            print(f"   ❌ Staff creation without ID failed")
+            return False
+        
+        # Test 5: Test staff listing to verify new staff appears
+        print(f"\n   🎯 TEST 5: Staff listing to verify new staff appears")
+        success, staff_list = self.run_test(
+            "Get All Staff (Verify New Staff)",
+            "GET",
+            "api/staff",
+            200
+        )
+        
+        if success:
+            staff_names = [staff.get('name') for staff in staff_list]
+            print(f"   ✅ Retrieved {len(staff_list)} staff members")
+            
+            # Check if our created staff members appear in the list
+            expected_names = ["Test User Fix", "Auto ID Test User"]
+            found_names = []
+            
+            for expected_name in expected_names:
+                if expected_name in staff_names:
+                    found_names.append(expected_name)
+                    print(f"   ✅ Found created staff: {expected_name}")
+                else:
+                    print(f"   ❌ Missing created staff: {expected_name}")
+            
+            if len(found_names) == len(expected_names):
+                print(f"   ✅ All created staff members found in listing")
+            else:
+                print(f"   ❌ Some created staff members missing from listing")
+                return False
+        else:
+            print(f"   ❌ Staff listing failed")
+            return False
+        
+        # Test 6: Test empty name field (should return validation error)
+        print(f"\n   🎯 TEST 6: Empty name field (should return validation error)")
+        empty_name_data = {
+            "name": "",  # Empty name
+            "active": True
+        }
+        
+        success, response = self.run_test(
+            "Create Staff with Empty Name (Should Fail)",
+            "POST",
+            "api/staff",
+            422,  # Expect validation error
+            data=empty_name_data
+        )
+        
+        if success:  # Success here means we got the expected 422 status
+            print(f"   ✅ Empty name field correctly rejected")
+        else:
+            print(f"   ❌ Empty name field was not properly rejected")
+            return False
+        
+        print(f"\n   🎉 ALL STAFF CREATION ENDPOINT TESTS PASSED!")
+        print(f"   ✅ Valid staff creation works with name and active fields")
+        print(f"   ✅ Duplicate staff creation returns proper error (no '[object Object]')")
+        print(f"   ✅ Missing name field returns validation error (no '[object Object]')")
+        print(f"   ✅ Backend auto-generates UUID when ID not provided")
+        print(f"   ✅ New staff appears in staff listing")
+        print(f"   ✅ Empty name field properly rejected")
+        
+        return True
+
 def main():
     print("🚀 Starting Shift Roster & Pay Calculator API Tests")
     print("🎯 FOCUS: Critical Pay Calculation Fix for 12:00PM-8:00PM Shifts")
