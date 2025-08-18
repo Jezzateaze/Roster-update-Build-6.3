@@ -6182,16 +6182,57 @@ function App() {
             )}
 
             <div className="space-y-3">
-              <div>
-                <Label htmlFor="username">Username</Label>
-                <Input
-                  id="username"
-                  type="text"
-                  placeholder="Enter username"
-                  value={loginData.username}
-                  onChange={(e) => setLoginData({ ...loginData, username: e.target.value })}
-                />
-              </div>
+              {useDropdown && availableUsers.length > 0 ? (
+                <div>
+                  <Label htmlFor="userSelect">Select User</Label>
+                  <select
+                    id="userSelect"
+                    className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
+                    value={loginData.username}
+                    onChange={(e) => setLoginData({ ...loginData, username: e.target.value })}
+                  >
+                    <option value="">Choose a user...</option>
+                    {availableUsers.map((user, index) => (
+                      <option key={index} value={user.username}>
+                        {user.displayName}
+                      </option>
+                    ))}
+                  </select>
+                  <div className="mt-1 text-xs text-slate-500">
+                    Don't see your name? 
+                    <button 
+                      type="button"
+                      className="ml-1 text-blue-600 hover:text-blue-800 underline"
+                      onClick={() => setUseDropdown(false)}
+                    >
+                      Type username manually
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div>
+                  <Label htmlFor="username">Username</Label>
+                  <Input
+                    id="username"
+                    type="text"
+                    placeholder="Enter username"
+                    value={loginData.username}
+                    onChange={(e) => setLoginData({ ...loginData, username: e.target.value })}
+                  />
+                  {availableUsers.length > 0 && (
+                    <div className="mt-1 text-xs text-slate-500">
+                      Prefer a dropdown? 
+                      <button 
+                        type="button"
+                        className="ml-1 text-blue-600 hover:text-blue-800 underline"
+                        onClick={() => setUseDropdown(true)}
+                      >
+                        Select from list
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
               <div>
                 <Label htmlFor="pin">PIN (4 or 6 digits)</Label>
                 <Input
