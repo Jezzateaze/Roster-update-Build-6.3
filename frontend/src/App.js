@@ -4679,7 +4679,9 @@ function App() {
                                         <span className="text-slate-600 truncate">{name}:</span>
                                         <div className="flex space-x-2">
                                           <span className="text-blue-600">{totals.hours.toFixed(1)}h</span>
-                                          <span className="text-emerald-600">{formatCurrency(totals.pay)}</span>
+                                          {currentUser?.role === 'admin' && (
+                                            <span className="text-emerald-600">{formatCurrency(totals.pay)}</span>
+                                          )}
                                         </div>
                                       </div>
                                     ))
