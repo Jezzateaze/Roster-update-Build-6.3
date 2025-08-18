@@ -4816,10 +4816,10 @@ function App() {
                       Cancel
                     </Button>
                     <div className="flex space-x-2">
-                      <Button variant="outline">
+                      <Button variant="outline" onClick={resetStaffPin}>
                         Reset PIN
                       </Button>
-                      <Button>
+                      <Button onClick={saveStaffProfile}>
                         Save Changes
                       </Button>
                     </div>
