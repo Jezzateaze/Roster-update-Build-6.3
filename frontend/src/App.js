@@ -118,6 +118,47 @@ function App() {
   const [changePinData, setChangePinData] = useState({ current_pin: '', new_pin: '', confirm_pin: '' });
   const [profileData, setProfileData] = useState({});
   const [editingProfile, setEditingProfile] = useState(false);
+  
+  // Save staff profile function
+  const saveStaffProfile = async () => {
+    try {
+      if (!selectedStaffForProfile) return;
+      
+      const response = await axios.put(`${API_BASE_URL}/api/staff/${selectedStaffForProfile.id}`, selectedStaffForProfile);
+      console.log('Staff profile saved:', response.data);
+      
+      // Update the staff list locally
+      const updatedStaff = staff.map(s => 
+        s.id === selectedStaffForProfile.id ? selectedStaffForProfile : s
+      );
+      setStaff(updatedStaff);
+      
+      setShowStaffProfileDialog(false);
+      alert('✅ Staff profile updated successfully!');
+    } catch (error) {
+      console.error('Error saving staff profile:', error);
+      alert(`❌ Error saving profile: ${error.response?.data?.detail || error.message}`);
+    }
+  };
+  
+  // Reset staff PIN function  
+  const resetStaffPin = async () => {
+    try {
+      if (!selectedStaffForProfile) return;
+      
+      if (window.confirm(`🔐 RESET PIN\n\nAre you sure you want to reset the PIN for ${selectedStaffForProfile.name}?\n\nThis will generate a new temporary PIN that must be changed on first login.`)) {
+        const response = await axios.post(`${API_BASE_URL}/api/admin/reset_pin`, {
+          email: selectedStaffForProfile.email || `${selectedStaffForProfile.name.toLowerCase().replace(/\s+/g, '')}@company.com`
+        });
+        
+        console.log('PIN reset response:', response.data);
+        alert(`🔐 PIN has been reset for ${selectedStaffForProfile.name}.\n\nNew temporary PIN: ${response.data.temp_pin}\n\nPlease provide this to the staff member securely.`);
+      }
+    } catch (error) {
+      console.error('Error resetting PIN:', error);
+      alert(`❌ Error resetting PIN: ${error.response?.data?.detail || error.message}`);
+    }
+  };
   const [authError, setAuthError] = useState('');
 
   const [currentDate, setCurrentDate] = useState(getBrisbaneDate());
