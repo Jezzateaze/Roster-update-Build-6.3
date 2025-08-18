@@ -1245,7 +1245,36 @@ async def logout(token: str):
     )
     return {"message": "Logged out successfully"}
 
-# User management endpoints (Admin only)
+# User management endpoints
+@app.get("/api/users/me")
+async def get_current_user_profile(current_user: dict = Depends(get_current_user)):
+    """Get current user's profile"""
+    user_data = {k: v for k, v in current_user.items() if k not in ["pin_hash", "_id"]}
+    return user_data
+
+@app.put("/api/users/me")
+async def update_current_user_profile(profile_data: dict, current_user: dict = Depends(get_current_user)):
+    """Update current user's profile"""
+    # Filter allowed fields that user can update
+    allowed_fields = ["first_name", "last_name", "email", "phone", "address", "date_of_birth", "emergency_contact"]
+    update_data = {k: v for k, v in profile_data.items() if k in allowed_fields}
+    
+    if not update_data:
+        raise HTTPException(status_code=400, detail="No valid fields to update")
+    
+    # Update user in database
+    result = db.users.update_one(
+        {"id": current_user["id"]},
+        {"$set": update_data}
+    )
+    
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    # Return updated user data
+    updated_user = db.users.find_one({"id": current_user["id"]}, {"_id": 0, "pin_hash": 0})
+    return updated_user
+
 @app.get("/api/users")
 async def get_users(current_user: dict = Depends(get_current_user)):
     """Get all users (Admin only)"""
