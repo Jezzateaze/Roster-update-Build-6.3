@@ -149,17 +149,47 @@ function App() {
     try {
       if (!selectedStaffForProfile) return;
       
-      if (window.confirm(`🔐 RESET PIN\n\nAre you sure you want to reset the PIN for ${selectedStaffForProfile.name}?\n\nThis will generate a new temporary PIN that must be changed on first login.`)) {
+      const staffName = selectedStaffForProfile.name;
+      const isAdmin = selectedStaffForProfile.role === 'admin';
+      
+      if (window.confirm(`🔐 RESET PIN\n\nAre you sure you want to reset the PIN for ${staffName}?\n\nThis will generate a new ${isAdmin ? '4-digit' : '6-digit'} temporary PIN that ${isAdmin ? 'can be used immediately' : 'must be changed on first login'}.`)) {
         const response = await axios.post(`${API_BASE_URL}/api/admin/reset_pin`, {
           email: selectedStaffForProfile.email || `${selectedStaffForProfile.name.toLowerCase().replace(/\s+/g, '')}@company.com`
         });
         
         console.log('PIN reset response:', response.data);
-        alert(`🔐 PIN has been reset for ${selectedStaffForProfile.name}.\n\nNew temporary PIN: ${response.data.temp_pin}\n\nUsername: ${response.data.username}\n\nPlease provide these credentials to the staff member securely.`);
+        
+        const { temp_pin, username, pin_length, must_change } = response.data;
+        
+        alert(`🔐 PIN has been reset for ${staffName}.\n\n` +
+              `New ${pin_length}-digit PIN: ${temp_pin}\n` +
+              `Username: ${username}\n\n` +
+              `${must_change ? 
+                '⚠️ IMPORTANT: This staff member MUST change their PIN on first login for security.' :
+                'This PIN can be used immediately.'}\n\n` +
+              `Please provide these credentials to ${staffName} securely.`);
       }
     } catch (error) {
       console.error('Error resetting PIN:', error);
-      alert(`❌ Error resetting PIN: ${error.response?.data?.detail || error.message}`);
+      
+      // Better error message extraction
+      let errorMessage = 'Unknown error occurred';
+      
+      if (error.response?.data) {
+        if (typeof error.response.data === 'string') {
+          errorMessage = error.response.data;
+        } else if (error.response.data.detail) {
+          errorMessage = error.response.data.detail;
+        } else if (error.response.data.message) {
+          errorMessage = error.response.data.message;
+        } else {
+          errorMessage = JSON.stringify(error.response.data);
+        }
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
+      alert(`❌ Error resetting PIN: ${errorMessage}`);
     }
   };
   const [authError, setAuthError] = useState('');
