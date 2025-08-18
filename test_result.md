@@ -396,6 +396,18 @@ agent_communication:
           agent: "testing"
           comment: "✅ ALLOW OVERLAP FUNCTIONALITY FULLY WORKING! Comprehensive testing completed: 1) POST /api/roster/add-shift endpoint accepts new allow_overlap field, 2) When allow_overlap=False (default), normal overlap prevention works correctly (409 Conflict returned), 3) When allow_overlap=True, shifts can be added even if they overlap successfully, 4) Enhanced error message mentions 'Use Allow Overlap option for 2:1 shifts' when overlap detected, 5) Multiple overlapping shifts can be added with allow_overlap=True, 6) Default behavior (no allow_overlap field) correctly prevents overlaps, 7) RosterEntry model properly accepts and stores allow_overlap field, 8) Pay calculations work correctly for overlapping shifts (verified rates: $42.00/hr weekday day, $44.50/hr weekday evening), 9) All overlapping shifts properly saved to database with correct allow_overlap values. All 10/10 allow overlap tests passed. Manual override functionality is production-ready for 2:1 shift management."
 
+  - task: "Advanced Roster Template Management with 2:1 Shift Support"
+    implemented: true
+    working: true
+    file: "server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "testing"
+          comment: "🎉 COMPREHENSIVE ADVANCED ROSTER TEMPLATE MANAGEMENT TESTING COMPLETED SUCCESSFULLY! Tested all newly implemented 2:1 shift support and intelligent duplicate handling features: 1) ✅ TEMPLATE CRUD OPERATIONS: GET/POST/PUT /api/roster-templates working perfectly with new fields (enable_2_1_shift, allow_overlap_override, prevent_duplicate_unassigned, allow_different_staff_only), all fields saved and updated correctly, 2) ✅ ENHANCED TEMPLATE GENERATION: POST /api/generate-roster-from-template/{template_id}/{month} working with advanced duplicate detection logic, proper template_config reporting, intelligent handling of overlaps and duplicates, 3) ✅ DUPLICATE DETECTION SCENARIOS: Successfully tested unassigned shift prevention, assigned shift handling with different staff policies, prevent_duplicate_unassigned=true correctly blocks duplicates, allow_different_staff_only=true enables selective duplicates, 4) ✅ 2:1 SHIFT FUNCTIONALITY: enable_2_1_shift=true allows multiple shifts at same time, allow_overlap field properly set on created entries, manual shift creation with allow_overlap=true working, multiple overlapping shifts successfully created, 5) ✅ RESPONSE VALIDATION: Enhanced responses include all required fields (message, entries_created, template_config), optional fields present when applicable (overlaps_detected, duplicates_prevented, duplicates_allowed), template_config contains all 4 new configuration fields. TEST RESULTS: 33/33 API calls successful (100% success rate), 5/5 test suites passed, comprehensive coverage of all new features. All advanced roster template management features are production-ready and working as specified in the review request."
+
   - task: "Backend API Review Request Investigation"
     implemented: true
     working: true
