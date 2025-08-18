@@ -192,8 +192,7 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Staff Account Restrictions Verification"
-    - "YTD Calculations Enhancement"
+    - "Enhanced Staff Deletion with Admin Authentication and Shift Management"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
