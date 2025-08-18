@@ -6340,7 +6340,7 @@ function App() {
                         <SelectValue placeholder="Keep existing type" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">No Override (Auto-detect)</SelectItem>
+                        <SelectItem value="auto">No Override (Auto-detect)</SelectItem>
                         <SelectItem value="weekday_day">Weekday Day</SelectItem>
                         <SelectItem value="weekday_evening">Weekday Evening</SelectItem>
                         <SelectItem value="weekday_night">Weekday Night</SelectItem>
