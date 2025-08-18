@@ -560,8 +560,14 @@ metadata:
   run_ui: false
 
 test_plan:
-  current_focus: []
-  stuck_tasks: []
+  current_focus:
+    - "Admin Profile Update with Address Autocomplete"
+    - "Add Staff Functionality" 
+    - "PIN Reset Functionality"
+  stuck_tasks:
+    - "Admin Profile Update with Address Autocomplete"
+    - "Add Staff Functionality"
+    - "PIN Reset Functionality"
   test_all: false
   test_priority: "high_first"
   completed_features:
