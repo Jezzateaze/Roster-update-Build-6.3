@@ -64,6 +64,199 @@ const getMondayOfISOWeek = (week, year) => {
 
 
 
+  // Fetch unassigned shifts
+  const fetchUnassignedShifts = async () => {
+    try {
+      const response = await axios.get(`${API_BASE_URL}/api/unassigned-shifts`, {
+        headers: { 'Authorization': `Bearer ${authToken}` }
+      });
+      setUnassignedShifts(response.data);
+    } catch (error) {
+      console.error('Error fetching unassigned shifts:', error);
+    }
+  };
+
+  // Fetch shift requests
+  const fetchShiftRequests = async () => {
+    try {
+      const response = await axios.get(`${API_BASE_URL}/api/shift-requests`, {
+        headers: { 'Authorization': `Bearer ${authToken}` }
+      });
+      setShiftRequests(response.data);
+    } catch (error) {
+      console.error('Error fetching shift requests:', error);
+    }
+  };
+
+  // Fetch staff availability
+  const fetchStaffAvailability = async () => {
+    try {
+      const response = await axios.get(`${API_BASE_URL}/api/staff-availability`, {
+        headers: { 'Authorization': `Bearer ${authToken}` }
+      });
+      setStaffAvailability(response.data);
+    } catch (error) {
+      console.error('Error fetching staff availability:', error);
+    }
+  };
+
+  // Fetch notifications
+  const fetchNotifications = async () => {
+    try {
+      const response = await axios.get(`${API_BASE_URL}/api/notifications`, {
+        headers: { 'Authorization': `Bearer ${authToken}` }
+      });
+      setNotifications(response.data);
+    } catch (error) {
+      console.error('Error fetching notifications:', error);
+    }
+  };
+
+  // Submit shift request
+  const submitShiftRequest = async (shiftId, notes) => {
+    try {
+      await axios.post(`${API_BASE_URL}/api/shift-requests`, {
+        roster_entry_id: shiftId,
+        notes: notes
+      }, {
+        headers: { 'Authorization': `Bearer ${authToken}` }
+      });
+      alert('✅ Shift request submitted successfully!');
+      fetchShiftRequests();
+      fetchUnassignedShifts();
+      setShowShiftRequestDialog(false);
+    } catch (error) {
+      console.error('Error submitting shift request:', error);
+      alert(`❌ Error: ${error.response?.data?.detail || error.message}`);
+    }
+  };
+
+  // Create staff availability
+  const createStaffAvailability = async (availability) => {
+    try {
+      await axios.post(`${API_BASE_URL}/api/staff-availability`, availability, {
+        headers: { 'Authorization': `Bearer ${authToken}` }
+      });
+      alert('✅ Availability updated successfully!');
+      fetchStaffAvailability();
+      setShowAvailabilityDialog(false);
+      setNewAvailability({
+        availability_type: 'available',
+        date_from: '',
+        date_to: '',
+        day_of_week: null,
+        start_time: '',
+        end_time: '',
+        is_recurring: false,
+        notes: ''
+      });
+    } catch (error) {
+      console.error('Error creating availability:', error);
+      alert(`❌ Error: ${error.response?.data?.detail || error.message}`);
+    }
+  };
+
+  // Approve shift request (Admin only)
+  const approveShiftRequest = async (requestId, adminNotes) => {
+    try {
+      await axios.put(`${API_BASE_URL}/api/shift-requests/${requestId}/approve`, 
+        { admin_notes: adminNotes }, 
+        { headers: { 'Authorization': `Bearer ${authToken}` } }
+      );
+      alert('✅ Shift request approved successfully!');
+      fetchShiftRequests();
+      fetchUnassignedShifts();
+      fetchRosterEntries();
+    } catch (error) {
+      console.error('Error approving shift request:', error);
+      alert(`❌ Error: ${error.response?.data?.detail || error.message}`);
+    }
+  };
+
+  // Reject shift request (Admin only)
+  const rejectShiftRequest = async (requestId, adminNotes) => {
+    try {
+      await axios.put(`${API_BASE_URL}/api/shift-requests/${requestId}/reject`, 
+        { admin_notes: adminNotes }, 
+        { headers: { 'Authorization': `Bearer ${authToken}` } }
+      );
+      alert('✅ Shift request rejected');
+      fetchShiftRequests();
+    } catch (error) {
+      console.error('Error rejecting shift request:', error);
+      alert(`❌ Error: ${error.response?.data?.detail || error.message}`);
+    }
+  };
+
+  // Mark notification as read
+  const markNotificationRead = async (notificationId) => {
+    try {
+      await axios.put(`${API_BASE_URL}/api/notifications/${notificationId}/read`, {}, {
+        headers: { 'Authorization': `Bearer ${authToken}` }
+      });
+      fetchNotifications();
+    } catch (error) {
+      console.error('Error marking notification as read:', error);
+    }
+  };
+
+  // Check assignment conflicts (when admin assigns staff)
+  const checkAssignmentConflicts = async (staffId, date, startTime, endTime) => {
+    try {
+      const response = await axios.post(`${API_BASE_URL}/api/check-assignment-conflicts`, {
+        staff_id: staffId,
+        date: date,
+        start_time: startTime,
+        end_time: endTime
+      }, {
+        headers: { 'Authorization': `Bearer ${authToken}` }
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Error checking assignment conflicts:', error);
+      return { has_conflicts: false, conflicts: [], can_override: true };
+    }
+  };
+
+  // Helper function to format date strings for display
+  const formatAvailabilityDate = (dateStr) => {
+    if (!dateStr) return '';
+    const date = new Date(dateStr);
+    return date.toLocaleDateString('en-AU', { 
+      weekday: 'short', 
+      year: 'numeric', 
+      month: 'short', 
+      day: 'numeric' 
+    });
+  };
+
+  // Helper function to get availability type badge
+  const getAvailabilityTypeBadge = (type) => {
+    const badges = {
+      'available': <Badge className="bg-green-100 text-green-800">✅ Available</Badge>,
+      'unavailable': <Badge className="bg-red-100 text-red-800">❌ Unavailable</Badge>,
+      'time_off_request': <Badge className="bg-orange-100 text-orange-800">🏖️ Time Off Request</Badge>,
+      'preferred_shifts': <Badge className="bg-blue-100 text-blue-800">⭐ Preferred</Badge>
+    };
+    return badges[type] || <Badge variant="secondary">{type}</Badge>;
+  };
+
+  // Helper function to get day of week name
+  const getDayOfWeekName = (dayNumber) => {
+    const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+    return days[dayNumber] || 'Unknown';
+  };
+
+  // Load availability data when authenticated
+  useEffect(() => {
+    if (isAuthenticated && authToken) {
+      fetchUnassignedShifts();
+      fetchShiftRequests();
+      fetchStaffAvailability();
+      fetchNotifications();
+    }
+  }, [isAuthenticated, authToken]);
+
 // Helper function to format time based on user preference
 const formatTime = (timeString, is24Hour = true) => {
   if (!timeString) return '';
