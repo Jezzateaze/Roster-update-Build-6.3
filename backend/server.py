@@ -1279,17 +1279,18 @@ async def admin_reset_pin(request: dict, current_user: dict = Depends(get_curren
                     # Create a user account for this staff member if it doesn't exist
                     existing_user = db.users.find_one({"staff_id": staff["id"]}) 
                     if not existing_user:
-                        # Create user account for staff member
+                        # Create user account for staff member with default staff PIN
                         new_user = User(
                             id=str(uuid.uuid4()),
                             username=staff["name"].lower().replace(" ", ""),
-                            pin_hash=hash_pin("0000"),  # Default PIN
+                            pin_hash=hash_pin("888888"),  # Default staff PIN: 888888
                             role=UserRole.STAFF,
                             email=email,
                             first_name=staff["name"].split()[0] if " " in staff["name"] else staff["name"],
                             last_name=" ".join(staff["name"].split()[1:]) if " " in staff["name"] else "",
                             staff_id=staff["id"],
-                            created_at=datetime.utcnow()
+                            created_at=datetime.utcnow(),
+                            is_first_login=True  # Staff must change PIN on first login
                         )
                         db.users.insert_one(new_user.dict())
                         user = new_user.dict()
@@ -1300,20 +1301,36 @@ async def admin_reset_pin(request: dict, current_user: dict = Depends(get_curren
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     
-    # Generate temporary PIN
-    temp_pin = str(secrets.randbelow(10000)).zfill(4)  # 4-digit temp PIN for simplicity
-    temp_pin_hash = hash_pin(temp_pin)
+    # Determine appropriate reset PIN based on user role
+    if user.get("role") == "admin":
+        reset_pin = "0000"  # Admin reset PIN
+        pin_length = 4
+    else:
+        reset_pin = "888888"  # Staff reset PIN
+        pin_length = 6
     
-    # Update user with temporary PIN
+    reset_pin_hash = hash_pin(reset_pin)
+    
+    # Update user with reset PIN and mark as first login for staff
+    update_data = {
+        "pin_hash": reset_pin_hash
+    }
+    
+    # Staff must change PIN after reset, Admin doesn't need to
+    if user.get("role") != "admin":
+        update_data["is_first_login"] = True
+    
     db.users.update_one(
         {"id": user["id"]},
-        {"$set": {"pin_hash": temp_pin_hash, "is_first_login": True}}
+        {"$set": update_data}
     )
     
     return {
         "message": "PIN reset successful",
-        "temp_pin": temp_pin,
-        "username": user.get("username", "")
+        "temp_pin": reset_pin,
+        "username": user.get("username", ""),
+        "pin_length": pin_length,
+        "must_change": user.get("role") != "admin"
     }
 
 @app.get("/api/auth/logout")
