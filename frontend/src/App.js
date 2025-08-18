@@ -3635,6 +3635,11 @@ function App() {
                                           Rate: ${template.manual_hourly_rate}/hr
                                         </Badge>
                                       )}
+                                      {template.allow_overlap && (
+                                        <Badge variant="outline" className="text-xs bg-yellow-100 text-yellow-800 border-yellow-200">
+                                          2:1 Overlap
+                                        </Badge>
+                                      )}
                                     </div>
                                   </div>
                                 </Card>
