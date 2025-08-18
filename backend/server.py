@@ -1392,23 +1392,34 @@ async def create_user(user_data: dict, current_user: dict = Depends(get_current_
     if existing_user:
         raise HTTPException(status_code=400, detail="Username already exists")
     
-    # Create new user with default PIN 888888
+    # Determine default PIN based on role
+    role = user_data.get("role", "staff")
+    if role == "admin":
+        default_pin = "0000"
+        requires_pin_change = False
+    else:
+        default_pin = "888888"  # Staff default PIN
+        requires_pin_change = True  # Staff must change PIN on first login
+    
+    # Create new user
     new_user = User(
         id=str(uuid.uuid4()),
         username=user_data["username"],
-        pin_hash=hash_pin("888888"),  # Default PIN
-        role=user_data.get("role", "staff"),
+        pin_hash=hash_pin(default_pin),
+        role=role,
         email=user_data.get("email"),
         first_name=user_data.get("first_name"),
         last_name=user_data.get("last_name"),
         staff_id=user_data.get("staff_id"),
-        created_at=datetime.utcnow()
+        created_at=datetime.utcnow(),
+        is_first_login=requires_pin_change
     )
     
     db.users.insert_one(new_user.dict())
     
     # Remove sensitive data from response
     user_response = {k: v for k, v in new_user.dict().items() if k != "pin_hash"}
+    user_response["default_pin"] = default_pin  # Include default PIN in response for admin
     return user_response
 
 # Address autocomplete endpoint using free Nominatim API
