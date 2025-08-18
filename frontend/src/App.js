@@ -3169,6 +3169,54 @@ function App() {
                     </SelectContent>
                   </Select>
                 </div>
+                
+                {/* 2:1 Shift and Overlap Control */}
+                <div className="space-y-3 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <Label className="text-sm font-medium">2:1 Shift (Two Staff Members)</Label>
+                      <p className="text-xs text-slate-600">Allow multiple staff on the same shift time</p>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <input
+                        type="checkbox"
+                        id="is-2-to-1"
+                        checked={selectedShift.is_2_to_1 || false}
+                        onChange={(e) => {
+                          setSelectedShift({
+                            ...selectedShift,
+                            is_2_to_1: e.target.checked,
+                            allow_overlap: e.target.checked // Auto-enable overlap for 2:1 shifts
+                          });
+                        }}
+                        className="rounded"
+                      />
+                      <Label htmlFor="is-2-to-1" className="text-sm">Enable 2:1</Label>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <Label className="text-sm font-medium">Allow Overlap</Label>
+                      <p className="text-xs text-slate-600">Override overlap detection for this shift</p>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <input
+                        type="checkbox"
+                        id="allow-overlap"
+                        checked={selectedShift.allow_overlap || false}
+                        onChange={(e) => {
+                          setSelectedShift({
+                            ...selectedShift,
+                            allow_overlap: e.target.checked
+                          });
+                        }}
+                        className="rounded"
+                      />
+                      <Label htmlFor="allow-overlap" className="text-sm">Allow</Label>
+                    </div>
+                  </div>
+                </div>
 
                 <Separator />
 
