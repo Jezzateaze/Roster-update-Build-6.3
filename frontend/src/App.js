@@ -1449,14 +1449,21 @@ function App() {
     let totalPay = 0;
 
     weekEntries.forEach(entry => {
-      if (entry.staff_name) {
-        if (!staffTotals[entry.staff_name]) {
-          staffTotals[entry.staff_name] = { hours: 0, pay: 0 };
+      // Only include shifts that have both staff_id AND staff_name (properly assigned shifts)
+      // and ensure the staff member is active
+      if (entry.staff_id && entry.staff_name) {
+        const staffMember = staff.find(s => s.id === entry.staff_id);
+        
+        // Only count if staff member exists and is active
+        if (staffMember && staffMember.active) {
+          if (!staffTotals[entry.staff_name]) {
+            staffTotals[entry.staff_name] = { hours: 0, pay: 0 };
+          }
+          staffTotals[entry.staff_name].hours += entry.hours_worked || 0;
+          staffTotals[entry.staff_name].pay += entry.total_pay || 0;
+          totalHours += entry.hours_worked || 0;
+          totalPay += entry.total_pay || 0;
         }
-        staffTotals[entry.staff_name].hours += entry.hours_worked;
-        staffTotals[entry.staff_name].pay += entry.total_pay;
-        totalHours += entry.hours_worked;
-        totalPay += entry.total_pay;
       }
     });
 
