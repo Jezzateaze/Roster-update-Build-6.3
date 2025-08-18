@@ -869,6 +869,7 @@ async def generate_roster_from_shift_templates(month: str, templates_data: dict)
     """Generate roster for a month using the shift templates from Shift Times section"""
     year, month_num = map(int, month.split("-"))
     templates = templates_data.get("templates", [])
+    force_overlaps = templates_data.get("force_overlaps", False)
     
     if not templates:
         raise HTTPException(status_code=400, detail="No shift templates provided")
@@ -890,25 +891,28 @@ async def generate_roster_from_shift_templates(month: str, templates_data: dict)
         
         for template in day_templates:
             template_name = template.get("name", "")
+            allow_overlap = template.get("allow_overlap", False)
             
-            # Check for overlaps (allows 2:1 shifts to overlap)
-            if check_shift_overlap(date_str, template["start_time"], template["end_time"], shift_name=template_name):
-                overlaps_detected.append({
-                    "date": date_str,
-                    "start_time": template["start_time"],
-                    "end_time": template["end_time"],
-                    "name": template_name
-                })
-                continue  # Skip overlapping shifts (unless they're 2:1)
+            # Check for overlaps (unless forced or explicitly allowed)
+            if not force_overlaps and not allow_overlap:
+                if check_shift_overlap(date_str, template["start_time"], template["end_time"], shift_name=template_name):
+                    overlaps_detected.append({
+                        "date": date_str,
+                        "start_time": template["start_time"],
+                        "end_time": template["end_time"],
+                        "name": template_name,
+                        "reason": "Overlap detected in shift templates"
+                    })
+                    continue  # Skip overlapping shifts unless forced
             
-            # Check if entry already exists
+            # Check if entry already exists (unless forcing overlaps)
             existing = db.roster.find_one({
                 "date": date_str,
                 "start_time": template["start_time"],
                 "end_time": template["end_time"]
-            })
+            }) if not force_overlaps else None
             
-            if not existing:
+            if not existing or force_overlaps:
                 entry = RosterEntry(
                     id=str(uuid.uuid4()),
                     date=date_str,
@@ -917,7 +921,8 @@ async def generate_roster_from_shift_templates(month: str, templates_data: dict)
                     end_time=template["end_time"],
                     is_sleepover=template.get("is_sleepover", False),
                     manual_shift_type=template.get("manual_shift_type"),
-                    manual_hourly_rate=template.get("manual_hourly_rate")
+                    manual_hourly_rate=template.get("manual_hourly_rate"),
+                    allow_overlap=allow_overlap or force_overlaps
                 )
                 
                 # Calculate pay using template overrides
@@ -930,13 +935,18 @@ async def generate_roster_from_shift_templates(month: str, templates_data: dict)
     
     result = {
         "message": f"Generated {entries_created} roster entries for {month} using Shift Times templates",
-        "entries_created": entries_created
+        "entries_created": entries_created,
+        "force_overlaps": force_overlaps
     }
     
     if overlaps_detected:
         result["overlaps_detected"] = len(overlaps_detected)
         result["overlap_details"] = overlaps_detected[:5]  # Show first 5 overlaps
-        result["note"] = "Shifts with '2:1' in the name are allowed to overlap"
+        if not force_overlaps:
+            result["note"] = "Shifts with overlaps were skipped. Use 'Publish All' to force overlaps."
+    
+    if force_overlaps:
+        result["message"] += " (overlaps forced)"
     
     return result
 
