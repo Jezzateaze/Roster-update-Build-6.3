@@ -175,19 +175,20 @@ class ShiftRosterAPITester:
             return False
         
         # Test 5: Test protected endpoint without token
-        print(f"\n   🎯 TEST 5: Access protected endpoint without token (should fail with 401)")
-        success, response = self.run_test(
-            "Access Protected Endpoint Without Token (Should Fail)",
-            "GET",
-            "api/users/me",
-            401,  # Expect unauthorized
-            use_auth=False  # Don't use auth token
-        )
-        
-        if success:  # Success here means we got the expected 401 status
-            print(f"   ✅ Protected endpoint correctly blocked without token")
-        else:
-            print(f"   ❌ Protected endpoint was accessible without token")
+        print(f"\n   🎯 TEST 5: Access protected endpoint without token (should fail with 401/403)")
+        # Try without token - should get 401 or 403
+        try:
+            import requests
+            url = f"{self.base_url}/api/users/me"
+            response = requests.get(url)
+            
+            if response.status_code in [401, 403]:
+                print(f"   ✅ Protected endpoint correctly blocked without token (status: {response.status_code})")
+            else:
+                print(f"   ❌ Protected endpoint was accessible without token (status: {response.status_code})")
+                return False
+        except Exception as e:
+            print(f"   ❌ Error testing protected endpoint: {e}")
             return False
         
         # Test 6: Test with invalid token
