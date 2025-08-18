@@ -835,6 +835,7 @@ function App() {
       return;
     }
     
+    setAddingStaff(true);
     try {
       console.log('Adding staff member:', newStaffName);
       const newStaff = {
@@ -852,6 +853,8 @@ function App() {
     } catch (error) {
       console.error('Error adding staff:', error);
       alert(`❌ Error adding staff: ${error.response?.data?.detail || error.message}`);
+    } finally {
+      setAddingStaff(false);
     }
   };
 
