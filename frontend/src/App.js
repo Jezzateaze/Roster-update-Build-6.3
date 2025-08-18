@@ -3383,11 +3383,29 @@ function App() {
                 <CardHeader>
                   <CardTitle className="flex items-center space-x-2">
                     <Clock className="w-5 h-5" />
-                    <span>Total Hours</span>
+                    <span>
+                      {currentUser?.role === 'admin' ? 'Total Hours' : 'My Hours'}
+                    </span>
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-3xl font-bold text-slate-800">{totalHours.toFixed(1)}</div>
+                  <div className="text-3xl font-bold text-slate-800">
+                    {(() => {
+                      if (currentUser?.role === 'admin') {
+                        return totalHours.toFixed(1);
+                      } else if (currentUser?.role === 'staff') {
+                        // Calculate only current staff member's hours
+                        const myHours = Object.entries(staffTotals)
+                          .filter(([name, totals]) => {
+                            const staffMember = staff.find(s => s.name === name);
+                            return staffMember && currentUser.staff_id === staffMember.id;
+                          })
+                          .reduce((sum, [name, totals]) => sum + totals.hours, 0);
+                        return myHours.toFixed(1);
+                      }
+                      return '0.0';
+                    })()}
+                  </div>
                   <p className="text-slate-600">This week</p>
                 </CardContent>
               </Card>
