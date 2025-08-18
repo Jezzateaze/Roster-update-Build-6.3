@@ -662,7 +662,7 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Authorization Middleware Implementation"
+    - "Shift & Staff Availability API Testing Complete"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
