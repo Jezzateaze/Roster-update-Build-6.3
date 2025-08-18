@@ -295,9 +295,9 @@ backend:
     implemented: true
     working: false
     file: "server.py"
-    stuck_count: 1
+    stuck_count: 2
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
         - working: false
           agent: "user"
@@ -311,6 +311,9 @@ backend:
         - working: false
           agent: "testing"
           comment: "🚨 CRITICAL REGRESSION DETECTED: Comprehensive testing reveals pay calculation bug fix is NOT working correctly. FAILED TESTS: 1) 12:00PM-7:59PM shift calculated at $335.30 instead of expected $335.16 (precision issue), 2) 12:00PM-8:01PM shift calculated at $356.74 instead of expected $356.89 (precision issue), 3) 8:00PM-10:00PM shift calculated at $148.00 instead of expected $89.00 (WRONG RATE - using Saturday rate $74/hr instead of evening rate $44.50/hr), 4) 7:59PM end time calculated at $335.30 instead of $335.16. CRITICAL FINDING: Backend is applying SATURDAY rates ($74/hr) to some weekday evening shifts instead of weekday evening rates ($44.50/hr). The 8:00PM boundary logic fix may have introduced a new bug affecting shift type determination."
+        - working: false
+          agent: "testing"
+          comment: "🚨 FRONTEND UI TESTING CONFIRMS CRITICAL BUG: Comprehensive testing of production UI reveals pay calculation bug fix is NOT working. CRITICAL FINDINGS: 1) ❌ Found 29 instances of incorrect $356 calculations (should be $336), 2) ✅ Found 23 correct $336 calculations, 3) ✅ Found 43 Day badges correctly displayed, 4) ✅ Found 9 instances of 12:00 PM shifts and 33 instances of 8:00 PM shifts, 5) ✅ Individual shift hours display working (167 instances), 6) ✅ All required features detected: Manage Templates, YTD Report, Save Template, Generate Roster. CONCLUSION: While frontend badges show correctly as 'Day', the pay calculations are still using evening rates ($356) instead of day rates ($336) for 12:00PM-8:00PM weekday shifts. The backend fix is not working in production."
 
   - task: "Roster Templates Management Interface"
     implemented: true
