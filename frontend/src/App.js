@@ -206,6 +206,7 @@ function App() {
   const [showAddShiftDialog, setShowAddShiftDialog] = useState(false);
   const [rosterTemplates, setRosterTemplates] = useState([]);
   const [showRosterTemplateDialog, setShowRosterTemplateDialog] = useState(false);
+  const [showManageTemplatesDialog, setShowManageTemplatesDialog] = useState(false);
   const [showSaveTemplateDialog, setShowSaveTemplateDialog] = useState(false);
   const [showGenerateFromTemplateDialog, setShowGenerateFromTemplateDialog] = useState(false);
   const [newTemplateName, setNewTemplateName] = useState('');
