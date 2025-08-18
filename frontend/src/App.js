@@ -2936,25 +2936,28 @@ function App() {
                     {/* First row of buttons */}
                     <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-2">
-                        <Button
-                          variant={bulkSelectionMode ? "default" : "outline"}
-                          onClick={toggleBulkSelectionMode}
-                          className={bulkSelectionMode ? "bg-blue-600 text-white" : ""}
-                        >
-                          {bulkSelectionMode ? (
-                            <>
-                              <Check className="w-4 h-4 mr-2" />
-                              Exit Selection
-                            </>
-                          ) : (
-                            <>
-                              <CheckSquare className="w-4 h-4 mr-2" />
-                              Select Multiple
-                            </>
-                          )}
-                        </Button>
+                        {/* Admin-only roster management buttons */}
+                        {isAdmin() && (
+                          <Button
+                            variant={bulkSelectionMode ? "default" : "outline"}
+                            onClick={toggleBulkSelectionMode}
+                            className={bulkSelectionMode ? "bg-blue-600 text-white" : ""}
+                          >
+                            {bulkSelectionMode ? (
+                              <>
+                                <Check className="w-4 h-4 mr-2" />
+                                Exit Selection
+                              </>
+                            ) : (
+                              <>
+                                <CheckSquare className="w-4 h-4 mr-2" />
+                                Select Multiple
+                              </>
+                            )}
+                          </Button>
+                        )}
 
-                        {!bulkSelectionMode && (
+                        {!bulkSelectionMode && isAdmin() && (
                           <>
                             <Button 
                               variant="outline"
@@ -2978,7 +2981,7 @@ function App() {
                           </>
                         )}
 
-                        {bulkSelectionMode && (
+                        {bulkSelectionMode && isAdmin() && (
                           <>
                             <div className="text-sm text-slate-600 px-3 py-2 bg-blue-50 rounded-md border">
                               {selectedShifts.size} selected
