@@ -118,6 +118,7 @@ function App() {
   const [showChangePinDialog, setShowChangePinDialog] = useState(false);
   const [showProfileDialog, setShowProfileDialog] = useState(false);
   const [showStaffProfileDialog, setShowStaffProfileDialog] = useState(false);
+  const [showStaffSelfProfileDialog, setShowStaffSelfProfileDialog] = useState(false);
   const [selectedStaffForProfile, setSelectedStaffForProfile] = useState(null);
   const [loginData, setLoginData] = useState({ username: '', pin: '' });
   const [availableUsers, setAvailableUsers] = useState([]);
