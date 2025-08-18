@@ -1441,12 +1441,18 @@ def initialize_admin():
             first_name="System",
             last_name="Administrator",
             created_at=datetime.utcnow(),
-            is_active=True
+            is_active=True,
+            is_first_login=False  # Don't require PIN change for admin
         )
         db.users.insert_one(default_admin.dict())
         print("✅ Default admin user created: Username=Admin, PIN=0000")
     else:
-        print("✅ Admin user already exists")
+        # Update existing admin user to not require PIN change
+        db.users.update_one(
+            {"username": "Admin"},
+            {"$set": {"is_first_login": False}}
+        )
+        print("✅ Admin user already exists - updated to not require PIN change")
 
 # Initialize admin on startup
 initialize_admin()
