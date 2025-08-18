@@ -107,9 +107,11 @@ class ShiftAvailabilityAPITester:
         if success:
             self.staff_token = staff_response.get('token')
             self.staff_user_id = staff_response.get('user', {}).get('id')
+            self.staff_id = staff_response.get('user', {}).get('staff_id')  # This is the actual staff ID
             staff_user_data = staff_response.get('user', {})
             print(f"   ✅ Staff authenticated - Username: angela")
-            print(f"   Staff ID: {self.staff_user_id}")
+            print(f"   User ID: {self.staff_user_id}")
+            print(f"   Staff ID: {self.staff_id}")
             print(f"   Staff Role: {staff_user_data.get('role')}")
         else:
             print(f"   ❌ Could not authenticate staff user")
