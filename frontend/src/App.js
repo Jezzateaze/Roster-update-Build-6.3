@@ -4790,6 +4790,23 @@ function App() {
                   <Label>Sleepover Shift</Label>
                 </div>
 
+                {/* Allow 2:1 Overlap Setting */}
+                <div className="flex items-center space-x-2">
+                  <Switch
+                    checked={selectedTemplate.allow_overlap || false}
+                    onCheckedChange={(checked) => {
+                      setSelectedTemplate({
+                        ...selectedTemplate,
+                        allow_overlap: checked
+                      });
+                    }}
+                  />
+                  <Label>Allow 2:1 Shift Overlapping</Label>
+                </div>
+                <div className="text-sm text-slate-500 mt-1">
+                  Enable this to allow multiple staff to be assigned to the same shift time (useful for 2:1 support scenarios)
+                </div>
+
                 {/* Manual Shift Type Override */}
                 <div>
                   <Label htmlFor="template-manual-shift-type">Manual Shift Type Override (Optional)</Label>
