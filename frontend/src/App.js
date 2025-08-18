@@ -207,6 +207,8 @@ function App() {
   const [rosterTemplates, setRosterTemplates] = useState([]);
   const [showRosterTemplateDialog, setShowRosterTemplateDialog] = useState(false);
   const [showManageTemplatesDialog, setShowManageTemplatesDialog] = useState(false);
+  const [showYTDReportDialog, setShowYTDReportDialog] = useState(false);
+  const [ytdReportType, setYTDReportType] = useState('financial'); // 'calendar' or 'financial'
   const [showSaveTemplateDialog, setShowSaveTemplateDialog] = useState(false);
   const [showGenerateFromTemplateDialog, setShowGenerateFromTemplateDialog] = useState(false);
   const [newTemplateName, setNewTemplateName] = useState('');
