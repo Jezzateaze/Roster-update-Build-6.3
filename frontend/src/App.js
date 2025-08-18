@@ -3429,13 +3429,41 @@ function App() {
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center space-x-2">
-                    <Users className="w-5 h-5" />
-                    <span>Staff Count</span>
+                    {currentUser?.role === 'admin' ? (
+                      <>
+                        <Users className="w-5 h-5" />
+                        <span>Staff Count</span>
+                      </>
+                    ) : (
+                      <>
+                        <DollarSign className="w-5 h-5" />
+                        <span>My Pay</span>
+                      </>
+                    )}
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-3xl font-bold text-slate-800">{staff.length}</div>
-                  <p className="text-slate-600">Active staff</p>
+                  {currentUser?.role === 'admin' ? (
+                    <>
+                      <div className="text-3xl font-bold text-slate-800">{staff.length}</div>
+                      <p className="text-slate-600">Active staff</p>
+                    </>
+                  ) : (
+                    <>
+                      <div className="text-3xl font-bold text-emerald-600">
+                        {(() => {
+                          const myPay = Object.entries(staffTotals)
+                            .filter(([name, totals]) => {
+                              const staffMember = staff.find(s => s.name === name);
+                              return staffMember && currentUser.staff_id === staffMember.id;
+                            })
+                            .reduce((sum, [name, totals]) => sum + totals.pay, 0);
+                          return formatCurrency(myPay);
+                        })()}
+                      </div>
+                      <p className="text-slate-600">This week</p>
+                    </>
+                  )}
                 </CardContent>
               </Card>
             </div>
