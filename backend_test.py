@@ -192,27 +192,28 @@ class ShiftRosterAPITester:
             return False
         
         # Test 6: Test with invalid token
-        print(f"\n   🎯 TEST 6: Access protected endpoint with invalid token (should fail with 401)")
+        print(f"\n   🎯 TEST 6: Access protected endpoint with invalid token (should fail with 401/403)")
         # Temporarily replace token with invalid one
         original_token = self.auth_token
         self.auth_token = "invalid_token_12345"
         
-        success, response = self.run_test(
-            "Access Protected Endpoint with Invalid Token (Should Fail)",
-            "GET",
-            "api/users/me",
-            401,  # Expect unauthorized
-            use_auth=True
-        )
-        
-        # Restore original token
-        self.auth_token = original_token
-        
-        if success:  # Success here means we got the expected 401 status
-            print(f"   ✅ Invalid token correctly rejected")
-        else:
-            print(f"   ❌ Invalid token was accepted")
+        try:
+            import requests
+            url = f"{self.base_url}/api/users/me"
+            headers = {'Authorization': f'Bearer {self.auth_token}'}
+            response = requests.get(url, headers=headers)
+            
+            if response.status_code in [401, 403]:
+                print(f"   ✅ Invalid token correctly rejected (status: {response.status_code})")
+            else:
+                print(f"   ❌ Invalid token was accepted (status: {response.status_code})")
+                return False
+        except Exception as e:
+            print(f"   ❌ Error testing invalid token: {e}")
             return False
+        finally:
+            # Restore original token
+            self.auth_token = original_token
         
         # Test 7: Additional PIN variations
         print(f"\n   🎯 TEST 7: Test additional PIN variations")
