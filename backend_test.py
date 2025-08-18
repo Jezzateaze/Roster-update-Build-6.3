@@ -59,10 +59,11 @@ class ShiftRosterAPITester:
             return False, {}
 
     def test_authentication_system(self):
-        """Test authentication with Admin/0000 credentials"""
-        print(f"\n🔐 Testing Authentication System...")
+        """Test comprehensive authentication system as per review request"""
+        print(f"\n🔐 Testing Authentication System - COMPREHENSIVE REVIEW REQUEST TESTS...")
         
-        # Test login with Admin/0000 credentials
+        # Test 1: Admin login with correct credentials (Admin/0000)
+        print(f"\n   🎯 TEST 1: Admin Login with username='Admin' and pin='0000'")
         login_data = {
             "username": "Admin",
             "pin": "0000"
@@ -91,11 +92,167 @@ class ShiftRosterAPITester:
                 print(f"   ✅ Admin role confirmed")
             else:
                 print(f"   ❌ Expected admin role, got: {user_data.get('role')}")
+                return False
                 
-            return True
+            # Verify token generation
+            if self.auth_token and len(self.auth_token) > 20:
+                print(f"   ✅ Valid token generated (length: {len(self.auth_token)})")
+            else:
+                print(f"   ❌ Invalid or missing token")
+                return False
         else:
             print(f"   ❌ Authentication failed")
             return False
+        
+        # Test 2: Test protected endpoint with valid token
+        print(f"\n   🎯 TEST 2: Access protected endpoint GET /api/users/me with token")
+        if self.auth_token:
+            success, profile_data = self.run_test(
+                "Access Protected Endpoint /api/users/me",
+                "GET",
+                "api/users/me",
+                200,
+                use_auth=True
+            )
+            
+            if success:
+                print(f"   ✅ Protected endpoint accessible with valid token")
+                print(f"   Profile data: username={profile_data.get('username')}, role={profile_data.get('role')}")
+                
+                # Verify profile data matches login response
+                if profile_data.get('username') == 'Admin' and profile_data.get('role') == 'admin':
+                    print(f"   ✅ Profile data matches login credentials")
+                else:
+                    print(f"   ❌ Profile data mismatch")
+                    return False
+            else:
+                print(f"   ❌ Could not access protected endpoint with valid token")
+                return False
+        else:
+            print(f"   ❌ No token available for protected endpoint test")
+            return False
+        
+        # Test 3: Test login with wrong PIN
+        print(f"\n   🎯 TEST 3: Login with wrong PIN (should fail with 401)")
+        wrong_pin_data = {
+            "username": "Admin",
+            "pin": "1234"  # Wrong PIN
+        }
+        
+        success, response = self.run_test(
+            "Login with Wrong PIN (Should Fail)",
+            "POST",
+            "api/auth/login",
+            401,  # Expect unauthorized
+            data=wrong_pin_data
+        )
+        
+        if success:  # Success here means we got the expected 401 status
+            print(f"   ✅ Wrong PIN correctly rejected with 401 error")
+        else:
+            print(f"   ❌ Wrong PIN was not properly rejected")
+            return False
+        
+        # Test 4: Test case sensitivity - "admin" instead of "Admin"
+        print(f"\n   🎯 TEST 4: Test case sensitivity - 'admin' instead of 'Admin' (should fail)")
+        case_sensitive_data = {
+            "username": "admin",  # Lowercase instead of "Admin"
+            "pin": "0000"
+        }
+        
+        success, response = self.run_test(
+            "Login with Lowercase Username (Should Fail)",
+            "POST",
+            "api/auth/login",
+            401,  # Expect unauthorized
+            data=case_sensitive_data
+        )
+        
+        if success:  # Success here means we got the expected 401 status
+            print(f"   ✅ Case sensitivity enforced - lowercase 'admin' correctly rejected")
+        else:
+            print(f"   ❌ Case sensitivity not enforced - lowercase 'admin' was accepted")
+            return False
+        
+        # Test 5: Test protected endpoint without token
+        print(f"\n   🎯 TEST 5: Access protected endpoint without token (should fail with 401)")
+        success, response = self.run_test(
+            "Access Protected Endpoint Without Token (Should Fail)",
+            "GET",
+            "api/users/me",
+            401,  # Expect unauthorized
+            use_auth=False  # Don't use auth token
+        )
+        
+        if success:  # Success here means we got the expected 401 status
+            print(f"   ✅ Protected endpoint correctly blocked without token")
+        else:
+            print(f"   ❌ Protected endpoint was accessible without token")
+            return False
+        
+        # Test 6: Test with invalid token
+        print(f"\n   🎯 TEST 6: Access protected endpoint with invalid token (should fail with 401)")
+        # Temporarily replace token with invalid one
+        original_token = self.auth_token
+        self.auth_token = "invalid_token_12345"
+        
+        success, response = self.run_test(
+            "Access Protected Endpoint with Invalid Token (Should Fail)",
+            "GET",
+            "api/users/me",
+            401,  # Expect unauthorized
+            use_auth=True
+        )
+        
+        # Restore original token
+        self.auth_token = original_token
+        
+        if success:  # Success here means we got the expected 401 status
+            print(f"   ✅ Invalid token correctly rejected")
+        else:
+            print(f"   ❌ Invalid token was accepted")
+            return False
+        
+        # Test 7: Additional PIN variations
+        print(f"\n   🎯 TEST 7: Test additional PIN variations")
+        pin_variations = [
+            ("0001", "Similar PIN"),
+            ("000", "Short PIN"),
+            ("00000", "Long PIN"),
+            ("", "Empty PIN"),
+            ("abcd", "Non-numeric PIN")
+        ]
+        
+        for pin, description in pin_variations:
+            test_data = {
+                "username": "Admin",
+                "pin": pin
+            }
+            
+            success, response = self.run_test(
+                f"Login with {description} '{pin}' (Should Fail)",
+                "POST",
+                "api/auth/login",
+                401,  # Expect unauthorized
+                data=test_data
+            )
+            
+            if success:  # Success here means we got the expected 401 status
+                print(f"   ✅ {description} correctly rejected")
+            else:
+                print(f"   ❌ {description} was incorrectly accepted")
+                return False
+        
+        print(f"\n   🎉 ALL AUTHENTICATION TESTS PASSED!")
+        print(f"   ✅ Admin/0000 login successful with valid token generation")
+        print(f"   ✅ Protected endpoint accessible with valid token")
+        print(f"   ✅ Wrong PIN correctly rejected (401)")
+        print(f"   ✅ Case sensitivity enforced ('admin' vs 'Admin')")
+        print(f"   ✅ Protected endpoint blocked without token")
+        print(f"   ✅ Invalid token correctly rejected")
+        print(f"   ✅ PIN variations correctly handled")
+        
+        return True
 
     def test_health_check(self):
         """Test health endpoint"""
