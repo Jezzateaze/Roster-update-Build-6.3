@@ -4576,11 +4576,14 @@ function App() {
 
               <div className="flex justify-end space-x-2">
                 <Button variant="outline" onClick={() => setShowSettingsDialog(false)}>
-                  Cancel
+                  {isAdmin() ? 'Cancel' : 'Close'}
                 </Button>
-                <Button onClick={() => updateSettings(settings)}>
-                  Save Settings
-                </Button>
+                {/* Save Settings button - Admin only */}
+                {isAdmin() && (
+                  <Button onClick={() => updateSettings(settings)}>
+                    Save Settings
+                  </Button>
+                )}
               </div>
             </div>
           </DialogContent>
