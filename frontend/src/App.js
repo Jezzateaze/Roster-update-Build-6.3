@@ -263,8 +263,66 @@ function App() {
   const [bulkSelectionMode, setBulkSelectionMode] = useState(false);
   const [showBulkActionsDialog, setShowBulkActionsDialog] = useState(false);
 
+  // Fetch available users for login dropdown
+  const fetchAvailableUsers = async () => {
+    try {
+      // First, get all staff members
+      const staffResponse = await axios.get(`${API_BASE_URL}/api/staff`);
+      const staffList = staffResponse.data;
+      
+      // Create user list with Admin + Staff members
+      const users = [
+        {
+          username: 'Admin',
+          displayName: '👤 Admin (Administrator)',
+          type: 'admin'
+        }
+      ];
+      
+      // Add staff members (convert staff names to likely usernames)
+      staffList.forEach(staff => {
+        if (staff.active) {
+          const username = staff.name.toLowerCase().replace(/\s+/g, '');
+          users.push({
+            username: username,
+            displayName: `👥 ${staff.name} (Staff)`,
+            type: 'staff',
+            staffId: staff.id
+          });
+        }
+      });
+      
+      setAvailableUsers(users);
+    } catch (error) {
+      console.error('Error fetching users for dropdown:', error);
+      // If we can't fetch users, fall back to manual input
+      setUseDropdown(false);
+    }
+  };
+
+  // Initial data fetch
   useEffect(() => {
     fetchInitialData();
+    fetchAvailableUsers();
+    
+    // Check for existing authentication
+    const storedToken = localStorage.getItem('authToken');
+    const storedUser = localStorage.getItem('currentUser');
+    
+    if (storedToken && storedUser) {
+      try {
+        const user = JSON.parse(storedUser);
+        setCurrentUser(user);
+        setAuthToken(storedToken);
+        setIsAuthenticated(true);
+        setShowLoginDialog(false);
+        axios.defaults.headers.common['Authorization'] = `Bearer ${storedToken}`;
+      } catch (error) {
+        // Clear invalid stored data
+        localStorage.removeItem('authToken');
+        localStorage.removeItem('currentUser');
+      }
+    }
   }, []);
 
   useEffect(() => {
