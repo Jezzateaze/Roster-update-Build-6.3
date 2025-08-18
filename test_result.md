@@ -147,6 +147,8 @@ test_plan:
 agent_communication:
     - agent: "main"
       message: "Phase 1 of staff restrictions completed. All roster management buttons, shift editing capabilities, settings modifications, template controls, and admin-specific UI elements have been hidden from staff users. Ready for backend testing to verify role-based access control implementation."
+    - agent: "testing"
+      message: "🎯 COMPREHENSIVE ROLE-BASED ACCESS CONTROL TESTING COMPLETED! Tested all 7 critical areas from review request: 1) ✅ Authentication System: Admin/0000 and staff login working perfectly with proper token generation and role verification, 2) ✅ User Profile Management: Both admin and staff can access/update GET/PUT /api/users/me endpoints correctly, 3) ⚠️ Staff Management: GET/POST /api/staff endpoints working but lack role restrictions (staff can create staff), 4) ⚠️ Settings Access: GET/PUT /api/settings working but lack role restrictions (staff can modify settings), 5) ✅ Roster Operations: All CRUD operations working for both roles, 6) ✅ PIN Management: Admin PIN reset working with proper 403 blocking for staff, both roles can change own PINs, 7) ⚠️ Unauthorized Access: Some endpoints (staff, settings, roster) accessible without authentication. CRITICAL FINDINGS: Backend authentication system working correctly, but several endpoints lack proper authorization middleware. Most endpoints return 403 'Not authenticated' instead of 401 'Unauthorized' (acceptable). Core role-based functionality working but needs authorization middleware on public endpoints."
 
   - task: "Enhanced Shift Template Editing"
     implemented: true
