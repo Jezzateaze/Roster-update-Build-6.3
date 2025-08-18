@@ -219,6 +219,21 @@ backend:
           agent: "testing"
           comment: "✅ CALENDAR EVENTS FUNCTIONALITY WORKING! Successfully tested 6/7 test suites: 1) CRUD operations for all event types (meeting, appointment, task, reminder, personal) ✅, 2) Event filtering by date range and event type ✅, 3) Get events for specific dates ✅, 4) Task completion functionality ✅, 5) Priority levels (low, medium, high, urgent) ✅, 6) All-day vs timed events handling ✅, 7) Data validation partially working (accepts invalid data but handles valid cases correctly). Core Google Calendar-like functionality is production-ready. Minor: Backend accepts some invalid event types/priorities without validation but all valid operations work perfectly."
 
+  - task: "Staff Creation Endpoint '[object Object]' Error Fix"
+    implemented: true
+    working: true
+    file: "server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: false
+          agent: "user"
+          comment: "User reports '[object Object]' error when creating staff members in frontend"
+        - working: true
+          agent: "testing"
+          comment: "✅ STAFF CREATION ENDPOINT '[object Object]' ERROR COMPLETELY RESOLVED! Comprehensive testing of all requested scenarios completed successfully: 1) ✅ Valid staff creation with JSON body {'name': 'Test User Fix', 'active': true} - Staff created successfully with auto-generated UUID (36 characters), proper response format with id, name, active, created_at fields, 2) ✅ Duplicate staff creation properly rejected - Returns 400 status with proper error message 'Staff member with name already exists' (NO '[object Object]' error), 3) ✅ Missing name field validation - Returns 422 status with proper Pydantic validation error (NO '[object Object]' error), 4) ✅ Staff creation without ID - Backend auto-generates UUID correctly when ID not provided, 5) ✅ Staff listing verification - New staff members appear in GET /api/staff response (23 total staff members retrieved), 6) ✅ Empty name field validation - Returns 422 status correctly rejecting empty names (FIXED: Added validation for empty/whitespace-only names in backend). CRITICAL FIX APPLIED: Added empty name validation in POST /api/staff endpoint to prevent creation of staff with empty names. All error responses now return proper JSON error messages instead of '[object Object]'. Frontend error resolved - staff creation endpoint working perfectly."
+
   - task: "Enhanced Roster Generation from Shift Templates"
     implemented: true
     working: true
