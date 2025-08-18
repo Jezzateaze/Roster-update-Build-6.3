@@ -291,6 +291,21 @@ backend:
           agent: "testing"
           comment: "🎉 CRITICAL OVERLAP HANDLING FIX VERIFIED AND WORKING! Comprehensive testing of the PUT endpoint fix completed successfully: ✅ CRITICAL TEST 1 PASSED: PUT /api/roster/{id} with allow_overlap=True now succeeds (200 status) - shift update from 18:00-22:00 to 15:00-20:00 allowed to overlap with existing 09:00-17:00 shift, ✅ CRITICAL TEST 2 PASSED: PUT /api/roster/{id} with allow_overlap=False correctly blocked (409 Conflict) - overlap prevention working as expected, ✅ CRITICAL TEST 3 PASSED: 2:1 shift functionality with allow_overlap=True works perfectly - enables overlap bypass for 2:1 shifts. 🎯 FIX CONFIRMATION: The backend now correctly implements 'if not entry.allow_overlap and check_shift_overlap(...)' logic in the PUT endpoint (line 1046). All three critical test scenarios passed, confirming that the PUT endpoint now respects the allow_overlap flag exactly as the POST endpoint does. Frontend can now successfully update shifts with allow_overlap=True to enable 2:1 shift overlaps."
 
+  - task: "Pay Calculation Bug Fix - 12PM-8PM Shifts"
+    implemented: false
+    working: false
+    file: "server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: false
+          agent: "user"
+          comment: "User reports 12:00PM-8:00PM shifts show correct 'Day' badge but calculate at evening rates ($356 instead of $336). Should be 8 hours × $42/hr = $336 day rate."
+        - working: false
+          agent: "main"
+          comment: "Bug identified: Backend determine_shift_type() uses 'end_minutes >= 20 * 60' (includes 8PM as evening) while frontend badge uses 'endMinutes > 20 * 60' (excludes 8PM from evening). Need to fix backend to match frontend logic."
+
   - task: "Pay Summary Display Fix"
     implemented: false
     working: false
