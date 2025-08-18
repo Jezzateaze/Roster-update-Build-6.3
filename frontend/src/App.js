@@ -788,6 +788,72 @@ function App() {
     }
   };
 
+  // Handle publishing all shifts including overlaps
+  const handlePublishAllShifts = async () => {
+    if (!overlapData) return;
+
+    try {
+      let response;
+      
+      if (overlapData.type === 'shift-templates') {
+        // Force generate with overlaps for shift templates
+        response = await axios.post(`${API_BASE_URL}/api/generate-roster-from-shift-templates/${overlapData.month}`, {
+          templates: overlapData.templates,
+          force_overlaps: true
+        });
+      } else if (overlapData.type === 'roster-template') {
+        // Force generate with overlaps for roster template
+        response = await axios.post(`${API_BASE_URL}/api/generate-roster-from-template/${overlapData.templateId}/${overlapData.month}`, {
+          force_overlaps: true
+        });
+      }
+
+      fetchRosterData();
+      setShowOverlapDialog(false);
+      setOverlapData(null);
+      
+      // Close any open dialogs
+      setShowGenerateFromTemplateDialog(false);
+      setSelectedRosterTemplate(null);
+
+      let message = response.data.message;
+      if (response.data.entries_created) {
+        message += `\n✅ ${response.data.entries_created} shifts created (including ${response.data.overlaps_detected || 0} overlapping shifts)`;
+      }
+      
+      alert(`🎉 All shifts published!\n\n${message}`);
+    } catch (error) {
+      console.error('Error publishing all shifts:', error);
+      alert(`❌ Error publishing shifts: ${error.response?.data?.detail || error.message}`);
+    }
+  };
+
+  // Handle skipping overlapping shifts
+  const handleSkipOverlapShifts = async () => {
+    if (!overlapData) return;
+
+    // The initial response already has the non-overlapping shifts created
+    fetchRosterData();
+    setShowOverlapDialog(false);
+    
+    // Close any open dialogs
+    setShowGenerateFromTemplateDialog(false);
+    setSelectedRosterTemplate(null);
+
+    const response = overlapData.response;
+    let message = overlapData.message;
+    
+    if (response.entries_created) {
+      message += `\n✅ ${response.entries_created} shifts created`;
+    }
+    if (response.overlaps_detected) {
+      message += `\n⚠️ ${response.overlaps_detected} overlapping shifts were skipped`;
+    }
+    
+    alert(`📋 Roster published (overlaps skipped)!\n\n${message}`);
+    setOverlapData(null);
+  };
+
   const deleteRosterTemplate = async (templateId) => {
     if (!window.confirm('Are you sure you want to delete this roster template? This action cannot be undone.')) {
       return;
