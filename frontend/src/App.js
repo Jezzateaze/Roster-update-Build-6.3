@@ -4535,6 +4535,8 @@ function App() {
                           step="0.01"
                           min="0"
                           value={settings.rates.sleepover_default}
+                          disabled={!isAdmin()}
+                          readOnly={!isAdmin()}
                           onChange={(e) => {
                             const newSettings = {
                               ...settings,
@@ -4558,6 +4560,8 @@ function App() {
                           step="0.01"
                           min="0"
                           value={settings.rates.sleepover_schads}
+                          disabled={!isAdmin()}
+                          readOnly={!isAdmin()}
                           onChange={(e) => {
                             const newSettings = {
                               ...settings,
