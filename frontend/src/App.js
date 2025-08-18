@@ -785,6 +785,22 @@ function App() {
     setShowTemplateEditDialog(true);
   };
 
+  // Save comprehensive template edits
+  const saveRosterTemplateEdits = async () => {
+    if (!selectedRosterTemplateForEdit) return;
+
+    try {
+      await axios.put(`${API_BASE_URL}/api/roster-templates/${selectedRosterTemplateForEdit.id}`, selectedRosterTemplateForEdit);
+      fetchInitialData(); // Reload templates
+      setShowTemplateEditDialog(false);
+      setSelectedRosterTemplateForEdit(null);
+      alert('✅ Template updated successfully with advanced 2:1 shift settings!');
+    } catch (error) {
+      console.error('Error updating roster template:', error);
+      alert(`❌ Error updating template: ${error.response?.data?.detail || error.message}`);
+    }
+  };
+
   const getTemplateShiftDetails = (template) => {
     if (!template.template_data) return 'No shift data available';
     
