@@ -5610,6 +5610,175 @@ function App() {
           </DialogContent>
         </Dialog>
 
+        {/* Comprehensive Template Edit Dialog */}
+        <Dialog open={showTemplateEditDialog} onOpenChange={setShowTemplateEditDialog}>
+          <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="text-xl font-bold text-slate-800">
+                🎯 Advanced Template Configuration
+              </DialogTitle>
+            </DialogHeader>
+            {selectedRosterTemplateForEdit && (
+              <div className="space-y-6">
+                {/* Basic Template Information */}
+                <div className="space-y-4 p-4 bg-slate-50 rounded-lg">
+                  <h3 className="text-lg font-semibold text-slate-800">📋 Template Details</h3>
+                  
+                  <div>
+                    <Label htmlFor="template-name">Template Name</Label>
+                    <Input
+                      id="template-name"
+                      value={selectedRosterTemplateForEdit.name}
+                      onChange={(e) => setSelectedRosterTemplateForEdit({
+                        ...selectedRosterTemplateForEdit,
+                        name: e.target.value
+                      })}
+                      placeholder="Enter template name"
+                    />
+                  </div>
+                  
+                  <div>
+                    <Label htmlFor="template-description">Description (Optional)</Label>
+                    <textarea
+                      id="template-description"
+                      className="w-full p-3 border rounded-md"
+                      rows={3}
+                      value={selectedRosterTemplateForEdit.description || ''}
+                      onChange={(e) => setSelectedRosterTemplateForEdit({
+                        ...selectedRosterTemplateForEdit,
+                        description: e.target.value
+                      })}
+                      placeholder="Describe this template's purpose or usage..."
+                    />
+                  </div>
+                </div>
+
+                {/* Advanced 2:1 Shift Configuration */}
+                <div className="space-y-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                  <h3 className="text-lg font-semibold text-blue-800 flex items-center space-x-2">
+                    <Users className="w-5 h-5" />
+                    <span>2:1 Shift Support Configuration</span>
+                  </h3>
+                  
+                  {/* Enable 2:1 Shift Toggle */}
+                  <div className="flex items-center justify-between p-3 bg-white rounded-lg border">
+                    <div className="flex-1">
+                      <div className="flex items-center space-x-2">
+                        <Switch
+                          checked={selectedRosterTemplateForEdit.enable_2_1_shift || false}
+                          onCheckedChange={(checked) => setSelectedRosterTemplateForEdit({
+                            ...selectedRosterTemplateForEdit,
+                            enable_2_1_shift: checked
+                          })}
+                        />
+                        <Label className="font-medium text-slate-800">Enable 2:1 Shift (Two Staff Members)</Label>
+                      </div>
+                      <p className="text-sm text-slate-600 mt-1">
+                        Allow multiple staff members to be assigned to the same shift time for enhanced support scenarios
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Allow Override Toggle */}
+                  <div className="flex items-center justify-between p-3 bg-white rounded-lg border">
+                    <div className="flex-1">
+                      <div className="flex items-center space-x-2">
+                        <Switch
+                          checked={selectedRosterTemplateForEdit.allow_overlap_override || false}
+                          onCheckedChange={(checked) => setSelectedRosterTemplateForEdit({
+                            ...selectedRosterTemplateForEdit,
+                            allow_overlap_override: checked
+                          })}
+                        />
+                        <Label className="font-medium text-slate-800">Allow Override (Allow Overlap Detection)</Label>
+                      </div>
+                      <p className="text-sm text-slate-600 mt-1">
+                        Override automatic overlap detection and allow manual scheduling conflicts when necessary
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Template Loading Behavior Configuration */}
+                <div className="space-y-4 p-4 bg-amber-50 rounded-lg border border-amber-200">
+                  <h3 className="text-lg font-semibold text-amber-800 flex items-center space-x-2">
+                    <Download className="w-5 h-5" />
+                    <span>Template Loading Behavior</span>
+                  </h3>
+
+                  {/* Duplicate Entry Prevention */}
+                  <div className="flex items-center justify-between p-3 bg-white rounded-lg border">
+                    <div className="flex-1">
+                      <div className="flex items-center space-x-2">
+                        <Switch
+                          checked={selectedRosterTemplateForEdit.prevent_duplicate_unassigned || true}
+                          onCheckedChange={(checked) => setSelectedRosterTemplateForEdit({
+                            ...selectedRosterTemplateForEdit,
+                            prevent_duplicate_unassigned: checked
+                          })}
+                        />
+                        <Label className="font-medium text-slate-800">Prevent Duplicate Unassigned Shifts</Label>
+                      </div>
+                      <p className="text-sm text-slate-600 mt-1">
+                        <strong>Do NOT Allow</strong> duplicate entries when loading template if shifts are unassigned
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Different Staff Only */}
+                  <div className="flex items-center justify-between p-3 bg-white rounded-lg border">
+                    <div className="flex-1">
+                      <div className="flex items-center space-x-2">
+                        <Switch
+                          checked={selectedRosterTemplateForEdit.allow_different_staff_only || true}
+                          onCheckedChange={(checked) => setSelectedRosterTemplateForEdit({
+                            ...selectedRosterTemplateForEdit,
+                            allow_different_staff_only: checked
+                          })}
+                        />
+                        <Label className="font-medium text-slate-800">Allow Different Staff Only</Label>
+                      </div>
+                      <p className="text-sm text-slate-600 mt-1">
+                        <strong>Allow</strong> duplicates when loading template if staff is assigned but only for different staff members (not the same staff)
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Configuration Summary */}
+                <div className="p-4 bg-green-50 rounded-lg border border-green-200">
+                  <h4 className="text-md font-semibold text-green-800 mb-2">📊 Configuration Summary</h4>
+                  <div className="text-sm text-green-700 space-y-1">
+                    <p>• <strong>2:1 Support:</strong> {selectedRosterTemplateForEdit.enable_2_1_shift ? '✅ Enabled - Multiple staff can work same shift' : '❌ Disabled - Single staff per shift'}</p>
+                    <p>• <strong>Overlap Override:</strong> {selectedRosterTemplateForEdit.allow_overlap_override ? '✅ Enabled - Manual conflicts allowed' : '❌ Disabled - Strict overlap detection'}</p>
+                    <p>• <strong>Unassigned Duplicates:</strong> {selectedRosterTemplateForEdit.prevent_duplicate_unassigned ? '🚫 Prevented - No duplicate unassigned shifts' : '✅ Allowed - Duplicate unassigned shifts permitted'}</p>
+                    <p>• <strong>Assigned Duplicates:</strong> {selectedRosterTemplateForEdit.allow_different_staff_only ? '👥 Different Staff Only - Duplicates only with different staff' : '🔓 All Duplicates Allowed'}</p>
+                  </div>
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex justify-end space-x-3 pt-4 border-t">
+                  <Button 
+                    variant="outline" 
+                    onClick={() => {
+                      setShowTemplateEditDialog(false);
+                      setSelectedRosterTemplateForEdit(null);
+                    }}
+                  >
+                    Cancel
+                  </Button>
+                  <Button 
+                    onClick={saveRosterTemplateEdits}
+                    className="bg-blue-600 hover:bg-blue-700 text-white"
+                  >
+                    💾 Save Template Configuration
+                  </Button>
+                </div>
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
+
         {/* Year-to-Date Report Dialog */}
         <Dialog open={showYTDReportDialog} onOpenChange={setShowYTDReportDialog}>
           <DialogContent className="max-w-6xl max-h-[85vh] overflow-y-auto">
