@@ -273,6 +273,18 @@ backend:
           agent: "testing"
           comment: "✅ ALLOW OVERLAP FUNCTIONALITY FULLY WORKING! Comprehensive testing completed: 1) POST /api/roster/add-shift endpoint accepts new allow_overlap field, 2) When allow_overlap=False (default), normal overlap prevention works correctly (409 Conflict returned), 3) When allow_overlap=True, shifts can be added even if they overlap successfully, 4) Enhanced error message mentions 'Use Allow Overlap option for 2:1 shifts' when overlap detected, 5) Multiple overlapping shifts can be added with allow_overlap=True, 6) Default behavior (no allow_overlap field) correctly prevents overlaps, 7) RosterEntry model properly accepts and stores allow_overlap field, 8) Pay calculations work correctly for overlapping shifts (verified rates: $42.00/hr weekday day, $44.50/hr weekday evening), 9) All overlapping shifts properly saved to database with correct allow_overlap values. All 10/10 allow overlap tests passed. Manual override functionality is production-ready for 2:1 shift management."
 
+  - task: "Backend API Review Request Investigation"
+    implemented: true
+    working: true
+    file: "server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "testing"
+          comment: "🎯 COMPREHENSIVE BACKEND INVESTIGATION COMPLETED! Review request findings: 1) ✅ Staff Profile Updates: PUT /api/staff/{id} endpoint working perfectly - successfully updated Angela's profile and verified persistence, 2) ❌ Shift Assignment: PUT /api/roster/{id} endpoint functional but blocked by overlap detection (409 conflict) - this is expected behavior for safety, 3) ✅ Pay Summary Data Analysis: CRITICAL FINDING - Backend calculates pay for ALL 183 shifts regardless of assignment status. 176 unassigned shifts (96.2%) have pay calculated ($555.00, $336.00, $356.00 examples). This is the ROOT CAUSE of frontend pay summary issues - frontend needs to filter out unassigned shifts (staff_id=null, staff_name=null) from pay calculations, 4) ✅ Active Staff Filter: All 12 staff properly returned as active, correctly filtered. Backend data structure and API endpoints working correctly. Issue is frontend logic needs to exclude unassigned shifts from pay summaries."
+
   - task: "Pay Summary Display Fix"
     implemented: false
     working: false
