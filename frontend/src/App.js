@@ -5533,10 +5533,10 @@ function App() {
                 
                 <div>
                   <Label className="text-sm">Address</Label>
-                  <Input 
+                  <AddressAutocomplete
                     value={profileData.address || currentUser?.address || ''}
-                    onChange={(e) => setProfileData({ ...profileData, address: e.target.value })}
-                    placeholder="Enter your address"
+                    onChange={(value) => setProfileData({ ...profileData, address: value })}
+                    placeholder="Start typing your address..."
                   />
                 </div>
               </div>
