@@ -2714,7 +2714,8 @@ function App() {
                           <div className="text-slate-600 truncate">{entry.staff_name || 'Unassigned'}</div>
                           <div className="font-medium text-emerald-600">{formatCurrency(entry.total_pay)}</div>
                         </div>
-                        {!bulkSelectionMode && (
+                        {/* Action buttons - Admin only */}
+                        {!bulkSelectionMode && isAdmin() && (
                           <button
                             className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white rounded-full text-xs opacity-0 group-hover:opacity-100 flex items-center justify-center hover:bg-red-600 transition-all z-10 shadow-sm border border-white"
                             onClick={(e) => {
