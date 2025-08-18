@@ -124,25 +124,34 @@ class ShiftAvailabilityAPITester:
         # Create some unassigned shifts
         test_shifts = [
             {
+                "id": str(uuid.uuid4()),
                 "date": "2025-01-15",
                 "start_time": "09:00",
                 "end_time": "17:00",
                 "shift_template_id": "test-unassigned-1",
-                "is_sleepover": False
+                "is_sleepover": False,
+                "staff_id": None,
+                "staff_name": None
             },
             {
+                "id": str(uuid.uuid4()),
                 "date": "2025-01-16", 
                 "start_time": "15:00",
                 "end_time": "23:00",
                 "shift_template_id": "test-unassigned-2",
-                "is_sleepover": False
+                "is_sleepover": False,
+                "staff_id": None,
+                "staff_name": None
             },
             {
+                "id": str(uuid.uuid4()),
                 "date": "2025-01-17",
                 "start_time": "23:00",
                 "end_time": "07:00",
                 "shift_template_id": "test-unassigned-3",
-                "is_sleepover": True
+                "is_sleepover": True,
+                "staff_id": None,
+                "staff_name": None
             }
         ]
         
