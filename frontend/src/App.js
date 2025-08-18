@@ -3323,10 +3323,13 @@ function App() {
                     <Users className="w-5 h-5" />
                     <span>Staff Management</span>
                   </CardTitle>
-                  <Button onClick={() => setShowStaffDialog(true)}>
-                    <Plus className="w-4 h-4 mr-2" />
-                    Add Staff
-                  </Button>
+                  {/* Add Staff button - Admin only */}
+                  {isAdmin() && (
+                    <Button onClick={() => setShowStaffDialog(true)}>
+                      <Plus className="w-4 h-4 mr-2" />
+                      Add Staff
+                    </Button>
+                  )}
                 </div>
               </CardHeader>
               <CardContent>
