@@ -3148,7 +3148,8 @@ function App() {
                 if (isStaff() && entry.staff_id !== currentUser?.staff_id) {
                   return sum; // Staff users don't see other staff's pay in totals
                 }
-                return sum + (entry.total_pay || 0);
+                const displayAmount = getDisplayAmount(entry, entry.staff_id) || 0;
+                return sum + displayAmount;
               }, 0);
               
               const isToday = date.toDateString() === getBrisbaneDate().toDateString();
