@@ -192,7 +192,7 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Username Dropdown Selection Menu on Login Screen"
+    - "Staff Privacy Controls for Roster Pay Information"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
