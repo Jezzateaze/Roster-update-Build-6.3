@@ -2974,7 +2974,7 @@ function App() {
                       >
                         <div className="font-medium">{formatTime(entry.start_time, settings.time_format === '24hr')}-{formatTime(entry.end_time, settings.time_format === '24hr')}</div>
                         <div className="text-slate-600 truncate">{entry.staff_name || 'Unassigned'}</div>
-                        <div className="font-medium text-emerald-600">{getPayDisplayText(entry.total_pay, entry.staff_id)}</div>
+                        <div className="font-medium text-emerald-600">{getPayDisplayText(entry, entry.staff_id)}</div>
                       </div>
                       {/* Action buttons - Admin only */}
                       {!bulkSelectionMode && isAdmin() && (
