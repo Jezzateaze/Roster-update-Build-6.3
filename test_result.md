@@ -204,7 +204,7 @@ metadata:
 
 test_plan:
   current_focus:
-    - "NDIS Charge Rate Integration"
+    - "Frontend NDIS Charge Display"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
