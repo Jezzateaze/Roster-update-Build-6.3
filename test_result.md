@@ -192,7 +192,7 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Enhanced Staff Deletion with Admin Authentication and Shift Management"
+    - "Username Dropdown Selection Menu on Login Screen"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
