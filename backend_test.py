@@ -485,8 +485,10 @@ class ShiftRosterAPITester:
         print(f"      ✅ Empty name staff records cleaned up: {len(cleaned_up)}")
         
         # Determine overall success
+        # Success criteria: Either new accounts were created OR all staff already have accounts AND staff can login
+        all_staff_have_accounts = (len(created_users) + len(existing_users)) >= (staff_count - len(cleaned_up))
         critical_success = (
-            len(created_users) > 0 and  # New accounts were created
+            (len(created_users) > 0 or all_staff_have_accounts) and  # New accounts created OR all staff already have accounts
             staff_auth_success > 0 and  # At least some staff can login
             len([e for e in errors if "empty name" not in e]) == 0  # No critical errors (empty name errors are expected)
         )
