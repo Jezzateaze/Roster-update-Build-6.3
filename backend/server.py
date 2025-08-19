@@ -502,9 +502,9 @@ def calculate_ndis_charges(roster_entry: RosterEntry, settings: Settings, shift_
                         start_hour = int(roster_entry.start_time.split(':')[0])
                         end_hour = int(roster_entry.end_time.split(':')[0])
                         
-                        # For extra wake hours, use weekday_night rate as most appropriate
-                        # since sleepovers typically occur during night hours
-                        ndis_shift_type_key = "weekday_night"
+                        # For extra wake hours, use weekday_day rate as standard
+                        # since sleepovers already include night premium in base rate
+                        ndis_shift_type_key = "weekday_day"
                         
                 except:
                     # Default to weekday_night if parsing fails
