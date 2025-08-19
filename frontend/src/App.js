@@ -8143,7 +8143,7 @@ function App() {
                   <p><strong>Date:</strong> {formatDateString(selectedUnassignedShift.date)}</p>
                   <p><strong>Time:</strong> {formatTime(selectedUnassignedShift.start_time)} - {formatTime(selectedUnassignedShift.end_time)}</p>
                   <p><strong>Hours:</strong> {selectedUnassignedShift.hours_worked?.toFixed(1)} hours</p>
-                  <p><strong>Pay:</strong> {formatCurrency(selectedUnassignedShift.total_pay)}</p>
+                  <p><strong>Pay:</strong> {getPayDisplayText(selectedUnassignedShift)}</p>
                   <div className="flex items-center space-x-2 mt-2">
                     {getShiftTypeBadge(selectedUnassignedShift)}
                   </div>
