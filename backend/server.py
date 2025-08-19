@@ -85,6 +85,13 @@ class RosterEntry(BaseModel):
     sleepover_allowance: float = 0.0
     total_pay: float = 0.0
     allow_overlap: Optional[bool] = False  # Allow this shift to overlap with others (for 2:1 shifts)
+    
+    # NDIS Charge Rate Fields (Client Billing)
+    ndis_hourly_charge: float = 0.0  # NDIS hourly charge rate
+    ndis_shift_charge: float = 0.0   # NDIS per-shift charge (for sleepovers)
+    ndis_total_charge: float = 0.0   # Total NDIS charge for this shift
+    ndis_line_item_code: Optional[str] = None  # NDIS line item code
+    ndis_description: Optional[str] = None     # NDIS service description
 
 class Settings(BaseModel):
     rates: Dict[str, float] = {
