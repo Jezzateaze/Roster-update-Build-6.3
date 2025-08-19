@@ -2176,9 +2176,12 @@ function App() {
             staffTotals[entry.staff_name] = { hours: 0, pay: 0 };
           }
           staffTotals[entry.staff_name].hours += entry.hours_worked || 0;
-          staffTotals[entry.staff_name].pay += entry.total_pay || 0;
+          
+          // Use appropriate amount based on user role (NDIS for Admin, staff pay for Staff)
+          const displayAmount = getDisplayAmount(entry, entry.staff_id) || 0;
+          staffTotals[entry.staff_name].pay += displayAmount;
           totalHours += entry.hours_worked || 0;
-          totalPay += entry.total_pay || 0;
+          totalPay += displayAmount;
         }
       }
     });
