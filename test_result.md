@@ -551,6 +551,18 @@ agent_communication:
           agent: "testing"
           comment: "🎉 USERNAME DROPDOWN LOGIN FUNCTIONALITY COMPREHENSIVE TESTING COMPLETED! URGENT REVIEW REQUEST ANALYSIS: The reported 'broken username dropdown selection menu' issue has been thoroughly investigated. CRITICAL FINDINGS: 1) ✅ DROPDOWN FUNCTIONALITY WORKING PERFECTLY: Username dropdown (#userSelect) displays correctly with 16 options including Admin + 14 staff members, all selection operations work flawlessly (tested Admin, angela, caroline, chanelle), selected values populate correctly in dropdown field, 2) ✅ TOGGLE FUNCTIONALITY WORKING: Manual input toggle works perfectly - users can switch between dropdown and manual input modes seamlessly, both 'Type username manually' and 'Select from list' buttons functional, previous selections preserved during mode switches, 3) ✅ LOGIN FLOW WORKING: Complete login flow tested successfully - Admin/0000 login works perfectly, dropdown closes after successful authentication, main application loads correctly with August 2025 roster data, 4) ✅ API INTEGRATION WORKING: /api/staff endpoint returns 14 staff members correctly, fetchAvailableUsers() function populates dropdown properly, all network requests successful, 5) ⚠️ MINOR DATA ISSUE IDENTIFIED: Found 1 staff member with empty name (ID: 6f45803a-f65b-4ca1-8879-28f2cdfe90bd) causing '👥  (Staff)' entry with empty value in dropdown - this is a data quality issue, not a dropdown functionality issue. CONCLUSION: The username dropdown selection menu is NOT broken and is working as designed. The reported issue may have been resolved in previous fixes or was a temporary issue. The dropdown provides excellent user experience with Admin + staff member selection, proper validation, and seamless toggle between dropdown and manual input modes. Only minor data cleanup needed for empty staff name entry."
 
+  - task: "Staff Privacy Controls for Roster Pay Information"
+    implemented: true
+    working: "NA"
+    file: "App.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "testing"
+          comment: "Starting comprehensive testing of staff privacy controls for roster pay information across all views (Daily, Weekly, Monthly, Calendar). Need to verify: 1) Staff can only see their own pay amounts, 2) Staff see '***' for other staff pay, 3) Staff can see unassigned shift pay, 4) Totals only include staff's own pay, 5) All shift details remain visible."
+
   - task: "Pay Summary Display Fix"
     implemented: false
     working: false
