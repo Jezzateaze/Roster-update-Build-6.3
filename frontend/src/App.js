@@ -2267,16 +2267,17 @@ function App() {
             };
           }
           
-          const grossPay = entry.total_pay || 0;
+          const grossPay = entry.total_pay || 0; // Always use staff pay for tax calculations
           const afterTaxPay = calculateAfterTaxPay(grossPay, staffMember);
+          const displayAmount = getDisplayAmount(entry, entry.staff_id) || 0; // Display amount for totals
           
           staffTotals[entry.staff_name].hours += entry.hours_worked || 0;
-          staffTotals[entry.staff_name].pay += grossPay;
-          staffTotals[entry.staff_name].grossPay += grossPay;
+          staffTotals[entry.staff_name].pay += displayAmount; // Use display amount for pay totals
+          staffTotals[entry.staff_name].grossPay += grossPay; // Use staff pay for tax calculations
           staffTotals[entry.staff_name].afterTaxPay += afterTaxPay;
           
           totalHours += entry.hours_worked || 0;
-          totalPay += grossPay;
+          totalPay += displayAmount; // Use display amount for total
         }
       }
     });
