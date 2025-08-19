@@ -2523,7 +2523,7 @@ function App() {
                       {getShiftTypeBadge(entry)}
                     </div>
                     <span className={`font-medium text-emerald-600 ${isCurrentMonth ? '' : 'opacity-75'}`}>
-                      {getPayDisplayText(entry.total_pay, entry.staff_id)}
+                      {getPayDisplayText(entry, entry.staff_id)}
                     </span>
                   </div>
                 </div>
