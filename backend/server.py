@@ -1923,7 +1923,7 @@ async def sync_staff_users(current_user: dict = Depends(get_current_user)):
                 email=f"{username}@company.com",
                 staff_id=staff["id"],
                 is_active=True,
-                must_change_pin=True,  # Force PIN change on first login
+                is_first_login=True,  # Force PIN change on first login
                 created_at=datetime.utcnow()
             )
             
