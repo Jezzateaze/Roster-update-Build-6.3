@@ -2453,7 +2453,14 @@ function App() {
     const selectedDate = selectedSingleDate || currentDate;
     const dayEntries = getDayEntries(selectedDate);
     const dayEvents = getDayEvents(selectedDate);
-    const dayTotal = dayEntries.reduce((sum, entry) => sum + entry.total_pay, 0);
+    
+    // Calculate day total based on user role
+    const dayTotal = dayEntries.reduce((sum, entry) => {
+      if (isStaff() && entry.staff_id !== currentUser?.staff_id) {
+        return sum; // Staff users don't see other staff's pay in totals
+      }
+      return sum + (entry.total_pay || 0);
+    }, 0);
     
     return (
       <div className="bg-white rounded-lg border border-slate-200 overflow-hidden">
