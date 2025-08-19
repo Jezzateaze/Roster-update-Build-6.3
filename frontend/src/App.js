@@ -2082,6 +2082,8 @@ function App() {
 
   // Check if current user should see NDIS charge information (Admin only)
   const canViewNDISCharges = () => {
+    // Temporarily hardcode to true to test if NDIS data is being fetched
+    // return true;
     return currentUser && currentUser.role === 'admin';
   };
 
