@@ -461,6 +461,54 @@ def check_shift_overlap(date_str: str, start_time: str, end_time: str, exclude_i
     
     return False
 
+def calculate_ndis_charges(roster_entry: RosterEntry, settings: Settings, shift_type: str) -> RosterEntry:
+    """Calculate NDIS charges for client billing"""
+    # Determine if this is a sleepover shift
+    is_sleepover = roster_entry.manual_sleepover if roster_entry.manual_sleepover is not None else roster_entry.is_sleepover
+    
+    if is_sleepover:
+        # Sleepover charges are per-shift basis
+        sleepover_charge = settings.ndis_charge_rates["sleepover_default"]
+        roster_entry.ndis_hourly_charge = 0.0  # Not applicable for sleepovers
+        roster_entry.ndis_shift_charge = sleepover_charge["rate"]
+        roster_entry.ndis_total_charge = sleepover_charge["rate"]
+        roster_entry.ndis_line_item_code = sleepover_charge["code"]
+        roster_entry.ndis_description = sleepover_charge["description"]
+        
+        # Add any additional wake hours beyond 2 hours at hourly rate
+        wake_hours = roster_entry.wake_hours if roster_entry.wake_hours else 0
+        extra_wake_hours = max(0, wake_hours - 2) if wake_hours > 2 else 0
+        
+        if extra_wake_hours > 0:
+            # Use appropriate hourly NDIS rate for extra wake time
+            # Map shift_type to NDIS charge rate key
+            shift_type_key = shift_type.lower().replace('_', '_')
+            if shift_type_key in settings.ndis_charge_rates:
+                hourly_ndis_rate = settings.ndis_charge_rates[shift_type_key]["rate"]
+                roster_entry.ndis_total_charge += extra_wake_hours * hourly_ndis_rate
+    else:
+        # Regular shift - hourly charges
+        # Map shift_type to NDIS charge rate key
+        shift_type_key = shift_type.lower().replace('_', '_')
+        
+        if shift_type_key in settings.ndis_charge_rates:
+            ndis_rate_info = settings.ndis_charge_rates[shift_type_key]
+            roster_entry.ndis_hourly_charge = ndis_rate_info["rate"]
+            roster_entry.ndis_shift_charge = 0.0  # Not applicable for regular shifts
+            roster_entry.ndis_total_charge = roster_entry.hours_worked * ndis_rate_info["rate"]
+            roster_entry.ndis_line_item_code = ndis_rate_info["code"]
+            roster_entry.ndis_description = ndis_rate_info["description"]
+        else:
+            # Default to weekday_day if shift type not found
+            default_rate = settings.ndis_charge_rates["weekday_day"]
+            roster_entry.ndis_hourly_charge = default_rate["rate"]
+            roster_entry.ndis_shift_charge = 0.0
+            roster_entry.ndis_total_charge = roster_entry.hours_worked * default_rate["rate"]
+            roster_entry.ndis_line_item_code = default_rate["code"]
+            roster_entry.ndis_description = default_rate["description"]
+    
+    return roster_entry
+
 def calculate_pay(roster_entry: RosterEntry, settings: Settings) -> RosterEntry:
     """Calculate pay for a roster entry with sleepover logic"""
     hours = calculate_hours_worked(roster_entry.start_time, roster_entry.end_time)
