@@ -2786,7 +2786,7 @@ function App() {
               </div>
               <div className="mt-4 p-3 bg-emerald-50 border border-emerald-200 rounded-lg">
                 <div className="text-lg font-bold text-emerald-700">
-                  Daily Total: {canViewPayInformation() ? formatCurrency(dayTotal) : '***'}
+                  Daily Total ({getRateTypeLabel()}): {canViewPayInformation() ? formatCurrency(dayTotal) : '***'}
                 </div>
               </div>
             </div>
