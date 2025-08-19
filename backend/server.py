@@ -611,6 +611,34 @@ def calculate_pay(roster_entry: RosterEntry, settings: Settings) -> RosterEntry:
         
         roster_entry.base_pay = hours * hourly_rate
     
+    # Calculate NDIS charges - determine shift type for NDIS calculation
+    if roster_entry.manual_shift_type:
+        ndis_shift_type = roster_entry.manual_shift_type
+    else:
+        # Determine shift type automatically for NDIS calculation
+        shift_type_enum = determine_shift_type(
+            roster_entry.date, 
+            roster_entry.start_time, 
+            roster_entry.end_time,
+            roster_entry.is_public_holiday
+        )
+        # Convert enum to string for NDIS calculation
+        if shift_type_enum == ShiftType.PUBLIC_HOLIDAY:
+            ndis_shift_type = "public_holiday"
+        elif shift_type_enum == ShiftType.SATURDAY:
+            ndis_shift_type = "saturday"
+        elif shift_type_enum == ShiftType.SUNDAY:
+            ndis_shift_type = "sunday"
+        elif shift_type_enum == ShiftType.WEEKDAY_EVENING:
+            ndis_shift_type = "weekday_evening"
+        elif shift_type_enum == ShiftType.WEEKDAY_NIGHT:
+            ndis_shift_type = "weekday_night"
+        else:
+            ndis_shift_type = "weekday_day"
+    
+    # Calculate NDIS charges
+    roster_entry = calculate_ndis_charges(roster_entry, settings, ndis_shift_type)
+    
     roster_entry.total_pay = roster_entry.base_pay + roster_entry.sleepover_allowance
     return roster_entry
 
