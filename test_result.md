@@ -205,7 +205,8 @@ metadata:
 test_plan:
   current_focus:
     - "Frontend NDIS Charge Display"
-  stuck_tasks: []
+  stuck_tasks:
+    - "Frontend NDIS Charge Display"
   test_all: false
   test_priority: "high_first"
 
