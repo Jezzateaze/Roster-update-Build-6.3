@@ -608,7 +608,10 @@ function App() {
       
       // Add staff members (convert staff names to likely usernames)
       staffList.forEach(staff => {
-        if (staff.active) {
+        if (staff.active && 
+            staff.name && 
+            staff.name.trim() !== '' // Filter out staff with empty names
+        ) {
           const username = staff.name.toLowerCase().replace(/\s+/g, '');
           users.push({
             username: username,
