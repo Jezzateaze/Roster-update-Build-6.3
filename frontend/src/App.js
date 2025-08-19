@@ -261,6 +261,69 @@ function App() {
     }
   };
 
+  // Sync staff users - Create missing user accounts for staff (Admin only)
+  const syncStaffUsers = async () => {
+    if (!isAdmin()) {
+      alert('❌ Admin access required to sync staff users.');
+      return;
+    }
+
+    const confirmMessage = `🔧 Staff User Synchronization\n\nThis will:\n• Create user accounts for staff members without login credentials\n• Set default PIN "888888" for new accounts\n• Clean up staff records with empty names\n• Allow staff to login and change their PINs\n\nProceed with synchronization?`;
+    
+    if (!window.confirm(confirmMessage)) {
+      return;
+    }
+
+    try {
+      const response = await axios.post(`${API_BASE_URL}/api/admin/sync_staff_users`, {}, {
+        headers: { 'Authorization': `Bearer ${authToken}` }
+      });
+      
+      const result = response.data;
+      
+      let message = `✅ ${result.message}\n\n`;
+      
+      if (result.summary) {
+        message += `📊 Summary:\n`;
+        message += `• Created: ${result.summary.created} new user accounts\n`;
+        message += `• Existing: ${result.summary.existing} accounts already existed\n`;
+        message += `• Errors: ${result.summary.errors} errors encountered\n`;
+        message += `• Cleaned up: ${result.summary.cleaned_up} empty name records\n\n`;
+      }
+      
+      if (result.created_users && result.created_users.length > 0) {
+        message += `👥 New User Accounts Created:\n`;
+        result.created_users.forEach(user => {
+          message += `• ${user}\n`;
+        });
+        message += `\n`;
+      }
+      
+      if (result.errors && result.errors.length > 0) {
+        message += `⚠️ Errors Encountered:\n`;
+        result.errors.forEach(error => {
+          message += `• ${error}\n`;
+        });
+        message += `\n`;
+      }
+      
+      message += `🎯 Next Steps:\n`;
+      message += `• Staff can now login with their username and PIN "888888"\n`;
+      message += `• They will be prompted to change their PIN on first login\n`;
+      message += `• Test staff login functionality`;
+      
+      alert(message);
+      
+      // Refresh data
+      fetchInitialData();
+      fetchAvailableUsers();
+      
+    } catch (error) {
+      console.error('Error syncing staff users:', error);
+      alert(`❌ Error syncing staff users: ${error.response?.data?.detail || error.message}`);
+    }
+  };
+
   const [authError, setAuthError] = useState('');
   const [addingStaff, setAddingStaff] = useState(false);
 
