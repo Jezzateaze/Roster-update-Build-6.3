@@ -5413,26 +5413,39 @@ class ShiftRosterAPITester:
         return True
 
 def main():
-    print("🚀 Starting Shift Roster & Pay Calculator API Tests")
-    print("🎯 FOCUS: Critical Pay Calculation Fix for 12:00PM-8:00PM Shifts")
+    print("🚀 Starting Staff User Synchronization API Tests")
+    print("🎯 URGENT: Test staff user synchronization endpoint to fix broken staff authentication")
     print("=" * 80)
     
     tester = ShiftRosterAPITester()
     
-    # Run basic health checks first
+    # Run authentication first to get admin token
+    print("\n🔐 Running Admin Authentication...")
+    auth_success = tester.test_authentication_system()
+    
+    if not auth_success:
+        print("❌ Admin authentication failed - cannot proceed with sync tests")
+        return 1
+    
+    # Run basic health checks
     print("\n📋 Running Basic Health Checks...")
     tester.test_health_check()
     tester.test_get_staff()
-    tester.test_get_settings()
     
-    # Run the critical pay calculation fix test
+    # Run the critical staff synchronization test
     print("\n" + "="*80)
-    print("🎯 CRITICAL PAY CALCULATION FIX TEST")
+    print("🎯 CRITICAL STAFF USER SYNCHRONIZATION TEST")
     print("="*80)
-    success = tester.test_12pm_8pm_pay_calculation_fix()
+    success = tester.test_staff_user_synchronization()
     
-    print(f"\n🏁 Critical Pay Calculation Test Complete!")
-    print(f"Result: {'✅ PASSED' if success else '❌ FAILED'}")
+    print(f"\n🏁 Staff User Synchronization Test Complete!")
+    print(f"Result: {'✅ PASSED - Staff authentication restored!' if success else '❌ FAILED - Staff authentication still broken'}")
+    
+    # Print final summary
+    print(f"\n📊 TEST SUMMARY:")
+    print(f"   Tests run: {tester.tests_run}")
+    print(f"   Tests passed: {tester.tests_passed}")
+    print(f"   Success rate: {(tester.tests_passed/tester.tests_run*100):.1f}%" if tester.tests_run > 0 else "   Success rate: 0%")
     
     return 0 if success else 1
 
