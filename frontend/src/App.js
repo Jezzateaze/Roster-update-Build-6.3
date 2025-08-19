@@ -2763,7 +2763,15 @@ function App() {
           {weekDays.map((date, index) => {
             const dayEntries = getDayEntries(date);
             const dayEvents = getDayEvents(date);
-            const dayTotal = dayEntries.reduce((sum, entry) => sum + entry.total_pay, 0);
+            
+            // Calculate day total based on user role
+            const dayTotal = dayEntries.reduce((sum, entry) => {
+              if (isStaff() && entry.staff_id !== currentUser?.staff_id) {
+                return sum; // Staff users don't see other staff's pay in totals
+              }
+              return sum + (entry.total_pay || 0);
+            }, 0);
+            
             const isToday = date.toDateString() === new Date().toDateString();
 
             return (
