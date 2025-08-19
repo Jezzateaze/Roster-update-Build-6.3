@@ -2082,7 +2082,9 @@ function App() {
 
   // Check if current user should see NDIS charge information (Admin only)
   const canViewNDISCharges = () => {
-    return currentUser && currentUser.role === 'admin';
+    const result = currentUser && currentUser.role === 'admin';
+    console.log('canViewNDISCharges:', result, 'currentUser:', currentUser);
+    return result;
   };
 
   // Get appropriate amount to display based on user role
@@ -2093,8 +2095,10 @@ function App() {
     
     // Admin users see NDIS charges, Staff users see staff pay
     if (canViewNDISCharges()) {
+      console.log('Admin user - returning NDIS charge:', entry.ndis_total_charge, 'for entry:', entry.id);
       return entry.ndis_total_charge || 0;
     } else {
+      console.log('Staff user - returning staff pay:', entry.total_pay, 'for entry:', entry.id);
       return entry.total_pay || 0;
     }
   };
