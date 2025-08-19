@@ -4837,7 +4837,7 @@ function App() {
                   <Separator />
                   <div className="flex justify-between font-bold">
                     <span>Total Pay:</span>
-                    <span className="text-emerald-600">{formatCurrency(selectedShift.total_pay)}</span>
+                    <span className="text-emerald-600">{getPayDisplayText(selectedShift)}</span>
                   </div>
                 </div>
 
