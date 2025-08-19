@@ -1428,6 +1428,55 @@ async def delete_roster_entry(entry_id: str):
         raise HTTPException(status_code=404, detail="Roster entry not found")
     return {"message": "Roster entry deleted"}
 
+@app.post("/api/admin/migrate-ndis-charges")
+async def migrate_ndis_charges_to_existing_entries(current_user: dict = Depends(get_current_user)):
+    """Migrate NDIS charge calculations to existing roster entries"""
+    # Admin only endpoint
+    if current_user.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="Admin access required")
+    
+    # Get current settings
+    settings_doc = db.settings.find_one()
+    settings = Settings(**settings_doc) if settings_doc else Settings()
+    
+    # Find all roster entries that don't have NDIS fields or have zero values
+    roster_entries = list(db.roster.find())
+    updated_count = 0
+    errors = []
+    
+    for entry_doc in roster_entries:
+        try:
+            # Check if entry needs NDIS migration
+            needs_migration = (
+                "ndis_total_charge" not in entry_doc or 
+                entry_doc.get("ndis_total_charge", 0) == 0 or
+                not entry_doc.get("ndis_line_item_code")
+            )
+            
+            if needs_migration:
+                # Convert to RosterEntry object
+                roster_entry = RosterEntry(**entry_doc)
+                
+                # Recalculate pay (including NDIS charges)
+                roster_entry = calculate_pay(roster_entry, settings)
+                
+                # Update in database
+                db.roster.update_one(
+                    {"id": roster_entry.id}, 
+                    {"$set": roster_entry.dict()}
+                )
+                updated_count += 1
+                
+        except Exception as e:
+            errors.append(f"Entry {entry_doc.get('id', 'unknown')}: {str(e)}")
+    
+    return {
+        "message": f"NDIS charge migration completed",
+        "entries_updated": updated_count,
+        "total_entries": len(roster_entries),
+        "errors": errors
+    }
+
 # Settings endpoints
 @app.get("/api/settings")
 async def get_settings():
