@@ -204,10 +204,10 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Staff Privacy Controls for Roster Pay Information"
+    - "Staff User Synchronization Endpoint"
   stuck_tasks: []
   test_all: false
-  test_priority: "high_first"
+  test_priority: "critical_first"
 
 agent_communication:
     - agent: "main"
