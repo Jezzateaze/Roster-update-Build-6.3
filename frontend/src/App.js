@@ -2202,7 +2202,8 @@ function App() {
       if (entry.staff_id && entry.staff_name) {
         const staffMember = staff.find(s => s.id === entry.staff_id);
         if (staffMember && staffMember.active) {
-          totalPay += entry.total_pay || 0;
+          const displayAmount = getDisplayAmount(entry, entry.staff_id) || 0;
+          totalPay += displayAmount;
           assignedShifts++;
         }
       }
