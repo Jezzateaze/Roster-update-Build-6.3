@@ -243,9 +243,9 @@ agent_communication:
     implemented: true
     working: false
     file: "server.py"
-    stuck_count: 0
+    stuck_count: 1
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
         - working: false
           agent: "main"
@@ -256,6 +256,9 @@ agent_communication:
         - working: false
           agent: "testing"
           comment: "🎯 COMPREHENSIVE NDIS TESTING COMPLETED - MIXED RESULTS: Tested all 5 critical areas from review request with 60% success rate (3/5 test suites passed). ✅ WORKING CORRECTLY: 1) NDIS Charge Fields: All 5 required fields (ndis_hourly_charge, ndis_shift_charge, ndis_total_charge, ndis_line_item_code, ndis_description) present in new roster entries, 2) Regular Shift NDIS Charges: Perfect calculations for weekday day ($70.23/hr), weekday evening ($77.38/hr), Saturday ($98.83/hr), Sunday ($122.59/hr) with correct codes and descriptions, 3) NDIS vs Staff Pay: Both calculations coexist correctly - staff pay at $42/hr vs NDIS charge at $70.23/hr for same shift, independent calculations working. ❌ CRITICAL ISSUES FOUND: 1) Sleepover Extra Wake Hours: NDIS calculation incorrect for extra wake hours beyond 2 hours (got $365.37, expected $356.79 for 3-hour wake), 2) Existing Roster Entries: Legacy entries in database missing NDIS fields completely (0/10 entries have NDIS data), only NEW entries have NDIS calculations. IMPACT: New NDIS functionality works for new shifts but existing roster data needs migration. Core NDIS calculation logic is sound but needs minor fix for sleepover wake hours and data migration for existing entries."
+        - working: false
+          agent: "testing"
+          comment: "🎯 COMPREHENSIVE NDIS RETESTING COMPLETED - SIGNIFICANT IMPROVEMENT: Tested all 6 critical areas from review request with 83.3% success rate (5/6 test suites passed). ✅ MAJOR IMPROVEMENTS: 1) NDIS Charge Fields: All 5 required fields present in new entries ✅, 2) Regular Shift NDIS Charges: Perfect calculations for all shift types (weekday day $70.23/hr, evening $77.38/hr, Saturday $98.83/hr, Sunday $122.59/hr) with correct codes ✅, 3) NDIS vs Staff Pay Coexistence: Both calculations working independently (staff $42/hr vs NDIS $70.23/hr) ✅, 4) NDIS Migration Endpoint: WORKING PERFECTLY - updated 510/525 existing entries with NDIS data ✅, 5) API Responses: All entries now have complete NDIS field coverage (10/10 tested) ✅. ❌ REMAINING CRITICAL ISSUE: Sleepover Extra Wake Hours Fix STILL BROKEN - showing $365.37 instead of expected $356.79 for 3-hour wake sleepover. The calculation shows correct base charge ($286.56) and extra wake calculation (1 hour × $78.81 = $78.81) totaling $365.37, but review request expects $356.79. This suggests the expected value in review request may need verification or the calculation logic needs further investigation."
 
   - task: "Enhanced Shift Template Editing"
     implemented: true
