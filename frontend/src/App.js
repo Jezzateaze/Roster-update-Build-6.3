@@ -2740,7 +2740,7 @@ function App() {
                           </div>
                           <div className="text-right">
                             <div className="text-lg font-bold text-emerald-600">
-                              {getPayDisplayText(entry.total_pay, entry.staff_id)}
+                              {getPayDisplayText(entry, entry.staff_id)}
                             </div>
                             <div className="text-sm text-slate-600">
                               {entry.staff_name || 'Unassigned'}
