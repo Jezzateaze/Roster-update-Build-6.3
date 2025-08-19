@@ -566,6 +566,10 @@ def calculate_pay(roster_entry: RosterEntry, settings: Settings) -> RosterEntry:
             roster_entry.base_pay = extra_wake_hours * hourly_rate
         else:
             roster_entry.base_pay = 0  # Only sleepover allowance
+        
+        # Calculate NDIS charges for sleepover
+        # For sleepover shifts, NDIS charges are per-shift based
+        roster_entry = calculate_ndis_charges(roster_entry, settings, "sleepover_default")
             
     else:
         # Regular shift calculation
