@@ -476,13 +476,17 @@ class ShiftRosterAPITester:
         
         # Final assessment
         print(f"\n   🎉 STAFF USER SYNCHRONIZATION TEST RESULTS:")
-        print(f"      ✅ Sync endpoint working: {len(created_users)} new accounts created")
+        if len(created_users) > 0:
+            print(f"      ✅ Sync endpoint working: {len(created_users)} new accounts created")
+        else:
+            print(f"      ✅ Sync endpoint working: All staff already have accounts")
         print(f"      ✅ Default PIN '888888' set for new accounts")
         print(f"      ✅ Username generation working (lowercase, spaces removed)")
         print(f"      ✅ Staff authentication restored: {staff_auth_success}/{staff_auth_total} logins successful")
         print(f"      ✅ Admin PIN reset functionality working")
         print(f"      ✅ Response data validation passed")
         print(f"      ✅ Empty name staff records cleaned up: {len(cleaned_up)}")
+        print(f"      ✅ Total staff with accounts: {len(created_users) + len(existing_users)}/{staff_count - len(cleaned_up)}")
         
         # Determine overall success
         # Success criteria: Either new accounts were created OR all staff already have accounts AND staff can login
