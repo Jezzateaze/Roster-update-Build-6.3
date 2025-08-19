@@ -2006,14 +2006,12 @@ function App() {
     // Admin can see all pay information
     if (currentUser.role === 'admin') return true;
     
-    // Staff can only see their own pay information
+    // Staff can see pay for unassigned shifts
+    if (!entryStaffId) return true;
+    
+    // Staff can only see their own pay information for assigned shifts
     if (currentUser.role === 'staff') {
-      // If entryStaffId is provided, check if it matches current user's staff_id
-      if (entryStaffId) {
-        return currentUser.staff_id === entryStaffId;
-      }
-      // For general pay visibility, staff cannot see others' pay
-      return false;
+      return currentUser.staff_id === entryStaffId;
     }
     
     return false;
