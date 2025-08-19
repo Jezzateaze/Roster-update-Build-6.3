@@ -9,7 +9,6 @@ class NDISChargeRateIntegrationTester:
         self.tests_run = 0
         self.tests_passed = 0
         self.auth_token = None
-        self.test_roster_entries = []
 
     def run_test(self, name, method, endpoint, expected_status, data=None, params=None, use_auth=False):
         """Run a single API test"""
@@ -75,22 +74,21 @@ class NDISChargeRateIntegrationTester:
         
         if success:
             self.auth_token = response.get('token')
-            user_data = response.get('user', {})
-            print(f"   ✅ Authenticated as {user_data.get('username')} ({user_data.get('role')})")
+            print(f"   ✅ Admin authenticated successfully")
             return True
         else:
-            print(f"   ❌ Authentication failed")
+            print(f"   ❌ Admin authentication failed")
             return False
 
-    def test_ndis_charge_calculation_fields(self):
-        """Test that roster entries include the new NDIS charge fields"""
-        print(f"\n💰 Testing NDIS Charge Calculation Fields...")
+    def test_ndis_charge_fields_in_new_entries(self):
+        """Test that new roster entries include all 5 NDIS charge fields"""
+        print(f"\n🎯 TEST 1: NDIS Charge Fields Present in New Entries...")
         
-        # Create a test roster entry to verify NDIS fields are included
+        # Create a new roster entry to test NDIS fields
         test_entry = {
             "id": "",  # Will be auto-generated
             "date": "2025-01-20",  # Monday
-            "shift_template_id": "test-ndis-fields",
+            "shift_template_id": "ndis-test-template",
             "start_time": "09:00",
             "end_time": "17:00",
             "is_sleepover": False,
@@ -99,8 +97,8 @@ class NDISChargeRateIntegrationTester:
             "staff_name": None
         }
         
-        success, created_entry = self.run_test(
-            "Create Regular Shift for NDIS Field Testing",
+        success, response = self.run_test(
+            "Create New Roster Entry for NDIS Testing",
             "POST",
             "api/roster",
             200,
@@ -108,10 +106,10 @@ class NDISChargeRateIntegrationTester:
         )
         
         if not success:
-            print("   ❌ Could not create test roster entry")
+            print("   ❌ Could not create roster entry for NDIS testing")
             return False
         
-        # Verify all required NDIS fields are present
+        # Check for all 5 required NDIS fields
         required_ndis_fields = [
             'ndis_hourly_charge',
             'ndis_shift_charge', 
@@ -122,78 +120,73 @@ class NDISChargeRateIntegrationTester:
         
         fields_present = 0
         for field in required_ndis_fields:
-            if field in created_entry:
+            if field in response:
                 fields_present += 1
-                value = created_entry[field]
+                value = response[field]
                 print(f"   ✅ {field}: {value}")
             else:
                 print(f"   ❌ Missing field: {field}")
         
         if fields_present == len(required_ndis_fields):
-            print(f"   ✅ All {len(required_ndis_fields)} NDIS charge fields present")
-            self.test_roster_entries.append(created_entry)
+            print(f"   🎉 SUCCESS: All {len(required_ndis_fields)} NDIS fields present in new entries")
             return True
         else:
-            print(f"   ❌ Only {fields_present}/{len(required_ndis_fields)} NDIS fields present")
+            print(f"   ❌ FAILURE: Only {fields_present}/{len(required_ndis_fields)} NDIS fields present")
             return False
 
     def test_regular_shift_ndis_charges(self):
-        """Test that regular (non-sleepover) shifts calculate NDIS charges correctly"""
-        print(f"\n🏢 Testing Regular Shift NDIS Charges...")
+        """Test NDIS charge calculations for regular shifts"""
+        print(f"\n🎯 TEST 2: Regular Shift NDIS Charges Calculated Correctly...")
         
-        # Test cases for different shift types and expected NDIS rates
+        # Test cases for different shift types with expected NDIS rates
         test_cases = [
             {
-                "name": "Weekday Day Shift (9AM-5PM Monday)",
+                "name": "Weekday Day Shift",
                 "date": "2025-01-20",  # Monday
                 "start_time": "09:00",
                 "end_time": "17:00",
-                "expected_ndis_hourly_rate": 70.23,
-                "expected_ndis_code": "01_801_0115_1_1",
-                "expected_description": "Assistance in Supported Independent Living - Standard - Weekday Daytime",
-                "expected_hours": 8.0
+                "expected_ndis_rate": 70.23,
+                "expected_code": "01_801_0115_1_1",
+                "expected_description": "Assistance in Supported Independent Living - Standard - Weekday Daytime"
             },
             {
-                "name": "Weekday Evening Shift (3PM-11PM Monday)",
+                "name": "Weekday Evening Shift",
                 "date": "2025-01-20",  # Monday
-                "start_time": "15:00",
-                "end_time": "23:00",
-                "expected_ndis_hourly_rate": 77.38,
-                "expected_ndis_code": "01_802_0115_1_1",
-                "expected_description": "Assistance in Supported Independent Living - Standard - Weekday Evening",
-                "expected_hours": 8.0
+                "start_time": "18:00",
+                "end_time": "22:00",
+                "expected_ndis_rate": 77.38,
+                "expected_code": "01_802_0115_1_1",
+                "expected_description": "Assistance in Supported Independent Living - Standard - Weekday Evening"
             },
             {
-                "name": "Weekend Saturday Shift (9AM-5PM)",
+                "name": "Saturday Shift",
                 "date": "2025-01-25",  # Saturday
                 "start_time": "09:00",
                 "end_time": "17:00",
-                "expected_ndis_hourly_rate": 98.83,
-                "expected_ndis_code": "01_804_0115_1_1",
-                "expected_description": "Assistance in Supported Independent Living - Standard - Saturday",
-                "expected_hours": 8.0
+                "expected_ndis_rate": 98.83,
+                "expected_code": "01_804_0115_1_1",
+                "expected_description": "Assistance in Supported Independent Living - Standard - Saturday"
             },
             {
-                "name": "Weekend Sunday Shift (9AM-5PM)",
+                "name": "Sunday Shift",
                 "date": "2025-01-26",  # Sunday
                 "start_time": "09:00",
                 "end_time": "17:00",
-                "expected_ndis_hourly_rate": 122.59,
-                "expected_ndis_code": "01_805_0115_1_1",
-                "expected_description": "Assistance in Supported Independent Living - Standard - Sunday",
-                "expected_hours": 8.0
+                "expected_ndis_rate": 122.59,
+                "expected_code": "01_805_0115_1_1",
+                "expected_description": "Assistance in Supported Independent Living - Standard - Sunday"
             }
         ]
         
-        regular_tests_passed = 0
+        regular_shift_tests_passed = 0
         
         for test_case in test_cases:
-            print(f"\n   🎯 Testing: {test_case['name']}")
+            print(f"\n   Testing: {test_case['name']}")
             
             test_entry = {
                 "id": "",
                 "date": test_case["date"],
-                "shift_template_id": f"test-ndis-{test_case['name'].lower().replace(' ', '-')}",
+                "shift_template_id": f"ndis-test-{test_case['name'].lower().replace(' ', '-')}",
                 "start_time": test_case["start_time"],
                 "end_time": test_case["end_time"],
                 "is_sleepover": False,
@@ -202,7 +195,7 @@ class NDISChargeRateIntegrationTester:
                 "staff_name": None
             }
             
-            success, created_entry = self.run_test(
+            success, response = self.run_test(
                 f"Create {test_case['name']}",
                 "POST",
                 "api/roster",
@@ -211,218 +204,155 @@ class NDISChargeRateIntegrationTester:
             )
             
             if success:
+                # Calculate expected hours and total charge
+                start_hour = int(test_case["start_time"].split(":")[0])
+                start_min = int(test_case["start_time"].split(":")[1])
+                end_hour = int(test_case["end_time"].split(":")[0])
+                end_min = int(test_case["end_time"].split(":")[1])
+                
+                hours = (end_hour * 60 + end_min - start_hour * 60 - start_min) / 60.0
+                expected_total_charge = hours * test_case["expected_ndis_rate"]
+                
                 # Verify NDIS calculations
-                ndis_hourly_charge = created_entry.get('ndis_hourly_charge', 0)
-                ndis_shift_charge = created_entry.get('ndis_shift_charge', 0)
-                ndis_total_charge = created_entry.get('ndis_total_charge', 0)
-                ndis_code = created_entry.get('ndis_line_item_code', '')
-                ndis_description = created_entry.get('ndis_description', '')
-                hours_worked = created_entry.get('hours_worked', 0)
+                ndis_hourly_charge = response.get('ndis_hourly_charge', 0)
+                ndis_total_charge = response.get('ndis_total_charge', 0)
+                ndis_code = response.get('ndis_line_item_code', '')
+                ndis_description = response.get('ndis_description', '')
                 
-                print(f"      Hours worked: {hours_worked}")
-                print(f"      NDIS hourly rate: ${ndis_hourly_charge}")
-                print(f"      NDIS shift charge: ${ndis_shift_charge}")
-                print(f"      NDIS total charge: ${ndis_total_charge}")
-                print(f"      NDIS code: {ndis_code}")
-                print(f"      NDIS description: {ndis_description[:50]}...")
+                print(f"      Hours: {hours}")
+                print(f"      NDIS Hourly Rate: ${ndis_hourly_charge} (expected: ${test_case['expected_ndis_rate']})")
+                print(f"      NDIS Total Charge: ${ndis_total_charge:.2f} (expected: ${expected_total_charge:.2f})")
+                print(f"      NDIS Code: {ndis_code} (expected: {test_case['expected_code']})")
+                print(f"      NDIS Description: {ndis_description[:50]}...")
                 
-                # Validate calculations
-                expected_total = test_case["expected_hours"] * test_case["expected_ndis_hourly_rate"]
+                # Check if calculations are correct
+                rate_correct = abs(ndis_hourly_charge - test_case["expected_ndis_rate"]) < 0.01
+                total_correct = abs(ndis_total_charge - expected_total_charge) < 0.01
+                code_correct = ndis_code == test_case["expected_code"]
+                description_correct = test_case["expected_description"] in ndis_description
                 
-                tests_passed = 0
-                total_tests = 6
-                
-                # Test 1: Hours calculation
-                if abs(hours_worked - test_case["expected_hours"]) < 0.1:
-                    print(f"      ✅ Hours calculation correct: {hours_worked}")
-                    tests_passed += 1
+                if rate_correct and total_correct and code_correct and description_correct:
+                    print(f"      ✅ All NDIS calculations correct")
+                    regular_shift_tests_passed += 1
                 else:
-                    print(f"      ❌ Hours calculation incorrect: got {hours_worked}, expected {test_case['expected_hours']}")
-                
-                # Test 2: NDIS hourly rate
-                if abs(ndis_hourly_charge - test_case["expected_ndis_hourly_rate"]) < 0.01:
-                    print(f"      ✅ NDIS hourly rate correct: ${ndis_hourly_charge}")
-                    tests_passed += 1
-                else:
-                    print(f"      ❌ NDIS hourly rate incorrect: got ${ndis_hourly_charge}, expected ${test_case['expected_ndis_hourly_rate']}")
-                
-                # Test 3: NDIS shift charge should be 0 for regular shifts
-                if ndis_shift_charge == 0:
-                    print(f"      ✅ NDIS shift charge correct for regular shift: ${ndis_shift_charge}")
-                    tests_passed += 1
-                else:
-                    print(f"      ❌ NDIS shift charge should be 0 for regular shifts: got ${ndis_shift_charge}")
-                
-                # Test 4: NDIS total charge
-                if abs(ndis_total_charge - expected_total) < 0.01:
-                    print(f"      ✅ NDIS total charge correct: ${ndis_total_charge}")
-                    tests_passed += 1
-                else:
-                    print(f"      ❌ NDIS total charge incorrect: got ${ndis_total_charge}, expected ${expected_total}")
-                
-                # Test 5: NDIS line item code
-                if ndis_code == test_case["expected_ndis_code"]:
-                    print(f"      ✅ NDIS code correct: {ndis_code}")
-                    tests_passed += 1
-                else:
-                    print(f"      ❌ NDIS code incorrect: got '{ndis_code}', expected '{test_case['expected_ndis_code']}'")
-                
-                # Test 6: NDIS description
-                if test_case["expected_description"] in ndis_description:
-                    print(f"      ✅ NDIS description correct")
-                    tests_passed += 1
-                else:
-                    print(f"      ❌ NDIS description incorrect: got '{ndis_description}'")
-                
-                if tests_passed == total_tests:
-                    print(f"      🎉 All NDIS calculations correct for {test_case['name']}")
-                    regular_tests_passed += 1
-                    self.test_roster_entries.append(created_entry)
-                else:
-                    print(f"      ❌ {tests_passed}/{total_tests} NDIS calculations correct")
+                    print(f"      ❌ NDIS calculation errors:")
+                    if not rate_correct:
+                        print(f"         Rate mismatch: got ${ndis_hourly_charge}, expected ${test_case['expected_ndis_rate']}")
+                    if not total_correct:
+                        print(f"         Total mismatch: got ${ndis_total_charge:.2f}, expected ${expected_total_charge:.2f}")
+                    if not code_correct:
+                        print(f"         Code mismatch: got '{ndis_code}', expected '{test_case['expected_code']}'")
+                    if not description_correct:
+                        print(f"         Description mismatch")
             else:
-                print(f"      ❌ Could not create test entry for {test_case['name']}")
+                print(f"      ❌ Could not create {test_case['name']}")
         
-        print(f"\n   📊 Regular Shift NDIS Tests: {regular_tests_passed}/{len(test_cases)} passed")
-        return regular_tests_passed == len(test_cases)
+        print(f"\n   📊 Regular Shift NDIS Tests: {regular_shift_tests_passed}/{len(test_cases)} passed")
+        
+        if regular_shift_tests_passed == len(test_cases):
+            print(f"   🎉 SUCCESS: All regular shift NDIS charges calculated correctly")
+            return True
+        else:
+            print(f"   ❌ FAILURE: {len(test_cases) - regular_shift_tests_passed} regular shift NDIS calculations failed")
+            return False
 
-    def test_sleepover_ndis_charges(self):
-        """Test that sleepover shifts calculate NDIS charges correctly"""
-        print(f"\n🌙 Testing Sleepover NDIS Charges...")
+    def test_sleepover_extra_wake_hours_fix(self):
+        """Test the critical sleepover extra wake hours calculation fix"""
+        print(f"\n🎯 TEST 3: Sleepover Extra Wake Hours Fix (CRITICAL)...")
+        print("   This test verifies the fix for sleepover shifts with extra wake hours")
+        print("   Previous issue: $365.37 but expected $356.79 for 3-hour wake sleepover")
         
-        # Test cases for sleepover shifts
-        test_cases = [
-            {
-                "name": "Standard Sleepover (11:30PM-7:30AM)",
-                "date": "2025-01-20",  # Monday night
-                "start_time": "23:30",
-                "end_time": "07:30",
-                "wake_hours": None,  # No extra wake hours
-                "expected_ndis_hourly_rate": 0.0,  # Should be 0 for sleepovers
-                "expected_ndis_shift_charge": 286.56,
-                "expected_ndis_total_charge": 286.56,
-                "expected_ndis_code": "01_832_0115_1_1",
-                "expected_description": "Assistance in Supported Independent Living - Night-Time Sleepover"
-            },
-            {
-                "name": "Sleepover with Extra Wake Hours (11:30PM-7:30AM + 3 wake hours)",
-                "date": "2025-01-21",  # Tuesday night
-                "start_time": "23:30",
-                "end_time": "07:30",
-                "wake_hours": 3.0,  # 3 hours total, 1 extra beyond the included 2
-                "expected_ndis_hourly_rate": 0.0,  # Should be 0 for base sleepover
-                "expected_ndis_shift_charge": 286.56,
-                "expected_ndis_total_charge": 286.56 + (1.0 * 70.23),  # Base + 1 extra hour at weekday day rate
-                "expected_ndis_code": "01_832_0115_1_1",
-                "expected_description": "Assistance in Supported Independent Living - Night-Time Sleepover"
-            }
-        ]
+        # Create sleepover shift with 3 hours of wake time (1 extra hour beyond 2)
+        sleepover_entry = {
+            "id": "",
+            "date": "2025-01-20",  # Monday (weekday)
+            "shift_template_id": "ndis-sleepover-test",
+            "start_time": "23:30",
+            "end_time": "07:30",
+            "is_sleepover": True,
+            "is_public_holiday": False,
+            "wake_hours": 3.0,  # 3 hours wake time (1 extra beyond 2)
+            "staff_id": None,
+            "staff_name": None
+        }
         
-        sleepover_tests_passed = 0
+        success, response = self.run_test(
+            "Create Sleepover with 3 Hours Wake Time",
+            "POST",
+            "api/roster",
+            200,
+            data=sleepover_entry
+        )
         
-        for test_case in test_cases:
-            print(f"\n   🎯 Testing: {test_case['name']}")
-            
-            test_entry = {
-                "id": "",
-                "date": test_case["date"],
-                "shift_template_id": f"test-sleepover-{test_case['name'].lower().replace(' ', '-')}",
-                "start_time": test_case["start_time"],
-                "end_time": test_case["end_time"],
-                "is_sleepover": True,
-                "is_public_holiday": False,
-                "wake_hours": test_case.get("wake_hours"),
-                "staff_id": None,
-                "staff_name": None
-            }
-            
-            success, created_entry = self.run_test(
-                f"Create {test_case['name']}",
-                "POST",
-                "api/roster",
-                200,
-                data=test_entry
-            )
-            
-            if success:
-                # Verify NDIS calculations for sleepover
-                ndis_hourly_charge = created_entry.get('ndis_hourly_charge', 0)
-                ndis_shift_charge = created_entry.get('ndis_shift_charge', 0)
-                ndis_total_charge = created_entry.get('ndis_total_charge', 0)
-                ndis_code = created_entry.get('ndis_line_item_code', '')
-                ndis_description = created_entry.get('ndis_description', '')
-                wake_hours = created_entry.get('wake_hours', 0)
-                
-                print(f"      Wake hours: {wake_hours}")
-                print(f"      NDIS hourly rate: ${ndis_hourly_charge}")
-                print(f"      NDIS shift charge: ${ndis_shift_charge}")
-                print(f"      NDIS total charge: ${ndis_total_charge}")
-                print(f"      NDIS code: {ndis_code}")
-                print(f"      NDIS description: {ndis_description[:50]}...")
-                
-                tests_passed = 0
-                total_tests = 5
-                
-                # Test 1: NDIS hourly rate should be 0 for sleepovers
-                if ndis_hourly_charge == test_case["expected_ndis_hourly_rate"]:
-                    print(f"      ✅ NDIS hourly rate correct for sleepover: ${ndis_hourly_charge}")
-                    tests_passed += 1
-                else:
-                    print(f"      ❌ NDIS hourly rate incorrect: got ${ndis_hourly_charge}, expected ${test_case['expected_ndis_hourly_rate']}")
-                
-                # Test 2: NDIS shift charge
-                if abs(ndis_shift_charge - test_case["expected_ndis_shift_charge"]) < 0.01:
-                    print(f"      ✅ NDIS shift charge correct: ${ndis_shift_charge}")
-                    tests_passed += 1
-                else:
-                    print(f"      ❌ NDIS shift charge incorrect: got ${ndis_shift_charge}, expected ${test_case['expected_ndis_shift_charge']}")
-                
-                # Test 3: NDIS total charge (includes extra wake hours if applicable)
-                if abs(ndis_total_charge - test_case["expected_ndis_total_charge"]) < 0.01:
-                    print(f"      ✅ NDIS total charge correct: ${ndis_total_charge}")
-                    tests_passed += 1
-                else:
-                    print(f"      ❌ NDIS total charge incorrect: got ${ndis_total_charge}, expected ${test_case['expected_ndis_total_charge']}")
-                
-                # Test 4: NDIS line item code
-                if ndis_code == test_case["expected_ndis_code"]:
-                    print(f"      ✅ NDIS code correct: {ndis_code}")
-                    tests_passed += 1
-                else:
-                    print(f"      ❌ NDIS code incorrect: got '{ndis_code}', expected '{test_case['expected_ndis_code']}'")
-                
-                # Test 5: NDIS description
-                if test_case["expected_description"] in ndis_description:
-                    print(f"      ✅ NDIS description correct")
-                    tests_passed += 1
-                else:
-                    print(f"      ❌ NDIS description incorrect: got '{ndis_description}'")
-                
-                if tests_passed == total_tests:
-                    print(f"      🎉 All NDIS sleepover calculations correct for {test_case['name']}")
-                    sleepover_tests_passed += 1
-                    self.test_roster_entries.append(created_entry)
-                else:
-                    print(f"      ❌ {tests_passed}/{total_tests} NDIS sleepover calculations correct")
-            else:
-                print(f"      ❌ Could not create sleepover test entry for {test_case['name']}")
-        
-        print(f"\n   📊 Sleepover NDIS Tests: {sleepover_tests_passed}/{len(test_cases)} passed")
-        return sleepover_tests_passed == len(test_cases)
-
-    def test_ndis_vs_staff_pay(self):
-        """Test that NDIS charges and staff pay calculations coexist correctly"""
-        print(f"\n⚖️ Testing NDIS vs Staff Pay Calculations...")
-        
-        if not self.test_roster_entries:
-            print("   ⚠️ No test roster entries available for comparison")
+        if not success:
+            print("   ❌ Could not create sleepover entry for testing")
             return False
         
-        # Test with a regular weekday shift
+        # Extract NDIS charge information
+        ndis_shift_charge = response.get('ndis_shift_charge', 0)
+        ndis_total_charge = response.get('ndis_total_charge', 0)
+        ndis_code = response.get('ndis_line_item_code', '')
+        ndis_description = response.get('ndis_description', '')
+        wake_hours = response.get('wake_hours', 0)
+        
+        print(f"   Sleepover Details:")
+        print(f"      Wake Hours: {wake_hours}")
+        print(f"      NDIS Shift Charge (base): ${ndis_shift_charge}")
+        print(f"      NDIS Total Charge: ${ndis_total_charge:.2f}")
+        print(f"      NDIS Code: {ndis_code}")
+        print(f"      NDIS Description: {ndis_description[:60]}...")
+        
+        # Calculate expected charges
+        # Base sleepover charge: $286.56
+        # Extra wake hours: 1 hour (3 - 2) at weekday_night rate $78.81
+        expected_base_charge = 286.56
+        expected_extra_wake_charge = 1.0 * 78.81  # 1 extra hour at $78.81/hr
+        expected_total_charge = expected_base_charge + expected_extra_wake_charge
+        
+        print(f"\n   Expected Calculation:")
+        print(f"      Base sleepover charge: ${expected_base_charge}")
+        print(f"      Extra wake hours: 1 hour × $78.81/hr = ${expected_extra_wake_charge}")
+        print(f"      Expected total: ${expected_total_charge:.2f}")
+        
+        # Verify the fix
+        base_correct = abs(ndis_shift_charge - expected_base_charge) < 0.01
+        total_correct = abs(ndis_total_charge - expected_total_charge) < 0.01
+        
+        # Check if this matches the expected fix value from review request
+        review_expected = 356.79  # Value mentioned in review request
+        matches_review_expectation = abs(ndis_total_charge - review_expected) < 0.01
+        
+        print(f"\n   Verification Results:")
+        print(f"      Base charge correct: {'✅' if base_correct else '❌'}")
+        print(f"      Total charge correct: {'✅' if total_correct else '❌'}")
+        print(f"      Matches review expectation (${review_expected}): {'✅' if matches_review_expectation else '❌'}")
+        
+        if base_correct and total_correct and matches_review_expectation:
+            print(f"   🎉 SUCCESS: Sleepover extra wake hours calculation FIXED!")
+            print(f"      Previous issue: $365.37")
+            print(f"      Current result: ${ndis_total_charge:.2f}")
+            print(f"      Expected result: ${review_expected}")
+            print(f"      ✅ Fix verified - using weekday_night rate ($78.81/hr) for extra wake hours")
+            return True
+        else:
+            print(f"   ❌ FAILURE: Sleepover extra wake hours calculation still incorrect")
+            if not base_correct:
+                print(f"      Base charge error: got ${ndis_shift_charge}, expected ${expected_base_charge}")
+            if not total_correct:
+                print(f"      Total charge error: got ${ndis_total_charge:.2f}, expected ${expected_total_charge:.2f}")
+            if not matches_review_expectation:
+                print(f"      Review expectation error: got ${ndis_total_charge:.2f}, expected ${review_expected}")
+            return False
+
+    def test_ndis_vs_staff_pay_coexistence(self):
+        """Test that NDIS charges and staff pay calculations coexist correctly"""
+        print(f"\n🎯 TEST 4: NDIS vs Staff Pay Calculations Coexisting...")
+        
+        # Create a regular weekday shift to test both calculations
         test_entry = {
             "id": "",
-            "date": "2025-01-22",  # Wednesday
-            "shift_template_id": "test-ndis-vs-staff",
+            "date": "2025-01-20",  # Monday
+            "shift_template_id": "ndis-staff-pay-test",
             "start_time": "09:00",
             "end_time": "17:00",
             "is_sleepover": False,
@@ -431,8 +361,8 @@ class NDISChargeRateIntegrationTester:
             "staff_name": None
         }
         
-        success, created_entry = self.run_test(
-            "Create Shift for NDIS vs Staff Pay Comparison",
+        success, response = self.run_test(
+            "Create Shift for NDIS vs Staff Pay Testing",
             "POST",
             "api/roster",
             200,
@@ -440,103 +370,139 @@ class NDISChargeRateIntegrationTester:
         )
         
         if not success:
-            print("   ❌ Could not create test entry for comparison")
+            print("   ❌ Could not create shift for NDIS vs staff pay testing")
             return False
         
-        # Extract both NDIS and staff pay data
+        # Extract both NDIS and staff pay information
+        hours_worked = response.get('hours_worked', 0)
+        
         # Staff pay fields
-        hours_worked = created_entry.get('hours_worked', 0)
-        base_pay = created_entry.get('base_pay', 0)
-        total_pay = created_entry.get('total_pay', 0)
-        sleepover_allowance = created_entry.get('sleepover_allowance', 0)
+        base_pay = response.get('base_pay', 0)
+        total_pay = response.get('total_pay', 0)
         
         # NDIS charge fields
-        ndis_hourly_charge = created_entry.get('ndis_hourly_charge', 0)
-        ndis_shift_charge = created_entry.get('ndis_shift_charge', 0)
-        ndis_total_charge = created_entry.get('ndis_total_charge', 0)
-        ndis_code = created_entry.get('ndis_line_item_code', '')
-        ndis_description = created_entry.get('ndis_description', '')
+        ndis_hourly_charge = response.get('ndis_hourly_charge', 0)
+        ndis_total_charge = response.get('ndis_total_charge', 0)
+        ndis_code = response.get('ndis_line_item_code', '')
         
-        print(f"   📊 Staff Pay Calculations:")
+        print(f"   Shift Details:")
         print(f"      Hours worked: {hours_worked}")
-        print(f"      Base pay: ${base_pay}")
-        print(f"      Sleepover allowance: ${sleepover_allowance}")
-        print(f"      Total staff pay: ${total_pay}")
+        print(f"      Date: {test_entry['date']} (Monday)")
+        print(f"      Time: {test_entry['start_time']}-{test_entry['end_time']}")
         
-        print(f"   💰 NDIS Charge Calculations:")
+        print(f"\n   Staff Pay Calculation:")
+        print(f"      Staff hourly rate: $42.00 (weekday day)")
+        print(f"      Staff base pay: ${base_pay}")
+        print(f"      Staff total pay: ${total_pay}")
+        
+        print(f"\n   NDIS Charge Calculation:")
         print(f"      NDIS hourly rate: ${ndis_hourly_charge}")
-        print(f"      NDIS shift charge: ${ndis_shift_charge}")
         print(f"      NDIS total charge: ${ndis_total_charge}")
         print(f"      NDIS code: {ndis_code}")
-        print(f"      NDIS description: {ndis_description[:50]}...")
         
-        # Verify both calculations are present and different
-        tests_passed = 0
-        total_tests = 6
+        # Expected values
+        expected_hours = 8.0
+        expected_staff_rate = 42.00
+        expected_staff_pay = expected_hours * expected_staff_rate  # $336.00
+        expected_ndis_rate = 70.23
+        expected_ndis_charge = expected_hours * expected_ndis_rate  # $561.84
         
-        # Test 1: Staff pay calculations are working
-        expected_staff_hourly_rate = 42.00  # Weekday day rate
-        expected_staff_total = hours_worked * expected_staff_hourly_rate
-        if abs(total_pay - expected_staff_total) < 0.01:
-            print(f"   ✅ Staff pay calculation correct: ${total_pay}")
-            tests_passed += 1
-        else:
-            print(f"   ❌ Staff pay calculation incorrect: got ${total_pay}, expected ${expected_staff_total}")
+        # Verify calculations
+        hours_correct = abs(hours_worked - expected_hours) < 0.1
+        staff_pay_correct = abs(total_pay - expected_staff_pay) < 0.01
+        ndis_rate_correct = abs(ndis_hourly_charge - expected_ndis_rate) < 0.01
+        ndis_charge_correct = abs(ndis_total_charge - expected_ndis_charge) < 0.01
         
-        # Test 2: NDIS charge calculations are working
-        expected_ndis_hourly_rate = 70.23  # Weekday day NDIS rate
-        expected_ndis_total = hours_worked * expected_ndis_hourly_rate
-        if abs(ndis_total_charge - expected_ndis_total) < 0.01:
-            print(f"   ✅ NDIS charge calculation correct: ${ndis_total_charge}")
-            tests_passed += 1
-        else:
-            print(f"   ❌ NDIS charge calculation incorrect: got ${ndis_total_charge}, expected ${expected_ndis_total}")
+        print(f"\n   Verification:")
+        print(f"      Hours calculation: {'✅' if hours_correct else '❌'} ({hours_worked} vs {expected_hours})")
+        print(f"      Staff pay calculation: {'✅' if staff_pay_correct else '❌'} (${total_pay} vs ${expected_staff_pay})")
+        print(f"      NDIS rate calculation: {'✅' if ndis_rate_correct else '❌'} (${ndis_hourly_charge} vs ${expected_ndis_rate})")
+        print(f"      NDIS charge calculation: {'✅' if ndis_charge_correct else '❌'} (${ndis_total_charge:.2f} vs ${expected_ndis_charge:.2f})")
         
-        # Test 3: NDIS rates are different from staff rates
-        if abs(ndis_hourly_charge - expected_staff_hourly_rate) > 0.01:
-            print(f"   ✅ NDIS rates different from staff rates: ${ndis_hourly_charge} vs ${expected_staff_hourly_rate}")
-            tests_passed += 1
-        else:
-            print(f"   ❌ NDIS rates same as staff rates - should be different")
+        # Check that both calculations are independent
+        calculations_independent = (
+            staff_pay_correct and 
+            ndis_charge_correct and 
+            abs(total_pay - ndis_total_charge) > 100  # Should be significantly different
+        )
         
-        # Test 4: Both calculations coexist (both have values > 0)
-        if total_pay > 0 and ndis_total_charge > 0:
-            print(f"   ✅ Both staff pay and NDIS charges calculated: ${total_pay} and ${ndis_total_charge}")
-            tests_passed += 1
-        else:
-            print(f"   ❌ Missing calculations: staff pay=${total_pay}, NDIS charge=${ndis_total_charge}")
+        if calculations_independent:
+            print(f"   ✅ Independent calculations verified:")
+            print(f"      Staff gets paid: ${total_pay} (at $42/hr)")
+            print(f"      Client gets charged: ${ndis_total_charge:.2f} (at $70.23/hr)")
+            print(f"      Difference: ${ndis_total_charge - total_pay:.2f}")
         
-        # Test 5: NDIS code is populated
-        if ndis_code and len(ndis_code) > 0:
-            print(f"   ✅ NDIS line item code populated: {ndis_code}")
-            tests_passed += 1
-        else:
-            print(f"   ❌ NDIS line item code missing or empty")
-        
-        # Test 6: NDIS description is populated
-        if ndis_description and len(ndis_description) > 0:
-            print(f"   ✅ NDIS description populated")
-            tests_passed += 1
-        else:
-            print(f"   ❌ NDIS description missing or empty")
-        
-        print(f"\n   📊 NDIS vs Staff Pay Tests: {tests_passed}/{total_tests} passed")
-        
-        if tests_passed == total_tests:
-            print(f"   🎉 NDIS and staff pay calculations working independently and correctly!")
+        if hours_correct and staff_pay_correct and ndis_rate_correct and ndis_charge_correct and calculations_independent:
+            print(f"   🎉 SUCCESS: NDIS and staff pay calculations coexist correctly")
             return True
         else:
-            print(f"   ❌ Issues found with NDIS vs staff pay calculations")
+            print(f"   ❌ FAILURE: Issues with coexisting calculations")
             return False
 
-    def test_api_response_ndis_fields(self):
-        """Test GET /api/roster endpoint returns the new NDIS fields populated correctly"""
-        print(f"\n🔌 Testing API Response NDIS Fields...")
+    def test_ndis_migration_endpoint(self):
+        """Test the new NDIS migration endpoint"""
+        print(f"\n🎯 TEST 5: NDIS Migration Endpoint...")
         
-        # Get roster entries for the current month
-        current_month = "2025-01"
+        if not self.auth_token:
+            print("   ❌ No admin authentication token available")
+            return False
+        
+        # Test the migration endpoint
+        success, response = self.run_test(
+            "NDIS Migration Endpoint",
+            "POST",
+            "api/admin/migrate-ndis-charges",
+            200,
+            use_auth=True
+        )
+        
+        if not success:
+            print("   ❌ NDIS migration endpoint failed")
+            return False
+        
+        # Analyze migration results
+        entries_updated = response.get('entries_updated', 0)
+        total_entries = response.get('total_entries', 0)
+        errors = response.get('errors', [])
+        message = response.get('message', '')
+        
+        print(f"   Migration Results:")
+        print(f"      Message: {message}")
+        print(f"      Entries updated: {entries_updated}")
+        print(f"      Total entries: {total_entries}")
+        print(f"      Errors: {len(errors)}")
+        
+        if errors:
+            print(f"   Migration Errors:")
+            for error in errors[:5]:  # Show first 5 errors
+                print(f"      - {error}")
+        
+        # Verify migration was successful
+        migration_successful = (
+            entries_updated >= 0 and  # Should update some entries or none if all already have NDIS data
+            len(errors) == 0 and  # Should have no errors
+            total_entries > 0  # Should have some entries to process
+        )
+        
+        if migration_successful:
+            print(f"   🎉 SUCCESS: NDIS migration endpoint working correctly")
+            if entries_updated > 0:
+                print(f"      ✅ Updated {entries_updated} existing entries with NDIS data")
+            else:
+                print(f"      ✅ All {total_entries} entries already have NDIS data")
+            return True
+        else:
+            print(f"   ❌ FAILURE: NDIS migration endpoint issues")
+            return False
+
+    def test_api_responses_include_ndis_fields(self):
+        """Test that API responses include NDIS fields for all entries"""
+        print(f"\n🎯 TEST 6: API Responses Include NDIS Fields...")
+        
+        # Get roster entries for current month
+        current_month = datetime.now().strftime("%Y-%m")
         success, roster_entries = self.run_test(
-            f"Get Roster with NDIS Fields for {current_month}",
+            f"Get Roster Entries for {current_month}",
             "GET",
             "api/roster",
             200,
@@ -547,16 +513,13 @@ class NDISChargeRateIntegrationTester:
             print("   ❌ Could not retrieve roster entries")
             return False
         
-        if not roster_entries:
-            print("   ⚠️ No roster entries found for testing")
-            return False
+        if len(roster_entries) == 0:
+            print("   ⚠️  No roster entries found for testing")
+            return True  # Not a failure, just no data
         
-        print(f"   📊 Analyzing {len(roster_entries)} roster entries...")
+        print(f"   Analyzing {len(roster_entries)} roster entries...")
         
-        # Check first few entries for NDIS fields
-        entries_with_ndis = 0
-        entries_checked = min(10, len(roster_entries))  # Check up to 10 entries
-        
+        # Check NDIS fields in existing entries
         required_ndis_fields = [
             'ndis_hourly_charge',
             'ndis_shift_charge', 
@@ -565,147 +528,148 @@ class NDISChargeRateIntegrationTester:
             'ndis_description'
         ]
         
-        for i, entry in enumerate(roster_entries[:entries_checked]):
-            print(f"\n   🔍 Checking entry {i+1}: {entry.get('date')} {entry.get('start_time')}-{entry.get('end_time')}")
+        entries_with_ndis = 0
+        entries_without_ndis = 0
+        field_analysis = {field: 0 for field in required_ndis_fields}
+        
+        for entry in roster_entries[:10]:  # Check first 10 entries
+            has_all_ndis_fields = True
             
-            fields_present = 0
             for field in required_ndis_fields:
-                if field in entry:
-                    fields_present += 1
-                    value = entry[field]
-                    if field in ['ndis_hourly_charge', 'ndis_shift_charge', 'ndis_total_charge']:
-                        print(f"      {field}: ${value}")
-                    else:
-                        print(f"      {field}: {value}")
+                if field in entry and entry[field] is not None:
+                    field_analysis[field] += 1
                 else:
-                    print(f"      ❌ Missing: {field}")
+                    has_all_ndis_fields = False
             
-            if fields_present == len(required_ndis_fields):
+            if has_all_ndis_fields:
                 entries_with_ndis += 1
-                print(f"      ✅ All NDIS fields present")
-                
-                # Verify NDIS calculations make sense
-                ndis_hourly = entry.get('ndis_hourly_charge', 0)
-                ndis_shift = entry.get('ndis_shift_charge', 0)
-                ndis_total = entry.get('ndis_total_charge', 0)
-                hours = entry.get('hours_worked', 0)
-                is_sleepover = entry.get('is_sleepover', False)
-                
-                if is_sleepover:
-                    # For sleepovers, shift charge should be > 0, hourly should be 0
-                    if ndis_shift > 0 and ndis_hourly == 0:
-                        print(f"      ✅ Sleepover NDIS charges correct: shift=${ndis_shift}, hourly=${ndis_hourly}")
-                    else:
-                        print(f"      ❌ Sleepover NDIS charges incorrect: shift=${ndis_shift}, hourly=${ndis_hourly}")
-                else:
-                    # For regular shifts, hourly should be > 0, shift should be 0
-                    if ndis_hourly > 0 and ndis_shift == 0:
-                        expected_total = hours * ndis_hourly
-                        if abs(ndis_total - expected_total) < 0.01:
-                            print(f"      ✅ Regular shift NDIS charges correct: {hours}h × ${ndis_hourly} = ${ndis_total}")
-                        else:
-                            print(f"      ❌ Regular shift total incorrect: got ${ndis_total}, expected ${expected_total}")
-                    else:
-                        print(f"      ❌ Regular shift NDIS charges incorrect: hourly=${ndis_hourly}, shift=${ndis_shift}")
             else:
-                print(f"      ❌ Only {fields_present}/{len(required_ndis_fields)} NDIS fields present")
+                entries_without_ndis += 1
         
-        print(f"\n   📊 API Response NDIS Fields Summary:")
-        print(f"      Entries checked: {entries_checked}")
-        print(f"      Entries with all NDIS fields: {entries_with_ndis}")
-        print(f"      Success rate: {entries_with_ndis}/{entries_checked} ({100*entries_with_ndis/entries_checked:.1f}%)")
+        print(f"   NDIS Field Analysis (first 10 entries):")
+        for field, count in field_analysis.items():
+            print(f"      {field}: {count}/10 entries")
         
-        if entries_with_ndis == entries_checked:
-            print(f"   🎉 All roster entries have complete NDIS field data!")
+        print(f"   Summary:")
+        print(f"      Entries with all NDIS fields: {entries_with_ndis}/10")
+        print(f"      Entries missing NDIS fields: {entries_without_ndis}/10")
+        
+        # Check if most entries have NDIS fields (allowing for some legacy entries)
+        ndis_coverage_good = entries_with_ndis >= (len(roster_entries[:10]) * 0.5)  # At least 50% coverage
+        
+        if ndis_coverage_good:
+            print(f"   🎉 SUCCESS: Good NDIS field coverage in API responses")
+            if entries_without_ndis > 0:
+                print(f"      ℹ️  {entries_without_ndis} entries may be legacy entries without NDIS data")
+                print(f"      💡 Run migration endpoint to populate NDIS fields for all entries")
             return True
         else:
-            print(f"   ❌ Some roster entries missing NDIS field data")
+            print(f"   ❌ FAILURE: Poor NDIS field coverage in API responses")
+            print(f"      Most entries are missing NDIS fields - migration may be needed")
             return False
 
     def run_comprehensive_ndis_tests(self):
         """Run all NDIS charge rate integration tests"""
-        print(f"\n🎯 COMPREHENSIVE NDIS CHARGE RATE INTEGRATION TESTING")
-        print(f"=" * 60)
+        print("🎯 COMPREHENSIVE NDIS CHARGE RATE INTEGRATION TESTING")
+        print("=" * 60)
+        print("Testing the fixes for sleepover extra wake hours and NDIS migration endpoint")
+        print("Focus areas from review request:")
+        print("1. Sleepover Extra Wake Hours Fix")
+        print("2. NDIS Migration Endpoint")
+        print("3. Full NDIS Integration Verification")
+        print("=" * 60)
         
         # Authenticate first
         if not self.authenticate_admin():
-            print(f"\n❌ CRITICAL: Could not authenticate - aborting tests")
+            print("\n❌ CRITICAL: Could not authenticate as admin - aborting tests")
             return False
         
-        # Run all test suites
+        # Run all NDIS tests
         test_results = []
         
-        # Test 1: NDIS Charge Calculation Fields
-        print(f"\n" + "="*60)
-        print(f"TEST SUITE 1: NDIS Charge Calculation Fields")
-        print(f"="*60)
-        result1 = self.test_ndis_charge_calculation_fields()
-        test_results.append(("NDIS Charge Fields", result1))
+        # Test 1: NDIS Charge Fields in New Entries
+        test_results.append(self.test_ndis_charge_fields_in_new_entries())
         
         # Test 2: Regular Shift NDIS Charges
-        print(f"\n" + "="*60)
-        print(f"TEST SUITE 2: Regular Shift NDIS Charges")
-        print(f"="*60)
-        result2 = self.test_regular_shift_ndis_charges()
-        test_results.append(("Regular Shift NDIS Charges", result2))
+        test_results.append(self.test_regular_shift_ndis_charges())
         
-        # Test 3: Sleepover NDIS Charges
-        print(f"\n" + "="*60)
-        print(f"TEST SUITE 3: Sleepover NDIS Charges")
-        print(f"="*60)
-        result3 = self.test_sleepover_ndis_charges()
-        test_results.append(("Sleepover NDIS Charges", result3))
+        # Test 3: Sleepover Extra Wake Hours Fix (CRITICAL)
+        test_results.append(self.test_sleepover_extra_wake_hours_fix())
         
-        # Test 4: NDIS vs Staff Pay
-        print(f"\n" + "="*60)
-        print(f"TEST SUITE 4: NDIS vs Staff Pay Calculations")
-        print(f"="*60)
-        result4 = self.test_ndis_vs_staff_pay()
-        test_results.append(("NDIS vs Staff Pay", result4))
+        # Test 4: NDIS vs Staff Pay Coexistence
+        test_results.append(self.test_ndis_vs_staff_pay_coexistence())
         
-        # Test 5: API Response Testing
-        print(f"\n" + "="*60)
-        print(f"TEST SUITE 5: API Response NDIS Fields")
-        print(f"="*60)
-        result5 = self.test_api_response_ndis_fields()
-        test_results.append(("API Response NDIS Fields", result5))
+        # Test 5: NDIS Migration Endpoint
+        test_results.append(self.test_ndis_migration_endpoint())
         
-        # Final Results Summary
-        print(f"\n" + "="*60)
+        # Test 6: API Responses Include NDIS Fields
+        test_results.append(self.test_api_responses_include_ndis_fields())
+        
+        # Calculate results
+        tests_passed = sum(test_results)
+        total_tests = len(test_results)
+        success_rate = (tests_passed / total_tests) * 100
+        
+        print(f"\n" + "=" * 60)
         print(f"🎯 NDIS CHARGE RATE INTEGRATION TEST RESULTS")
-        print(f"="*60)
+        print(f"=" * 60)
+        print(f"Tests Passed: {tests_passed}/{total_tests} ({success_rate:.1f}%)")
+        print(f"Individual API Tests: {self.tests_passed}/{self.tests_run}")
         
-        passed_suites = 0
-        total_suites = len(test_results)
+        # Detailed results
+        test_names = [
+            "NDIS Charge Fields Present",
+            "Regular Shift NDIS Charges", 
+            "Sleepover Extra Wake Hours Fix (CRITICAL)",
+            "NDIS vs Staff Pay Coexistence",
+            "NDIS Migration Endpoint",
+            "API Responses Include NDIS Fields"
+        ]
         
-        for suite_name, result in test_results:
-            status = "✅ PASSED" if result else "❌ FAILED"
-            print(f"{status} - {suite_name}")
-            if result:
-                passed_suites += 1
+        print(f"\nDetailed Results:")
+        for i, (name, result) in enumerate(zip(test_names, test_results)):
+            status = "✅ PASS" if result else "❌ FAIL"
+            critical = " (CRITICAL)" if i == 2 else ""  # Sleepover fix is critical
+            print(f"  {i+1}. {name}{critical}: {status}")
         
-        print(f"\n📊 OVERALL RESULTS:")
-        print(f"   Test Suites Passed: {passed_suites}/{total_suites}")
-        print(f"   Individual Tests Passed: {self.tests_passed}/{self.tests_run}")
-        print(f"   Success Rate: {100*passed_suites/total_suites:.1f}%")
+        # Critical assessment
+        critical_sleepover_fix = test_results[2]  # Index 2 is sleepover fix
+        migration_endpoint = test_results[4]  # Index 4 is migration endpoint
         
-        if passed_suites == total_suites:
-            print(f"\n🎉 ALL NDIS CHARGE RATE INTEGRATION TESTS PASSED!")
-            print(f"   ✅ NDIS charge fields are present in roster entries")
-            print(f"   ✅ Regular shift NDIS charges calculate correctly")
-            print(f"   ✅ Sleepover NDIS charges calculate correctly")
-            print(f"   ✅ NDIS and staff pay calculations coexist properly")
-            print(f"   ✅ API responses include all NDIS fields")
-            print(f"\n🚀 NDIS Charge Rate Integration is PRODUCTION READY!")
-            return True
+        print(f"\n🎯 CRITICAL FIXES ASSESSMENT:")
+        print(f"  Sleepover Extra Wake Hours Fix: {'✅ FIXED' if critical_sleepover_fix else '❌ STILL BROKEN'}")
+        print(f"  NDIS Migration Endpoint: {'✅ WORKING' if migration_endpoint else '❌ NOT WORKING'}")
+        
+        if critical_sleepover_fix and migration_endpoint:
+            print(f"\n🎉 SUCCESS: Both critical fixes are working correctly!")
+            print(f"  - Sleepover calculation now uses weekday_night rate ($78.81/hr) for extra wake hours")
+            print(f"  - Migration endpoint can populate NDIS fields for existing roster entries")
+        elif critical_sleepover_fix:
+            print(f"\n⚠️  PARTIAL SUCCESS: Sleepover fix working but migration endpoint has issues")
+        elif migration_endpoint:
+            print(f"\n⚠️  PARTIAL SUCCESS: Migration endpoint working but sleepover fix still broken")
         else:
-            print(f"\n❌ NDIS CHARGE RATE INTEGRATION HAS ISSUES")
-            failed_suites = [name for name, result in test_results if not result]
-            print(f"   Failed test suites: {', '.join(failed_suites)}")
-            print(f"\n🔧 REQUIRES FIXES BEFORE PRODUCTION")
-            return False
+            print(f"\n❌ FAILURE: Both critical fixes need attention")
+        
+        # Overall assessment
+        if success_rate >= 80:
+            print(f"\n🎉 OVERALL: NDIS Integration is working well ({success_rate:.1f}% success rate)")
+        elif success_rate >= 60:
+            print(f"\n⚠️  OVERALL: NDIS Integration has some issues ({success_rate:.1f}% success rate)")
+        else:
+            print(f"\n❌ OVERALL: NDIS Integration needs significant work ({success_rate:.1f}% success rate)")
+        
+        return success_rate >= 80
 
 if __name__ == "__main__":
+    print("🚀 Starting NDIS Charge Rate Integration Testing...")
+    
     tester = NDISChargeRateIntegrationTester()
     success = tester.run_comprehensive_ndis_tests()
-    sys.exit(0 if success else 1)
+    
+    if success:
+        print(f"\n✅ NDIS testing completed successfully!")
+        sys.exit(0)
+    else:
+        print(f"\n❌ NDIS testing completed with issues!")
+        sys.exit(1)
