@@ -480,11 +480,40 @@ def calculate_ndis_charges(roster_entry: RosterEntry, settings: Settings, shift_
         extra_wake_hours = max(0, wake_hours - 2) if wake_hours > 2 else 0
         
         if extra_wake_hours > 0:
-            # Use appropriate hourly NDIS rate for extra wake time
-            # Map shift_type to NDIS charge rate key
-            shift_type_key = shift_type.lower().replace('_', '_')
-            if shift_type_key in settings.ndis_charge_rates:
-                hourly_ndis_rate = settings.ndis_charge_rates[shift_type_key]["rate"]
+            # For extra wake hours beyond 2, use the appropriate hourly NDIS rate
+            # based on the actual shift timing (not sleepover rate)
+            # Determine the proper shift type for NDIS hourly billing
+            if shift_type == "sleepover_default":
+                # Need to determine actual shift type for extra wake hours
+                # Use the roster entry's date and time to determine correct NDIS hourly rate
+                from datetime import datetime
+                try:
+                    shift_date = datetime.strptime(roster_entry.date, "%Y-%m-%d")
+                    day_of_week = shift_date.weekday()  # 0=Monday, 6=Sunday
+                    
+                    if roster_entry.is_public_holiday:
+                        ndis_shift_type_key = "public_holiday"
+                    elif day_of_week == 5:  # Saturday
+                        ndis_shift_type_key = "saturday"
+                    elif day_of_week == 6:  # Sunday
+                        ndis_shift_type_key = "sunday"
+                    else:
+                        # Weekday - determine if day/evening/night based on shift times
+                        start_hour = int(roster_entry.start_time.split(':')[0])
+                        end_hour = int(roster_entry.end_time.split(':')[0])
+                        
+                        # For extra wake hours, use weekday_night rate as most appropriate
+                        # since sleepovers typically occur during night hours
+                        ndis_shift_type_key = "weekday_night"
+                        
+                except:
+                    # Default to weekday_night if parsing fails
+                    ndis_shift_type_key = "weekday_night"
+            else:
+                ndis_shift_type_key = shift_type.lower().replace('_', '_')
+            
+            if ndis_shift_type_key in settings.ndis_charge_rates:
+                hourly_ndis_rate = settings.ndis_charge_rates[ndis_shift_type_key]["rate"]
                 roster_entry.ndis_total_charge += extra_wake_hours * hourly_ndis_rate
     else:
         # Regular shift - hourly charges
