@@ -87,21 +87,67 @@ class RosterEntry(BaseModel):
     allow_overlap: Optional[bool] = False  # Allow this shift to overlap with others (for 2:1 shifts)
 
 class Settings(BaseModel):
-    pay_mode: PayMode = PayMode.DEFAULT
-    timezone: str = "Australia/Brisbane"  # AEST UTC+10
-    time_format: str = "24hr"  # "12hr" or "24hr"
-    first_day_of_week: str = "monday"  # "monday" or "sunday"
-    dark_mode: bool = False  # true or false
     rates: Dict[str, float] = {
         "weekday_day": 42.00,
         "weekday_evening": 44.50,
-        "weekday_night": 48.50,
+        "weekday_night": 52.00,
         "saturday": 57.50,
         "sunday": 74.00,
         "public_holiday": 88.50,
         "sleepover_default": 175.00,
-        "sleepover_schads": 60.02
+        "sleepover_schads": 286.56
     }
+    
+    # NDIS Invoice Charge Rates (Client Billing)
+    ndis_charge_rates: Dict[str, Dict] = {
+        "weekday_day": {
+            "rate": 70.23,
+            "code": "01_801_0115_1_1",
+            "description": "Assistance in Supported Independent Living - Standard - Weekday Daytime",
+            "time_range": "6am-8pm (Starts at/after 6:00am, ends at/before 8:00pm)"
+        },
+        "weekday_evening": {
+            "rate": 77.38,
+            "code": "01_802_0115_1_1", 
+            "description": "Assistance in Supported Independent Living - Standard - Weekday Evening",
+            "time_range": "After 8pm (Starts after 8:00pm OR extends past 8:00pm)"
+        },
+        "weekday_night": {
+            "rate": 78.81,
+            "code": "01_803_0115_1_1",
+            "description": "Assistance in Supported Independent Living - Standard - Weekday Night", 
+            "time_range": "Overnight (Commences at/before midnight and finishes after midnight)"
+        },
+        "saturday": {
+            "rate": 98.83,
+            "code": "01_804_0115_1_1",
+            "description": "Assistance in Supported Independent Living - Standard - Saturday",
+            "time_range": "All hours on Saturday"
+        },
+        "sunday": {
+            "rate": 122.59,
+            "code": "01_805_0115_1_1", 
+            "description": "Assistance in Supported Independent Living - Standard - Sunday",
+            "time_range": "All hours on Sunday"
+        },
+        "public_holiday": {
+            "rate": 150.10,
+            "code": "01_806_0115_1_1",
+            "description": "Assistance in Supported Independent Living - Standard - Public Holiday",
+            "time_range": "All hours on public holidays"
+        },
+        "sleepover_default": {
+            "rate": 286.56,
+            "code": "01_832_0115_1_1",
+            "description": "Assistance in Supported Independent Living - Night-Time Sleepover",
+            "time_range": "8-hour sleepover period (includes up to 2 hours active support)",
+            "unit": "per_shift"
+        }
+    }
+    
+    first_day_of_week: str = "monday"  # "monday" or "sunday"
+    pay_mode: str = "default"  # "default" or "schads"
+    time_format: str = "24hr"  # "12hr" or "24hr"
 
 class RosterTemplate(BaseModel):
     id: str
