@@ -2080,12 +2080,73 @@ function App() {
     return false;
   };
 
-  // Get display text for pay information based on privacy rules
-  const getPayDisplayText = (amount, entryStaffId = null) => {
-    if (canViewPayInformation(entryStaffId)) {
-      return formatCurrency(amount);
+  // Check if current user should see NDIS charge information (Admin only)
+  const canViewNDISCharges = () => {
+    return currentUser && currentUser.role === 'admin';
+  };
+
+  // Get appropriate amount to display based on user role
+  const getDisplayAmount = (entry, entryStaffId = null) => {
+    if (!canViewPayInformation(entryStaffId)) {
+      return null; // No pay information visible
     }
-    return '***'; // Hide pay information
+    
+    // Admin users see NDIS charges, Staff users see staff pay
+    if (canViewNDISCharges()) {
+      return entry.ndis_total_charge || 0;
+    } else {
+      return entry.total_pay || 0;
+    }
+  };
+
+  // Get display text for pay/charge information based on user role and privacy rules
+  const getPayDisplayText = (entry, entryStaffId = null) => {
+    const amount = getDisplayAmount(entry, entryStaffId);
+    
+    if (amount === null) {
+      return '***'; // Hide information
+    }
+    
+    return formatCurrency(amount);
+  };
+
+  // Get appropriate hourly rate for display based on user role
+  const getDisplayHourlyRate = (entry) => {
+    if (!canViewPayInformation(entry.staff_id)) {
+      return null;
+    }
+    
+    // Admin users see NDIS hourly rates, Staff users see staff rates
+    if (canViewNDISCharges()) {
+      return entry.ndis_hourly_charge || 0;
+    } else {
+      // Calculate staff hourly rate from total pay and hours
+      const hours = entry.hours_worked || 0;
+      if (hours > 0) {
+        return (entry.total_pay || 0) / hours;
+      }
+      return 0;
+    }
+  };
+
+  // Get display text for hourly rates
+  const getHourlyRateDisplayText = (entry) => {
+    const rate = getDisplayHourlyRate(entry);
+    
+    if (rate === null) {
+      return '***';
+    }
+    
+    return formatCurrency(rate);
+  };
+
+  // Get rate type label for display (NDIS vs Staff)
+  const getRateTypeLabel = () => {
+    if (canViewNDISCharges()) {
+      return 'NDIS Charge';
+    } else {
+      return 'Staff Pay';
+    }
   };
 
   const getWeeklyTotals = () => {
