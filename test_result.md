@@ -268,13 +268,16 @@ agent_communication:
     implemented: true
     working: false
     file: "App.js"
-    stuck_count: 0
+    stuck_count: 1
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
         - working: false
           agent: "main"
           comment: "🎨 FRONTEND NDIS DISPLAY IMPLEMENTATION COMPLETE: Updated React frontend to display NDIS charges for Admin users instead of staff pay rates. Key changes: 1) Created canViewNDISCharges() helper function (Admin only), 2) Added getDisplayAmount() to return NDIS charges for Admin, staff pay for Staff, 3) Updated all pay display locations (roster views, daily/weekly/monthly totals, Shift Times page, YTD reports) to use new helper functions, 4) Added rate type indicators showing '(NDIS Charge)' vs '(Staff Pay)' in daily totals, 5) Maintained privacy controls - Staff users still see only their own pay information. All roster displays now show appropriate amounts based on user role while preserving existing staff restrictions."
+        - working: false
+          agent: "testing"
+          comment: "❌ CRITICAL ISSUE: NDIS CHARGE DISPLAY NOT WORKING CORRECTLY! Comprehensive testing reveals that Admin users are still seeing staff pay rates instead of NDIS charge rates. SPECIFIC FINDINGS: 1) ✅ Admin Login: Working perfectly (Admin/0000), 2) ❌ NDIS Rates Missing: Admin users see $42.00/hr (staff day rate) and $44.50/hr (staff evening rate) instead of expected $70.23/hr (NDIS day) and $77.38/hr (NDIS evening), 3) ❌ Shift Times Page: Shows staff pay rates ($42.00/hr, $44.50/hr, $175.00 sleepover) for Admin instead of NDIS charges, 4) ❌ Rate Labels: No 'NDIS Charge' labels found, still showing staff pay information, 5) ⚠️ Staff Login: Technical issues prevented full staff testing but Admin testing clearly shows NDIS implementation is not functioning. ROOT CAUSE: The frontend NDIS display functions (canViewNDISCharges, getDisplayAmount) may be implemented but are not being called correctly, or the backend NDIS data is not being populated in roster entries. IMPACT: Admin users cannot see client billing rates (NDIS charges) and are seeing internal staff costs instead, which defeats the purpose of the NDIS integration. This is a high-priority issue requiring immediate investigation of both frontend function calls and backend NDIS data population."
 
   - task: "Enhanced Shift Template Editing"
     implemented: true
