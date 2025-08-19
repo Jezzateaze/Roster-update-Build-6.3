@@ -503,8 +503,11 @@ class ShiftRosterAPITester:
                 print(f"      - No new user accounts were created")
             if staff_auth_success == 0:
                 print(f"      - Staff authentication still not working")
-            if len(errors) > 0:
-                print(f"      - Sync process encountered errors")
+            critical_errors = [e for e in errors if "empty name" not in e]
+            if len(critical_errors) > 0:
+                print(f"      - Sync process encountered critical errors: {critical_errors}")
+            if len(errors) > 0 and len(critical_errors) == 0:
+                print(f"      - Only minor errors (empty names) encountered - this is expected behavior")
         
         return critical_success
 
