@@ -495,14 +495,17 @@ class ShiftRosterAPITester:
         
         if critical_success:
             print(f"\n   🎉 CRITICAL SUCCESS: Staff authentication system fully restored!")
-            print(f"      - All active staff now have corresponding user accounts")
+            if len(created_users) > 0:
+                print(f"      - {len(created_users)} new user accounts created for staff without accounts")
+            else:
+                print(f"      - All {len(existing_users)} active staff already have user accounts")
             print(f"      - Staff can login with username + PIN '888888'")
             print(f"      - Admin PIN reset functionality works for all staff")
-            print(f"      - Authentication system completely fixed")
+            print(f"      - Authentication system completely functional")
         else:
             print(f"\n   ❌ CRITICAL ISSUES REMAIN:")
-            if len(created_users) == 0:
-                print(f"      - No new user accounts were created")
+            if len(created_users) == 0 and not all_staff_have_accounts:
+                print(f"      - No new user accounts were created and not all staff have accounts")
             if staff_auth_success == 0:
                 print(f"      - Staff authentication still not working")
             critical_errors = [e for e in errors if "empty name" not in e]
