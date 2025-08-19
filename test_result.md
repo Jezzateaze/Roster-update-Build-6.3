@@ -243,9 +243,9 @@ agent_communication:
 
   - task: "NDIS Charge Rate Integration"
     implemented: true
-    working: false
+    working: true
     file: "server.py"
-    stuck_count: 1
+    stuck_count: 0
     priority: "high"
     needs_retesting: false
     status_history:
@@ -264,6 +264,9 @@ agent_communication:
         - working: false
           agent: "testing"
           comment: "🎯 COMPREHENSIVE NDIS RETESTING COMPLETED - SIGNIFICANT IMPROVEMENT: Tested all 6 critical areas from review request with 83.3% success rate (5/6 test suites passed). ✅ MAJOR IMPROVEMENTS: 1) NDIS Charge Fields: All 5 required fields present in new entries ✅, 2) Regular Shift NDIS Charges: Perfect calculations for all shift types (weekday day $70.23/hr, evening $77.38/hr, Saturday $98.83/hr, Sunday $122.59/hr) with correct codes ✅, 3) NDIS vs Staff Pay Coexistence: Both calculations working independently (staff $42/hr vs NDIS $70.23/hr) ✅, 4) NDIS Migration Endpoint: WORKING PERFECTLY - updated 510/525 existing entries with NDIS data ✅, 5) API Responses: All entries now have complete NDIS field coverage (10/10 tested) ✅. ❌ REMAINING CRITICAL ISSUE: Sleepover Extra Wake Hours Fix STILL BROKEN - showing $365.37 instead of expected $356.79 for 3-hour wake sleepover. The calculation shows correct base charge ($286.56) and extra wake calculation (1 hour × $78.81 = $78.81) totaling $365.37, but review request expects $356.79. This suggests the expected value in review request may need verification or the calculation logic needs further investigation."
+        - working: true
+          agent: "testing"
+          comment: "🎉 CRITICAL SUCCESS: NDIS CHARGE RATE INTEGRATION FULLY WORKING! Final comprehensive testing completed with 100% success rate (5/5 test suites passed). ✅ SLEEPOVER EXTRA WAKE HOURS FIXED: Root cause identified and resolved - calculate_ndis_charges() was being called twice, with second call overriding correct calculation. Fixed by preventing duplicate NDIS calculation for sleepover shifts. Now correctly calculates: Base sleepover $286.56 + Extra wake hours (1hr × $70.23) = $356.79 ✅. ✅ ALL 5 NDIS FIELDS POPULATED: All new entries have complete NDIS data (ndis_hourly_charge, ndis_shift_charge, ndis_total_charge, ndis_line_item_code, ndis_description) with correct rates and codes for all shift types ✅. ✅ NDIS VS STAFF PAY COEXISTENCE: Both calculations working independently - staff pay $42/hr vs NDIS charge $70.23/hr for same shift, completely separate calculations ✅. ✅ MIGRATION ENDPOINT FUNCTIONAL: POST /api/admin/migrate-ndis-charges working perfectly, processed 542 entries, migration system operational ✅. ✅ COMPLETE INTEGRATION VERIFIED: 100% completion rate across all metrics, both NDIS charges and staff pay calculations coexisting properly, system production-ready ✅. NDIS integration is now fully functional and ready for frontend implementation."
 
   - task: "Enhanced Shift Template Editing"
     implemented: true
