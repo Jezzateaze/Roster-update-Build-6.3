@@ -237,6 +237,18 @@ agent_communication:
     - agent: "main"
       message: "🔧 STARTED NDIS CHARGE RATE INTEGRATION: Implementing comprehensive NDIS charge rate calculations to display charge rates for Admin users instead of staff pay rates. Phase 1: Extended RosterEntry model with NDIS charge fields (ndis_hourly_charge, ndis_shift_charge, ndis_total_charge, ndis_line_item_code, ndis_description). Phase 2: Created calculate_ndis_charges() function for client billing calculations. Phase 3: Integrated NDIS calculations into calculate_pay() function for both regular shifts and sleepovers. Backend changes ready for testing - need to verify calculations work correctly before proceeding to frontend display updates."
 
+  - task: "NDIS Charge Rate Integration"
+    implemented: true
+    working: false
+    file: "server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: false
+          agent: "main"
+          comment: "🔧 BACKEND IMPLEMENTATION COMPLETE: Extended RosterEntry model with 5 new NDIS charge fields (ndis_hourly_charge, ndis_shift_charge, ndis_total_charge, ndis_line_item_code, ndis_description). Created calculate_ndis_charges() function for client billing calculations with proper shift type mapping. Integrated NDIS calculations into calculate_pay() function for both regular shifts and sleepovers. Ready for backend testing to verify calculations work correctly."
+
   - task: "Enhanced Shift Template Editing"
     implemented: true
     working: true
