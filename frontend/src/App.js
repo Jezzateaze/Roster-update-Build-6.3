@@ -4309,7 +4309,7 @@ function App() {
                                 <div className="flex items-center space-x-2">
                                   {getShiftTypeBadge(shift)}
                                   <Badge variant="outline" className="text-emerald-600">
-                                    {formatCurrency(shift.total_pay)}
+                                    {getPayDisplayText(shift)}
                                   </Badge>
                                 </div>
                               </div>
