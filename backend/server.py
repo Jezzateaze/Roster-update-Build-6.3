@@ -484,8 +484,9 @@ def calculate_ndis_charges(roster_entry: RosterEntry, settings: Settings, shift_
             # based on the actual shift timing (not sleepover rate)
             # Determine the proper shift type for NDIS hourly billing
             if shift_type == "sleepover_default":
-                # Need to determine actual shift type for extra wake hours
-                # Use the roster entry's date and time to determine correct NDIS hourly rate
+                # For sleepover extra wake hours, always use weekday_day rate
+                # as per review request: 1 hour × $70.23 (weekday_day NDIS rate)
+                # This is because the sleepover base rate already includes night premium
                 from datetime import datetime
                 try:
                     shift_date = datetime.strptime(roster_entry.date, "%Y-%m-%d")
@@ -498,17 +499,14 @@ def calculate_ndis_charges(roster_entry: RosterEntry, settings: Settings, shift_
                     elif day_of_week == 6:  # Sunday
                         ndis_shift_type_key = "sunday"
                     else:
-                        # Weekday - determine if day/evening/night based on shift times
-                        start_hour = int(roster_entry.start_time.split(':')[0])
-                        end_hour = int(roster_entry.end_time.split(':')[0])
-                        
-                        # For extra wake hours, use weekday_day rate as standard
-                        # since sleepovers already include night premium in base rate
+                        # For weekday sleepovers, always use weekday_day rate for extra wake hours
+                        # This matches the expected calculation in the review request
                         ndis_shift_type_key = "weekday_day"
                         
-                except:
-                    # Default to weekday_night if parsing fails
-                    ndis_shift_type_key = "weekday_night"
+                except Exception as e:
+                    # Default to weekday_day for sleepover extra wake hours
+                    # This ensures we use the correct rate as specified in review request
+                    ndis_shift_type_key = "weekday_day"
             else:
                 ndis_shift_type_key = shift_type.lower().replace('_', '_')
             
