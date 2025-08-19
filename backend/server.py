@@ -1878,6 +1878,84 @@ async def delete_staff_availability(availability_id: str, current_user: dict = D
     
     return {"message": "Availability record deleted"}
 
+@app.post("/api/admin/sync_staff_users")
+async def sync_staff_users(current_user: dict = Depends(get_current_user)):
+    """Create missing user accounts for all active staff members (Admin only)"""
+    if current_user["role"] != "admin":
+        raise HTTPException(status_code=403, detail="Admin access required")
+    
+    # Get all active staff members
+    staff_members = list(db.staff.find({"active": True}))
+    
+    created_users = []
+    existing_users = []
+    errors = []
+    
+    for staff in staff_members:
+        # Skip staff with empty names
+        if not staff.get("name") or not staff.get("name").strip():
+            errors.append(f"Skipped staff with empty name (ID: {staff.get('id')})")
+            continue
+        
+        # Generate username from staff name
+        staff_name = staff["name"].strip()
+        username = staff_name.lower().replace(' ', '')
+        
+        # Check if user already exists
+        existing_user = db.users.find_one({"username": username})
+        if existing_user:
+            existing_users.append(f"{staff_name} -> {username}")
+            continue
+        
+        try:
+            # Create new user account
+            user_id = str(uuid.uuid4())
+            default_pin = "888888"
+            pin_hash = hash_pin(default_pin)
+            
+            new_user = User(
+                id=user_id,
+                username=username,
+                pin_hash=pin_hash,
+                role=UserRole.STAFF,
+                first_name=staff_name.split()[0] if staff_name.split() else staff_name,
+                last_name=' '.join(staff_name.split()[1:]) if len(staff_name.split()) > 1 else '',
+                email=f"{username}@company.com",
+                staff_id=staff["id"],
+                is_active=True,
+                must_change_pin=True,  # Force PIN change on first login
+                created_at=datetime.utcnow()
+            )
+            
+            db.users.insert_one(new_user.dict())
+            created_users.append(f"{staff_name} -> {username} (PIN: {default_pin})")
+            
+        except Exception as e:
+            errors.append(f"Failed to create user for {staff_name}: {str(e)}")
+    
+    # Clean up staff with empty names
+    empty_name_staff = list(db.staff.find({"$or": [{"name": ""}, {"name": None}]}))
+    cleaned_up = []
+    for empty_staff in empty_name_staff:
+        db.staff.update_one({"id": empty_staff["id"]}, {"$set": {"active": False}})
+        cleaned_up.append(empty_staff["id"])
+    
+    result = {
+        "message": f"Staff user synchronization completed",
+        "created_users": created_users,
+        "existing_users": existing_users,
+        "errors": errors,
+        "cleaned_up_empty_names": cleaned_up,
+        "summary": {
+            "created": len(created_users),
+            "existing": len(existing_users),
+            "errors": len(errors),
+            "cleaned_up": len(cleaned_up)
+        }
+    }
+    
+    return result
+
 @app.get("/api/notifications")
 async def get_notifications(current_user: dict = Depends(get_current_user)):
     """Get notifications for current user"""
