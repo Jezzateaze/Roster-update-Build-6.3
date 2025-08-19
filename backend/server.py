@@ -512,6 +512,8 @@ def calculate_ndis_charges(roster_entry: RosterEntry, settings: Settings, shift_
             
             if ndis_shift_type_key in settings.ndis_charge_rates:
                 hourly_ndis_rate = settings.ndis_charge_rates[ndis_shift_type_key]["rate"]
+                print(f"DEBUG: Using NDIS rate for extra wake hours: {ndis_shift_type_key} = ${hourly_ndis_rate}")
+                print(f"DEBUG: Extra wake hours: {extra_wake_hours}, Total extra charge: ${extra_wake_hours * hourly_ndis_rate}")
                 roster_entry.ndis_total_charge += extra_wake_hours * hourly_ndis_rate
     else:
         # Regular shift - hourly charges
