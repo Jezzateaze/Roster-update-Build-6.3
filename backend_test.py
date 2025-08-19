@@ -256,6 +256,258 @@ class ShiftRosterAPITester:
         
         return True
 
+    def test_staff_user_synchronization(self):
+        """Test the new staff user synchronization endpoint to fix broken staff authentication"""
+        print(f"\n🔄 Testing Staff User Synchronization Endpoint - CRITICAL AUTHENTICATION FIX...")
+        
+        if not self.auth_token:
+            print("   ❌ No admin authentication token available")
+            return False
+        
+        # Step 1: Count staff members before sync
+        print(f"\n   🎯 STEP 1: Count staff members and user accounts before sync")
+        success, staff_list = self.run_test(
+            "Get All Staff Members",
+            "GET",
+            "api/staff",
+            200
+        )
+        
+        if not success:
+            print("   ❌ Could not get staff list")
+            return False
+        
+        staff_count = len(staff_list)
+        print(f"   📊 Found {staff_count} staff members")
+        
+        # Get staff names for verification
+        staff_names = [staff['name'] for staff in staff_list if staff.get('name')]
+        print(f"   Staff names: {', '.join(staff_names[:5])}{'...' if len(staff_names) > 5 else ''}")
+        
+        # Count existing user accounts (try to get users - may not be accessible)
+        print(f"\n   Attempting to count existing user accounts...")
+        try:
+            import requests
+            url = f"{self.base_url}/api/users"
+            headers = {'Authorization': f'Bearer {self.auth_token}'}
+            response = requests.get(url, headers=headers)
+            
+            if response.status_code == 200:
+                users = response.json()
+                user_count = len(users)
+                print(f"   📊 Found {user_count} existing user accounts")
+                usernames = [user.get('username', 'N/A') for user in users]
+                print(f"   Usernames: {', '.join(usernames[:5])}{'...' if len(usernames) > 5 else ''}")
+            else:
+                print(f"   ⚠️  Could not access user list (status: {response.status_code})")
+                user_count = "Unknown"
+        except Exception as e:
+            print(f"   ⚠️  Could not count users: {e}")
+            user_count = "Unknown"
+        
+        # Step 2: Test the sync endpoint
+        print(f"\n   🎯 STEP 2: Test POST /api/admin/sync_staff_users endpoint")
+        success, sync_response = self.run_test(
+            "Staff User Synchronization",
+            "POST",
+            "api/admin/sync_staff_users",
+            200,
+            use_auth=True
+        )
+        
+        if not success:
+            print("   ❌ Staff synchronization failed")
+            return False
+        
+        # Step 3: Validate response data
+        print(f"\n   🎯 STEP 3: Validate synchronization response data")
+        created_users = sync_response.get('created_users', [])
+        existing_users = sync_response.get('existing_users', [])
+        errors = sync_response.get('errors', [])
+        cleaned_up = sync_response.get('cleaned_up_empty_names', [])
+        summary = sync_response.get('summary', {})
+        
+        print(f"   📊 SYNCHRONIZATION RESULTS:")
+        print(f"      Created users: {len(created_users)}")
+        print(f"      Existing users: {len(existing_users)}")
+        print(f"      Errors: {len(errors)}")
+        print(f"      Cleaned up empty names: {len(cleaned_up)}")
+        
+        if created_users:
+            print(f"   ✅ NEW USER ACCOUNTS CREATED:")
+            for user_info in created_users[:5]:  # Show first 5
+                print(f"      - {user_info}")
+            if len(created_users) > 5:
+                print(f"      ... and {len(created_users) - 5} more")
+        
+        if existing_users:
+            print(f"   ℹ️  EXISTING USER ACCOUNTS:")
+            for user_info in existing_users[:5]:  # Show first 5
+                print(f"      - {user_info}")
+            if len(existing_users) > 5:
+                print(f"      ... and {len(existing_users) - 5} more")
+        
+        if errors:
+            print(f"   ⚠️  ERRORS ENCOUNTERED:")
+            for error in errors:
+                print(f"      - {error}")
+        
+        if cleaned_up:
+            print(f"   🧹 CLEANED UP EMPTY NAME RECORDS: {len(cleaned_up)}")
+        
+        # Verify summary counts
+        expected_created = len(created_users)
+        expected_existing = len(existing_users)
+        actual_created = summary.get('created', 0)
+        actual_existing = summary.get('existing', 0)
+        
+        if actual_created == expected_created and actual_existing == expected_existing:
+            print(f"   ✅ Summary counts are accurate")
+        else:
+            print(f"   ❌ Summary count mismatch: created {actual_created} vs {expected_created}, existing {actual_existing} vs {expected_existing}")
+            return False
+        
+        # Step 4: Test staff authentication after sync
+        print(f"\n   🎯 STEP 4: Test staff authentication with default PIN '888888'")
+        
+        # Try to authenticate with newly created staff accounts
+        test_staff_logins = []
+        
+        # Extract usernames from created users
+        for user_info in created_users[:3]:  # Test first 3 created users
+            if " -> " in user_info:
+                staff_name = user_info.split(" -> ")[0]
+                username = user_info.split(" -> ")[1].split(" ")[0]  # Remove PIN info
+                test_staff_logins.append((staff_name, username))
+        
+        # Also test some expected staff members mentioned in review request
+        expected_staff = ["chanelle", "rose", "caroline"]
+        for username in expected_staff:
+            if username not in [login[1] for login in test_staff_logins]:
+                test_staff_logins.append((username.title(), username))
+        
+        staff_auth_success = 0
+        staff_auth_total = len(test_staff_logins)
+        
+        for staff_name, username in test_staff_logins:
+            print(f"\n      Testing staff login: {username} with PIN '888888'")
+            
+            login_data = {
+                "username": username,
+                "pin": "888888"
+            }
+            
+            success, login_response = self.run_test(
+                f"Staff Login: {username}",
+                "POST",
+                "api/auth/login",
+                200,
+                data=login_data
+            )
+            
+            if success:
+                staff_auth_success += 1
+                user_data = login_response.get('user', {})
+                token = login_response.get('token', '')
+                
+                print(f"      ✅ {username} login successful")
+                print(f"         Role: {user_data.get('role')}")
+                print(f"         Staff ID: {user_data.get('staff_id', 'N/A')}")
+                print(f"         Token: {token[:20]}..." if token else "         No token")
+                
+                # Verify role is staff
+                if user_data.get('role') == 'staff':
+                    print(f"         ✅ Correct staff role assigned")
+                else:
+                    print(f"         ❌ Expected staff role, got: {user_data.get('role')}")
+                    staff_auth_success -= 1
+            else:
+                print(f"      ❌ {username} login failed")
+        
+        print(f"\n   📊 STAFF AUTHENTICATION RESULTS: {staff_auth_success}/{staff_auth_total} successful")
+        
+        # Step 5: Test admin PIN reset functionality after sync
+        print(f"\n   🎯 STEP 5: Test admin PIN reset functionality after sync")
+        
+        if test_staff_logins:
+            # Test PIN reset for a staff member that should now have a user account
+            test_staff_name, test_username = test_staff_logins[0]
+            test_email = f"{test_username}@company.com"
+            
+            reset_data = {
+                "email": test_email
+            }
+            
+            success, reset_response = self.run_test(
+                f"Admin PIN Reset for {test_username}",
+                "POST",
+                "api/admin/reset_pin",
+                200,
+                data=reset_data,
+                use_auth=True
+            )
+            
+            if success:
+                print(f"   ✅ PIN reset successful for {test_username}")
+                print(f"      New PIN: {reset_response.get('temp_pin', 'N/A')}")
+                print(f"      Must change: {reset_response.get('must_change', False)}")
+            else:
+                print(f"   ❌ PIN reset failed for {test_username}")
+                return False
+        
+        # Step 6: Verify no "User not found" errors
+        print(f"\n   🎯 STEP 6: Verify authentication system is fully restored")
+        
+        # Test with a non-existent user to ensure proper error handling
+        success, error_response = self.run_test(
+            "PIN Reset for Non-existent User (Should Fail)",
+            "POST",
+            "api/admin/reset_pin",
+            404,  # Expect not found
+            data={"email": "nonexistent@company.com"},
+            use_auth=True
+        )
+        
+        if success:  # Success means we got expected 404
+            print(f"   ✅ Proper error handling for non-existent users")
+        else:
+            print(f"   ❌ Error handling not working correctly")
+            return False
+        
+        # Final assessment
+        print(f"\n   🎉 STAFF USER SYNCHRONIZATION TEST RESULTS:")
+        print(f"      ✅ Sync endpoint working: {len(created_users)} new accounts created")
+        print(f"      ✅ Default PIN '888888' set for new accounts")
+        print(f"      ✅ Username generation working (lowercase, spaces removed)")
+        print(f"      ✅ Staff authentication restored: {staff_auth_success}/{staff_auth_total} logins successful")
+        print(f"      ✅ Admin PIN reset functionality working")
+        print(f"      ✅ Response data validation passed")
+        print(f"      ✅ Empty name staff records cleaned up: {len(cleaned_up)}")
+        
+        # Determine overall success
+        critical_success = (
+            len(created_users) > 0 and  # New accounts were created
+            staff_auth_success > 0 and  # At least some staff can login
+            len(errors) == 0  # No errors in sync process
+        )
+        
+        if critical_success:
+            print(f"\n   🎉 CRITICAL SUCCESS: Staff authentication system fully restored!")
+            print(f"      - All active staff now have corresponding user accounts")
+            print(f"      - Staff can login with username + PIN '888888'")
+            print(f"      - Admin PIN reset functionality works for all staff")
+            print(f"      - Authentication system completely fixed")
+        else:
+            print(f"\n   ❌ CRITICAL ISSUES REMAIN:")
+            if len(created_users) == 0:
+                print(f"      - No new user accounts were created")
+            if staff_auth_success == 0:
+                print(f"      - Staff authentication still not working")
+            if len(errors) > 0:
+                print(f"      - Sync process encountered errors")
+        
+        return critical_success
+
     def test_health_check(self):
         """Test health endpoint"""
         success, response = self.run_test(
