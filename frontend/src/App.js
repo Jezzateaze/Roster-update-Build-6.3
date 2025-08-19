@@ -3893,12 +3893,22 @@ function App() {
                     <Users className="w-5 h-5" />
                     <span>Staff Management</span>
                   </CardTitle>
-                  {/* Add Staff button - Admin only */}
+                  {/* Admin controls */}
                   {isAdmin() && (
-                    <Button onClick={() => setShowStaffDialog(true)}>
-                      <Plus className="w-4 h-4 mr-2" />
-                      Add Staff
-                    </Button>
+                    <div className="flex items-center space-x-2">
+                      <Button 
+                        onClick={syncStaffUsers}
+                        variant="secondary"
+                        className="bg-blue-50 hover:bg-blue-100 text-blue-700 border-blue-200"
+                        title="Create missing user accounts for staff login"
+                      >
+                        🔧 Sync Staff Users
+                      </Button>
+                      <Button onClick={() => setShowStaffDialog(true)}>
+                        <Plus className="w-4 h-4 mr-2" />
+                        Add Staff
+                      </Button>
+                    </div>
                   )}
                 </div>
               </CardHeader>
