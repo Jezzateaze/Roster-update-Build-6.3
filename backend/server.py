@@ -573,8 +573,33 @@ class NDISOCRProcessor:
     def process_image(self, image_path: Path) -> Dict[str, Any]:
         """Process image file and extract text"""
         try:
-            # Load image
-            image = cv2.imread(str(image_path))
+            # Check if it's a HEIF/HEIC file
+            file_extension = image_path.suffix.lower()
+            is_heif = file_extension in ['.heif', '.heic']
+            
+            if is_heif:
+                # Load HEIF/HEIC image using Pillow with HEIF support
+                self.logger.info(f"Loading HEIF/HEIC image: {image_path}")
+                pil_image = Image.open(str(image_path))
+                # Convert to RGB if necessary
+                if pil_image.mode != 'RGB':
+                    pil_image = pil_image.convert('RGB')
+                # Convert PIL image to numpy array for OpenCV
+                image = np.array(pil_image)
+                # Convert RGB to BGR for OpenCV
+                image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
+                self.logger.info(f"Successfully loaded HEIF image with dimensions: {image.shape}")
+            else:
+                # Load regular image formats using OpenCV
+                image = cv2.imread(str(image_path))
+                if image is None:
+                    # Fallback: try loading with Pillow and convert
+                    pil_image = Image.open(str(image_path))
+                    if pil_image.mode != 'RGB':
+                        pil_image = pil_image.convert('RGB')
+                    image = np.array(pil_image)
+                    image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
+            
             if image is None:
                 raise ValueError("Could not load image")
             
@@ -590,7 +615,8 @@ class NDISOCRProcessor:
             return {
                 'text': text.strip(),
                 'word_count': len(text.split()) if text.strip() else 0,
-                'confidence': self.get_text_confidence(processed_image)
+                'confidence': self.get_text_confidence(processed_image),
+                'format': 'heif' if is_heif else 'standard_image'
             }
             
         except Exception as e:
