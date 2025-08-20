@@ -10733,14 +10733,19 @@ function App() {
                     <Button 
                       variant="outline"
                       onClick={() => {
-                        setShowOCRReviewDialog(false);
-                        // Open client selection dialog (to be implemented)
-                        alert('Select an existing client to update...');
+                        if (currentClient) {
+                          // Update existing client
+                          applyOCRToClient(currentClient.id);
+                        } else {
+                          // Show client selection (for future enhancement)
+                          alert('Please select a client to update from the client list first.');
+                          setShowOCRReviewDialog(false);
+                        }
                       }}
                       className="w-full"
                     >
                       <Edit className="w-4 h-4 mr-2" />
-                      Update Existing Client
+                      {currentClient ? `Update ${currentClient.full_name}` : 'Update Existing Client'}
                     </Button>
                   </div>
                 </div>
