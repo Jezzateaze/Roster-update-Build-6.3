@@ -1055,6 +1055,205 @@ function App() {
     }
   }, [isAuthenticated, authToken]);
 
+  // =====================================
+  // OCR DOCUMENT PROCESSING FUNCTIONS
+  // =====================================
+
+  // Process uploaded NDIS plan document
+  const processOCRDocument = async (file) => {
+    if (!file) return;
+
+    setOCRProcessing(true);
+    setOCRProgress(0);
+    setOCRResults(null);
+    setExtractedClientData(null);
+
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('extract_client_data', 'true');
+
+      const response = await axios.post(`${API_BASE_URL}/api/ocr/process`, formData, {
+        headers: { 
+          'Authorization': `Bearer ${authToken}`,
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+
+      const taskId = response.data.task_id;
+      setOCRTaskId(taskId);
+      setOCRProgress(50);
+
+      // If processing completed immediately, get results
+      if (response.data.status === 'completed') {
+        setOCRResults(response.data);
+        setExtractedClientData(response.data.extracted_data);
+        setOCRProgress(100);
+        setOCRProcessing(false);
+        
+        if (response.data.extracted_data) {
+          setShowOCRReviewDialog(true);
+        }
+      } else {
+        // Poll for results
+        pollOCRResults(taskId);
+      }
+
+    } catch (error) {
+      console.error('Error processing OCR document:', error);
+      setOCRProcessing(false);
+      setOCRProgress(0);
+      alert(`❌ Error processing document: ${error.response?.data?.detail || error.message}`);
+    }
+  };
+
+  // Poll OCR results
+  const pollOCRResults = async (taskId) => {
+    const maxAttempts = 30; // 30 seconds max
+    let attempts = 0;
+
+    const poll = async () => {
+      try {
+        attempts++;
+        const response = await axios.get(`${API_BASE_URL}/api/ocr/result/${taskId}`, {
+          headers: { 'Authorization': `Bearer ${authToken}` }
+        });
+
+        if (response.data.status === 'completed') {
+          setOCRResults(response.data);
+          setExtractedClientData(response.data.extracted_data);
+          setOCRProgress(100);
+          setOCRProcessing(false);
+          
+          if (response.data.extracted_data) {
+            setShowOCRReviewDialog(true);
+          }
+        } else if (response.data.status === 'failed') {
+          setOCRProcessing(false);
+          setOCRProgress(0);
+          alert(`❌ Document processing failed: ${response.data.error || 'Unknown error'}`);
+        } else if (attempts < maxAttempts) {
+          // Still processing, try again
+          setOCRProgress(50 + (attempts * 2)); // Gradual progress increase
+          setTimeout(poll, 1000);
+        } else {
+          // Timeout
+          setOCRProcessing(false);
+          setOCRProgress(0);
+          alert('❌ Document processing timed out. Please try again.');
+        }
+      } catch (error) {
+        console.error('Error polling OCR results:', error);
+        if (attempts < maxAttempts) {
+          setTimeout(poll, 1000);
+        } else {
+          setOCRProcessing(false);
+          setOCRProgress(0);
+          alert('❌ Error getting processing results. Please try again.');
+        }
+      }
+    };
+
+    poll();
+  };
+
+  // Apply OCR data to client profile
+  const applyOCRToClient = async (clientId = null) => {
+    if (!ocrTaskId) {
+      alert('❌ No OCR data available to apply');
+      return;
+    }
+
+    try {
+      const url = clientId 
+        ? `${API_BASE_URL}/api/ocr/apply-to-client/${ocrTaskId}?client_id=${clientId}`
+        : `${API_BASE_URL}/api/ocr/apply-to-client/${ocrTaskId}`;
+
+      const response = await axios.post(url, {}, {
+        headers: { 'Authorization': `Bearer ${authToken}` }
+      });
+
+      alert(`✅ ${response.data.message}`);
+      
+      // Refresh clients list
+      fetchClients();
+      
+      // Close dialogs
+      setShowOCRReviewDialog(false);
+      setShowOCRDialog(false);
+      setShowClientDialog(false);
+      
+      // Reset OCR states
+      resetOCRStates();
+
+    } catch (error) {
+      console.error('Error applying OCR data:', error);
+      alert(`❌ Error applying OCR data: ${error.response?.data?.detail || error.message}`);
+    }
+  };
+
+  // Reset OCR states
+  const resetOCRStates = () => {
+    setOCRProcessing(false);
+    setOCRResults(null);
+    setOCRTaskId(null);
+    setOCRProgress(0);
+    setExtractedClientData(null);
+    setShowOCRReviewDialog(false);
+    setSelectedFile(null);
+  };
+
+  // Handle file selection for OCR
+  const handleOCRFileSelect = (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      // Validate file type
+      const allowedTypes = ['application/pdf', 'image/jpeg', 'image/jpg', 'image/png', 'image/tiff', 'image/bmp'];
+      if (!allowedTypes.includes(file.type)) {
+        alert('❌ Please select a PDF or image file (JPG, PNG, TIFF, BMP)');
+        return;
+      }
+
+      // Validate file size (50MB max)
+      const maxSize = 50 * 1024 * 1024; // 50MB
+      if (file.size > maxSize) {
+        alert('❌ File too large. Maximum size is 50MB.');
+        return;
+      }
+
+      setSelectedFile(file);
+      processOCRDocument(file);
+    }
+  };
+
+  // Handle drag and drop for OCR
+  const handleOCRDrop = (event) => {
+    event.preventDefault();
+    const file = event.dataTransfer.files[0];
+    if (file) {
+      // Validate file type
+      const allowedTypes = ['application/pdf', 'image/jpeg', 'image/jpg', 'image/png', 'image/tiff', 'image/bmp'];
+      if (!allowedTypes.includes(file.type)) {
+        alert('❌ Please select a PDF or image file (JPG, PNG, TIFF, BMP)');
+        return;
+      }
+
+      // Validate file size (50MB max)
+      const maxSize = 50 * 1024 * 1024; // 50MB
+      if (file.size > maxSize) {
+        alert('❌ File too large. Maximum size is 50MB.');
+        return;
+      }
+
+      setSelectedFile(file);
+      processOCRDocument(file);
+    }
+  };
+
+  const handleOCRDragOver = (event) => {
+    event.preventDefault();
+  };
+
   // Fetch available users for login dropdown
   const fetchAvailableUsers = async () => {
     try {
