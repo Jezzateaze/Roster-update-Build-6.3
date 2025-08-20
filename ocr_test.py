@@ -300,6 +300,7 @@ startxref
             return True
         else:
             print(f"   ❌ Some iPhone/iOS MIME types are failing")
+            print(f"   🚨 CRITICAL ISSUE: iPhone users getting 'All 1 files failed to process' error")
             return False
 
     def poll_ocr_completion(self, task_id, max_wait=30):
