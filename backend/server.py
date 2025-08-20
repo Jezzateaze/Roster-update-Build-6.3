@@ -336,8 +336,8 @@ def send_reset_email(email: str, temp_pin: str):
 create_admin_user()
 
 # Pay calculation functions
-def determine_shift_type(date_str: str, start_time: str, end_time: str, is_public_holiday: bool) -> ShiftType:
-    """Determine the shift type based on date and time - SIMPLIFIED LOGIC"""
+def determine_shift_type_with_context(date_str: str, start_time: str, end_time: str, is_public_holiday: bool, is_post_midnight_segment: bool = False) -> ShiftType:
+    """Determine the shift type with context for cross-midnight calculations"""
     
     if is_public_holiday:
         return ShiftType.PUBLIC_HOLIDAY
@@ -365,7 +365,20 @@ def determine_shift_type(date_str: str, start_time: str, end_time: str, is_publi
     if end_minutes <= start_minutes:
         end_minutes += 24 * 60
     
-    # Simple time-based classification for weekdays
+    # Special handling for post-midnight segments of cross-midnight shifts
+    if is_post_midnight_segment:
+        # For post-midnight segments (00:01-XX:XX), classify based on time ranges for the new day
+        # Night: 00:01-05:59
+        if start_hour < 6:
+            return ShiftType.WEEKDAY_NIGHT
+        # Day: 06:00-19:59  
+        elif start_hour < 20:
+            return ShiftType.WEEKDAY_DAY
+        # Evening: 20:00-23:59
+        else:
+            return ShiftType.WEEKDAY_EVENING
+    
+    # Original logic for regular shifts and first segments of cross-midnight shifts
     # Night: starts before 6am OR ends after midnight
     if start_hour < 6 or end_minutes > 24 * 60:
         return ShiftType.WEEKDAY_NIGHT
@@ -375,6 +388,10 @@ def determine_shift_type(date_str: str, start_time: str, end_time: str, is_publi
     # Day: everything else (6am-8pm range)
     else:
         return ShiftType.WEEKDAY_DAY
+
+def determine_shift_type(date_str: str, start_time: str, end_time: str, is_public_holiday: bool) -> ShiftType:
+    """Determine the shift type based on date and time - SIMPLIFIED LOGIC"""
+    return determine_shift_type_with_context(date_str, start_time, end_time, is_public_holiday, False)
 
 def calculate_hours_worked(start_time: str, end_time: str) -> float:
     """Calculate hours worked between start and end time"""
