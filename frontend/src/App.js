@@ -10545,7 +10545,7 @@ function App() {
                 <Button variant="outline" onClick={() => setShowClientProfileDialog(false)}>
                   Close
                 </Button>
-                {isAdmin() && (
+                {(isAdmin() || (currentUser && currentUser.role === 'supervisor')) && (
                   <>
                     <Button 
                       variant="outline"
