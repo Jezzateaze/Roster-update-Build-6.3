@@ -719,10 +719,10 @@ function App() {
   }, []);
 
   useEffect(() => {
-    if (currentDate) {
+    if (currentDate && isAuthenticated) {
       fetchRosterData();
     }
-  }, [currentDate]);
+  }, [currentDate, isAuthenticated]);
 
   const fetchInitialData = async () => {
     try {
