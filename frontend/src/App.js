@@ -1199,49 +1199,62 @@ function App() {
   };
 
   // Poll OCR result for a single file
-  const pollSingleOCRResult = async (taskId, filename) => {
-    const maxAttempts = 30; // 30 seconds max per file
+  const pollSingleOCRResult = async (taskId, filename, fileNumber = 0) => {
+    const maxAttempts = 45; // 45 seconds max per file (increased for large batches)
     let attempts = 0;
+
+    console.log(`⏳ Polling OCR result for file ${fileNumber}: ${filename} (task: ${taskId})`);
 
     return new Promise((resolve) => {
       const poll = async () => {
         try {
           attempts++;
+          console.log(`🔍 Polling attempt ${attempts}/${maxAttempts} for file ${fileNumber}: ${filename}`);
+          
           const response = await axios.get(`${API_BASE_URL}/api/ocr/result/${taskId}`, {
-            headers: { 'Authorization': `Bearer ${authToken}` }
+            headers: { 'Authorization': `Bearer ${authToken}` },
+            timeout: 10000 // 10 second timeout per poll
           });
 
           if (response.data.status === 'completed') {
+            console.log(`✅ File ${fileNumber} (${filename}) processing completed successfully`);
             resolve({
               filename: filename,
               taskId: taskId,
               data: response.data.extracted_data,
-              success: true
+              success: true,
+              fileNumber: fileNumber
             });
           } else if (response.data.status === 'failed') {
+            console.error(`❌ File ${fileNumber} (${filename}) processing failed:`, response.data.error);
             resolve({
               filename: filename,
               taskId: taskId,
               data: null,
               success: false,
-              error: response.data.error || 'Processing failed'
+              error: response.data.error || 'Processing failed',
+              fileNumber: fileNumber
             });
           } else if (attempts < maxAttempts) {
             // Still processing, try again
+            console.log(`⏳ File ${fileNumber} (${filename}) still processing... (${response.data.status})`);
             setTimeout(poll, 1000);
           } else {
             // Timeout
+            console.error(`⏰ File ${fileNumber} (${filename}) processing timeout after ${maxAttempts} attempts`);
             resolve({
               filename: filename,
               taskId: taskId,
               data: null,
               success: false,
-              error: 'Processing timeout'
+              error: `Processing timeout after ${maxAttempts} seconds`,
+              fileNumber: fileNumber
             });
           }
         } catch (error) {
-          console.error(`Error polling OCR result for ${filename}:`, error);
-          if (attempts < maxAttempts) {
+          console.error(`❌ Error polling OCR result for file ${fileNumber} (${filename}):`, error);
+          if (attempts < maxAttempts && !error.message?.includes('timeout')) {
+            // Retry on network errors, but not on timeouts
             setTimeout(poll, 1000);
           } else {
             resolve({
@@ -1249,7 +1262,8 @@ function App() {
               taskId: taskId,
               data: null,
               success: false,
-              error: error.message || 'Polling error'
+              error: error.message || 'Polling error',
+              fileNumber: fileNumber
             });
           }
         }
