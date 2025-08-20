@@ -11121,11 +11121,42 @@ function App() {
                 {/* Raw text preview (collapsible) */}
                 <div className="border rounded-lg">
                   <div className="p-3 bg-gray-50 border-b">
-                    <h4 className="font-medium text-sm text-gray-700">📄 Extracted Text Preview</h4>
+                    <h4 className="font-medium text-sm text-gray-700">📄 Processing Results</h4>
                   </div>
-                  <div className="p-3 max-h-32 overflow-y-auto text-xs text-gray-600 font-mono bg-gray-50">
-                    {ocrResults?.extracted_text?.slice(0, 500)}
-                    {ocrResults?.extracted_text?.length > 500 && '...'}
+                  <div className="p-3">
+                    {ocrResults?.type === 'multiple' ? (
+                      <div className="space-y-3">
+                        <div className="text-sm text-gray-600">
+                          <strong>Batch Processing Summary:</strong>
+                        </div>
+                        <div className="grid grid-cols-1 gap-2">
+                          {ocrResults.individualResults?.map((result, index) => (
+                            <div key={index} className={`p-2 rounded text-xs ${
+                              result.success ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'
+                            } border`}>
+                              <div className="flex items-center justify-between">
+                                <span className="font-medium">
+                                  {result.success ? '✅' : '❌'} {result.filename}
+                                </span>
+                                {result.success && result.data?.confidence_score && (
+                                  <span className="text-gray-500">
+                                    {result.data.confidence_score.toFixed(1)}% confidence
+                                  </span>
+                                )}
+                              </div>
+                              {!result.success && result.error && (
+                                <p className="text-red-600 mt-1">{result.error}</p>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="max-h-32 overflow-y-auto text-xs text-gray-600 font-mono bg-gray-50 p-2 rounded">
+                        {ocrResults?.extracted_text?.slice(0, 500)}
+                        {ocrResults?.extracted_text?.length > 500 && '...'}
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
