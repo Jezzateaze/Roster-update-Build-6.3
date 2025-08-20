@@ -508,6 +508,17 @@ function App() {
   const [unassignedShiftsViewMode, setUnassignedShiftsViewMode] = useState('daily');
   const [unassignedShiftsSearchDate, setUnassignedShiftsSearchDate] = useState('');
   
+  // Shift Request CRUD states
+  const [showEditShiftRequestDialog, setShowEditShiftRequestDialog] = useState(false);
+  const [showAddShiftRequestDialog, setShowAddShiftRequestDialog] = useState(false);
+  const [editingShiftRequest, setEditingShiftRequest] = useState(null);
+  const [newShiftRequest, setNewShiftRequest] = useState({
+    staff_id: '',
+    roster_entry_id: '',
+    notes: '',
+    admin_notes: ''
+  });
+  
   // Touch/swipe handling for mobile
   const [touchStart, setTouchStart] = useState(null);
   const [touchEnd, setTouchEnd] = useState(null);
