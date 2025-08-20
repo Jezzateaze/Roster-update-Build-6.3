@@ -8229,6 +8229,31 @@ function App() {
               </Select>
             </div>
 
+            {/* Staff Selection - Admin Only */}
+            {isAdmin() && (
+              <div>
+                <Label>Select Staff Member *</Label>
+                <Select 
+                  value={newAvailability.staff_id} 
+                  onValueChange={(value) => setNewAvailability({...newAvailability, staff_id: value})}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Choose staff member..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {staff.filter(s => s.active).map((staffMember) => (
+                      <SelectItem key={staffMember.id} value={staffMember.id}>
+                        👤 {staffMember.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-sm text-slate-600 mt-1">
+                  As an Admin, you can create availability records for any staff member
+                </p>
+              </div>
+            )}
+
             <div className="flex items-center space-x-2">
               <Switch
                 id="is-recurring"
