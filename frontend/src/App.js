@@ -4723,19 +4723,56 @@ function App() {
                 </CardContent>
               </Card>
 
-              {/* Shift Requests Section */}
+              {/* Enhanced Shift Requests Section with Admin CRUD */}
               <Card>
                 <CardHeader>
-                  <CardTitle className="flex items-center space-x-2">
-                    <FileText className="w-5 h-5" />
-                    <span>{isStaff() ? 'My Shift Requests' : 'All Shift Requests'}</span>
+                  <CardTitle className="flex items-center justify-between">
+                    <div className="flex items-center space-x-2">
+                      <FileText className="w-5 h-5" />
+                      <span>{isStaff() ? 'My Shift Requests' : 'All Shift Requests'}</span>
+                    </div>
+                    {isAdmin() && (
+                      <div className="flex items-center space-x-2">
+                        <Button 
+                          onClick={() => setShowAddShiftRequestDialog(true)}
+                          size="sm"
+                        >
+                          <Plus className="w-4 h-4 mr-2" />
+                          Add Request
+                        </Button>
+                        {shiftRequests.length > 0 && (
+                          <Button 
+                            variant="destructive" 
+                            size="sm"
+                            onClick={clearAllShiftRequests}
+                          >
+                            <Trash2 className="w-4 h-4 mr-2" />
+                            Clear All
+                          </Button>
+                        )}
+                      </div>
+                    )}
                   </CardTitle>
+                  {isAdmin() && (
+                    <p className="text-sm text-slate-600 mt-2">
+                      Manage all staff shift requests - create, edit, approve, reject, or delete requests
+                    </p>
+                  )}
                 </CardHeader>
                 <CardContent>
                   {shiftRequests.length === 0 ? (
                     <div className="text-center py-8 text-slate-500">
                       <FileText className="w-12 h-12 mx-auto mb-3 opacity-50" />
                       <p>No shift requests</p>
+                      {isAdmin() && (
+                        <Button 
+                          className="mt-3"
+                          onClick={() => setShowAddShiftRequestDialog(true)}
+                        >
+                          <Plus className="w-4 h-4 mr-2" />
+                          Create First Request
+                        </Button>
+                      )}
                     </div>
                   ) : (
                     <div className="space-y-3">
@@ -4770,30 +4807,58 @@ function App() {
                                   Requested: {new Date(request.request_date).toLocaleString()}
                                 </div>
                               </div>
-                              {isAdmin() && request.status === 'pending' && (
-                                <div className="flex space-x-2 ml-4">
-                                  <Button 
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => {
-                                      const notes = prompt('Admin notes (optional):');
-                                      if (notes !== null) approveShiftRequest(request.id, notes);
-                                    }}
-                                  >
-                                    Approve
-                                  </Button>
-                                  <Button 
-                                    variant="destructive" 
-                                    size="sm"
-                                    onClick={() => {
-                                      const notes = prompt('Reason for rejection:');
-                                      if (notes) rejectShiftRequest(request.id, notes);
-                                    }}
-                                  >
-                                    Reject
-                                  </Button>
-                                </div>
-                              )}
+                              
+                              {/* Admin Action Buttons */}
+                              <div className="flex flex-col space-y-2 ml-4">
+                                {isAdmin() && request.status === 'pending' && (
+                                  <div className="flex space-x-2">
+                                    <Button 
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={() => {
+                                        const notes = prompt('Admin notes (optional):');
+                                        if (notes !== null) approveShiftRequest(request.id, notes);
+                                      }}
+                                    >
+                                      Approve
+                                    </Button>
+                                    <Button 
+                                      variant="destructive" 
+                                      size="sm"
+                                      onClick={() => {
+                                        const notes = prompt('Reason for rejection:');
+                                        if (notes) rejectShiftRequest(request.id, notes);
+                                      }}
+                                    >
+                                      Reject
+                                    </Button>
+                                  </div>
+                                )}
+                                
+                                {isAdmin() && (
+                                  <div className="flex space-x-2">
+                                    <Button 
+                                      variant="ghost" 
+                                      size="sm"
+                                      onClick={() => {
+                                        setEditingShiftRequest(request);
+                                        setShowEditShiftRequestDialog(true);
+                                      }}
+                                    >
+                                      <Edit className="w-4 h-4 mr-1" />
+                                      Edit
+                                    </Button>
+                                    <Button 
+                                      variant="ghost" 
+                                      size="sm"
+                                      onClick={() => deleteShiftRequest(request.id)}
+                                    >
+                                      <Trash2 className="w-4 h-4 mr-1" />
+                                      Delete
+                                    </Button>
+                                  </div>
+                                )}
+                              </div>
                             </div>
                           </div>
                         );
