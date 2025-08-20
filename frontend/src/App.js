@@ -1551,7 +1551,17 @@ function App() {
     ];
     
     const invalidFiles = files.filter(file => {
-      return !allowedTypes.includes(file.type) || file.size > maxSize;
+      const isPdfByExtension = file.name.toLowerCase().endsWith('.pdf');
+      const isHeifByExtension = file.name.toLowerCase().endsWith('.heif') || file.name.toLowerCase().endsWith('.heic');
+      const isMobileCompatible = mobileCompatibleTypes.includes(file.type) && (isPdfByExtension || isHeifByExtension);
+      
+      const validType = allowedTypes.includes(file.type) || isMobileCompatible;
+      const validSize = file.size <= maxSize;
+      
+      // Log file details for debugging mobile uploads
+      console.log(`File validation: ${file.name}, Type: ${file.type}, Size: ${file.size}, Valid: ${validType && validSize}`);
+      
+      return !validType || !validSize;
     });
 
     if (invalidFiles.length > 0) {
