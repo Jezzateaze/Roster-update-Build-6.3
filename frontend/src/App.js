@@ -11009,14 +11009,14 @@ function App() {
                     📁 Select multiple files for batch processing
                   </p>
                   <p className="text-xs text-gray-400">
-                    Supports: PDF, JPG, PNG, TIFF, BMP (max 50MB each)
+                    Supports: PDF, JPG, PNG, TIFF, BMP, HEIF/HEIC (max 50MB each)
                   </p>
                 </div>
                 
                 <input
                   id="ocrFileInput"
                   type="file"
-                  accept=".pdf,.jpg,.jpeg,.png,.tiff,.bmp"
+                  accept=".pdf,.jpg,.jpeg,.png,.tiff,.bmp,.heif,.heic"
                   onChange={handleOCRFileSelect}
                   className="hidden"
                   multiple
