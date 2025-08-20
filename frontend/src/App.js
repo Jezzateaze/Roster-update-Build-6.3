@@ -518,6 +518,10 @@ function App() {
     notes: '',
     admin_notes: ''
   });
+
+  // Staff Availability CRUD states
+  const [showEditStaffAvailabilityDialog, setShowEditStaffAvailabilityDialog] = useState(false);
+  const [editingStaffAvailability, setEditingStaffAvailability] = useState(null);
   
   // Touch/swipe handling for mobile
   const [touchStart, setTouchStart] = useState(null);
