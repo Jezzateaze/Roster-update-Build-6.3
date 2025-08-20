@@ -436,7 +436,8 @@ function App() {
     start_time: '',
     end_time: '',
     is_recurring: false,
-    notes: ''
+    notes: '',
+    staff_id: '' // For admin to select which staff member
   });
   const [showNotifications, setShowNotifications] = useState(false);
   
