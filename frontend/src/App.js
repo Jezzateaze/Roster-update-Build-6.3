@@ -4624,13 +4624,25 @@ function App() {
                   </CardTitle>
                   {/* Admin controls */}
                   {isAdmin() && (
-                    <Button onClick={() => {
-                      setEditingClient(null);
-                      setShowClientDialog(true);
-                    }}>
-                      <Plus className="w-4 h-4 mr-2" />
-                      Add Client Profile
-                    </Button>
+                    <div className="flex space-x-2">
+                      <Button onClick={() => {
+                        setEditingClient(null);
+                        setShowClientDialog(true);
+                      }}>
+                        <Plus className="w-4 h-4 mr-2" />
+                        Add Client Profile
+                      </Button>
+                      <Button 
+                        variant="outline"
+                        onClick={() => {
+                          resetOCRStates();
+                          setShowOCRDialog(true);
+                        }}
+                      >
+                        <FileText className="w-4 h-4 mr-2" />
+                        Scan NDIS Plan
+                      </Button>
+                    </div>
                   )}
                 </div>
               </CardHeader>
