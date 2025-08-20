@@ -10857,7 +10857,9 @@ function App() {
             {!ocrProcessing && !ocrResults && (
               <div>
                 <p className="text-sm text-gray-600 mb-4">
-                  Upload an NDIS plan document (PDF or image) to automatically extract client information.
+                  Upload NDIS plan documents (PDF or images) to automatically extract client information. 
+                  <br />
+                  <span className="font-medium text-blue-600">✨ Multiple files supported for batch processing!</span>
                 </p>
                 
                 {/* File Upload Area */}
@@ -10869,13 +10871,16 @@ function App() {
                 >
                   <FileText className="w-12 h-12 mx-auto text-gray-400 mb-4" />
                   <p className="text-lg font-medium text-gray-700 mb-2">
-                    Drop your NDIS plan here
+                    Drop your NDIS plan documents here
                   </p>
-                  <p className="text-sm text-gray-500 mb-4">
+                  <p className="text-sm text-gray-500 mb-2">
                     or click to browse files
                   </p>
+                  <p className="text-xs text-blue-600 font-medium mb-2">
+                    📁 Select multiple files for batch processing
+                  </p>
                   <p className="text-xs text-gray-400">
-                    Supports: PDF, JPG, PNG, TIFF, BMP (max 50MB)
+                    Supports: PDF, JPG, PNG, TIFF, BMP (max 50MB each)
                   </p>
                 </div>
                 
@@ -10885,6 +10890,7 @@ function App() {
                   accept=".pdf,.jpg,.jpeg,.png,.tiff,.bmp"
                   onChange={handleOCRFileSelect}
                   className="hidden"
+                  multiple
                 />
               </div>
             )}
