@@ -9092,6 +9092,171 @@ function App() {
         </DialogContent>
       </Dialog>
 
+      {/* Edit Staff Availability Dialog */}
+      <Dialog open={showEditStaffAvailabilityDialog} onOpenChange={setShowEditStaffAvailabilityDialog}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Edit Staff Availability</DialogTitle>
+            <p className="text-sm text-slate-600 mt-2">
+              Modify the availability record details
+            </p>
+          </DialogHeader>
+          {editingStaffAvailability && (
+            <div className="space-y-4">
+              {/* Staff Selection - Admin Only */}
+              {isAdmin() && (
+                <div>
+                  <Label>Staff Member</Label>
+                  <Select 
+                    value={editingStaffAvailability.staff_id} 
+                    onValueChange={(value) => {
+                      const selectedStaff = staff.find(s => s.id === value);
+                      setEditingStaffAvailability({
+                        ...editingStaffAvailability, 
+                        staff_id: value,
+                        staff_name: selectedStaff?.name || ''
+                      });
+                    }}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {staff.filter(s => s.active).map((staffMember) => (
+                        <SelectItem key={staffMember.id} value={staffMember.id}>
+                          👤 {staffMember.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+
+              <div>
+                <Label>Availability Type</Label>
+                <Select 
+                  value={editingStaffAvailability.availability_type} 
+                  onValueChange={(value) => setEditingStaffAvailability({...editingStaffAvailability, availability_type: value})}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="available">✅ Available</SelectItem>
+                    <SelectItem value="unavailable">❌ Unavailable</SelectItem>
+                    <SelectItem value="time_off_request">🏖️ Time Off Request</SelectItem>
+                    <SelectItem value="preferred_shifts">⭐ Preferred Shifts</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="flex items-center space-x-2">
+                <Switch
+                  id="edit-is-recurring"
+                  checked={editingStaffAvailability.is_recurring}
+                  onCheckedChange={(checked) => setEditingStaffAvailability({...editingStaffAvailability, is_recurring: checked})}
+                />
+                <Label htmlFor="edit-is-recurring">Recurring (every week)</Label>
+              </div>
+
+              {editingStaffAvailability.is_recurring ? (
+                <div>
+                  <Label>Day of Week</Label>
+                  <Select 
+                    value={editingStaffAvailability.day_of_week?.toString() || ''} 
+                    onValueChange={(value) => setEditingStaffAvailability({...editingStaffAvailability, day_of_week: parseInt(value)})}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select day" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="0">Monday</SelectItem>
+                      <SelectItem value="1">Tuesday</SelectItem>
+                      <SelectItem value="2">Wednesday</SelectItem>
+                      <SelectItem value="3">Thursday</SelectItem>
+                      <SelectItem value="4">Friday</SelectItem>
+                      <SelectItem value="5">Saturday</SelectItem>
+                      <SelectItem value="6">Sunday</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              ) : (
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="edit-date-from">From Date</Label>
+                    <Input
+                      id="edit-date-from"
+                      type="date"
+                      value={editingStaffAvailability.date_from}
+                      onChange={(e) => setEditingStaffAvailability({...editingStaffAvailability, date_from: e.target.value})}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="edit-date-to">To Date (leave blank for single day)</Label>
+                    <Input
+                      id="edit-date-to"
+                      type="date"
+                      value={editingStaffAvailability.date_to}
+                      onChange={(e) => setEditingStaffAvailability({...editingStaffAvailability, date_to: e.target.value})}
+                    />
+                  </div>
+                </div>
+              )}
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="edit-start-time">Start Time (optional)</Label>
+                  <Input
+                    id="edit-start-time"
+                    type="time"
+                    value={editingStaffAvailability.start_time}
+                    onChange={(e) => setEditingStaffAvailability({...editingStaffAvailability, start_time: e.target.value})}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="edit-end-time">End Time (optional)</Label>
+                  <Input
+                    id="edit-end-time"
+                    type="time"
+                    value={editingStaffAvailability.end_time}
+                    onChange={(e) => setEditingStaffAvailability({...editingStaffAvailability, end_time: e.target.value})}
+                  />
+                </div>
+              </div>
+
+              <div>
+                <Label htmlFor="edit-availability-notes">Notes</Label>
+                <textarea
+                  id="edit-availability-notes"
+                  className="w-full p-3 border rounded-md mt-1"
+                  rows={3}
+                  placeholder="Add any additional notes..."
+                  value={editingStaffAvailability.notes}
+                  onChange={(e) => setEditingStaffAvailability({...editingStaffAvailability, notes: e.target.value})}
+                />
+              </div>
+
+              <div className="flex justify-end space-x-2">
+                <Button variant="outline" onClick={() => setShowEditStaffAvailabilityDialog(false)}>
+                  Cancel
+                </Button>
+                <Button 
+                  onClick={() => updateStaffAvailability(editingStaffAvailability.id, editingStaffAvailability)}
+                  disabled={
+                    // Date validation for non-recurring availability
+                    (!editingStaffAvailability.is_recurring && !editingStaffAvailability.date_from) ||
+                    // Day validation for recurring availability
+                    (editingStaffAvailability.is_recurring && editingStaffAvailability.day_of_week === null)
+                  }
+                >
+                  Update Availability
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
       {/* Comprehensive Overlap Management Dialog */}
       <Dialog open={showOverlapDialog} onOpenChange={setShowOverlapDialog}>
         <DialogContent className="max-w-4xl max-h-[85vh] overflow-y-auto">
