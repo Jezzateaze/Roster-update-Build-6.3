@@ -8358,8 +8358,18 @@ function App() {
               <Button variant="outline" onClick={() => setShowAvailabilityDialog(false)}>
                 Cancel
               </Button>
-              <Button onClick={() => createStaffAvailability(newAvailability)}>
-                Save Availability
+              <Button 
+                onClick={() => createStaffAvailability(newAvailability)}
+                disabled={
+                  // For admin users, staff_id is required
+                  (isAdmin() && !newAvailability.staff_id) ||
+                  // Date validation for non-recurring availability
+                  (!newAvailability.is_recurring && !newAvailability.date_from) ||
+                  // Day validation for recurring availability
+                  (newAvailability.is_recurring && newAvailability.day_of_week === null)
+                }
+              >
+                {isAdmin() ? 'Add Staff Availability' : 'Save My Availability'}
               </Button>
             </div>
           </div>
