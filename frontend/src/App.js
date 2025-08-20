@@ -10544,15 +10544,29 @@ function App() {
                   Close
                 </Button>
                 {isAdmin() && (
-                  <Button 
-                    onClick={() => {
-                      setEditingClient(selectedClient);
-                      setShowClientProfileDialog(false);
-                      setShowClientDialog(true);
-                    }}
-                  >
-                    Edit Profile
-                  </Button>
+                  <>
+                    <Button 
+                      variant="outline"
+                      onClick={() => {
+                        // Set current client for OCR update
+                        setCurrentClient(selectedClient);
+                        resetOCRStates();
+                        setShowOCRDialog(true);
+                      }}
+                    >
+                      <FileText className="w-4 h-4 mr-2" />
+                      Upload NDIS Plan
+                    </Button>
+                    <Button 
+                      onClick={() => {
+                        setEditingClient(selectedClient);
+                        setShowClientProfileDialog(false);
+                        setShowClientDialog(true);
+                      }}
+                    >
+                      Edit Profile
+                    </Button>
+                  </>
                 )}
               </div>
             </div>
