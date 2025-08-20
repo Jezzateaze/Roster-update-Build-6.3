@@ -10559,6 +10559,201 @@ function App() {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* OCR Document Upload Dialog */}
+      <Dialog open={showOCRDialog} onOpenChange={setShowOCRDialog}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-lg font-bold text-slate-800">
+              📄 Scan NDIS Plan Document
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            {!ocrProcessing && !ocrResults && (
+              <div>
+                <p className="text-sm text-gray-600 mb-4">
+                  Upload an NDIS plan document (PDF or image) to automatically extract client information.
+                </p>
+                
+                {/* File Upload Area */}
+                <div 
+                  className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-blue-400 transition-colors cursor-pointer"
+                  onDrop={handleOCRDrop}
+                  onDragOver={handleOCRDragOver}
+                  onClick={() => document.getElementById('ocrFileInput').click()}
+                >
+                  <FileText className="w-12 h-12 mx-auto text-gray-400 mb-4" />
+                  <p className="text-lg font-medium text-gray-700 mb-2">
+                    Drop your NDIS plan here
+                  </p>
+                  <p className="text-sm text-gray-500 mb-4">
+                    or click to browse files
+                  </p>
+                  <p className="text-xs text-gray-400">
+                    Supports: PDF, JPG, PNG, TIFF, BMP (max 50MB)
+                  </p>
+                </div>
+                
+                <input
+                  id="ocrFileInput"
+                  type="file"
+                  accept=".pdf,.jpg,.jpeg,.png,.tiff,.bmp"
+                  onChange={handleOCRFileSelect}
+                  className="hidden"
+                />
+              </div>
+            )}
+
+            {ocrProcessing && (
+              <div className="space-y-4">
+                <div className="flex items-center space-x-3">
+                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500"></div>
+                  <span className="text-sm font-medium">Processing document...</span>
+                </div>
+                
+                {/* Progress Bar */}
+                <div className="w-full bg-gray-200 rounded-full h-2">
+                  <div 
+                    className="bg-blue-500 h-2 rounded-full transition-all duration-500"
+                    style={{ width: `${ocrProgress}%` }}
+                  ></div>
+                </div>
+                <p className="text-xs text-gray-500 text-center">
+                  {ocrProgress}% complete
+                </p>
+              </div>
+            )}
+
+            <div className="flex justify-end space-x-2">
+              <Button variant="outline" onClick={() => {
+                resetOCRStates();
+                setShowOCRDialog(false);
+              }}>
+                Cancel
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* OCR Results Review Dialog */}
+      <Dialog open={showOCRReviewDialog} onOpenChange={setShowOCRReviewDialog}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-lg font-bold text-slate-800">
+              ✅ Document Processed - Review Extracted Data
+            </DialogTitle>
+          </DialogHeader>
+          {extractedClientData && (
+            <div className="space-y-6">
+              <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
+                <div className="flex items-center space-x-2 mb-2">
+                  <CheckSquare className="w-5 h-5 text-green-600" />
+                  <span className="font-medium text-green-800">Document successfully processed!</span>
+                </div>
+                <p className="text-sm text-green-700">
+                  Confidence Score: {extractedClientData.confidence_score?.toFixed(1) || 0}%
+                </p>
+              </div>
+
+              {/* Extracted Data Preview */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-4">
+                  <h3 className="font-semibold text-slate-700">👤 Personal Information</h3>
+                  <div className="space-y-3">
+                    <div className="flex justify-between items-center p-2 bg-gray-50 rounded">
+                      <span className="text-sm font-medium">Full Name:</span>
+                      <span className="text-sm">{extractedClientData.full_name || 'Not found'}</span>
+                    </div>
+                    <div className="flex justify-between items-center p-2 bg-gray-50 rounded">
+                      <span className="text-sm font-medium">Date of Birth:</span>
+                      <span className="text-sm">{extractedClientData.date_of_birth || 'Not found'}</span>
+                    </div>
+                    <div className="flex justify-between items-center p-2 bg-gray-50 rounded">
+                      <span className="text-sm font-medium">Address:</span>
+                      <span className="text-sm text-right">{extractedClientData.address || 'Not found'}</span>
+                    </div>
+                    <div className="flex justify-between items-center p-2 bg-gray-50 rounded">
+                      <span className="text-sm font-medium">Mobile:</span>
+                      <span className="text-sm">{extractedClientData.mobile || 'Not found'}</span>
+                    </div>
+                    <div className="flex justify-between items-center p-2 bg-gray-50 rounded">
+                      <span className="text-sm font-medium">Disability:</span>
+                      <span className="text-sm text-right">{extractedClientData.disability_condition || 'Not found'}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <h3 className="font-semibold text-slate-700">💼 NDIS Plan Details</h3>
+                  <div className="space-y-3">
+                    <div className="flex justify-between items-center p-2 bg-blue-50 rounded">
+                      <span className="text-sm font-medium">NDIS Number:</span>
+                      <span className="text-sm">{extractedClientData.ndis_number || 'Not found'}</span>
+                    </div>
+                    <div className="flex justify-between items-center p-2 bg-blue-50 rounded">
+                      <span className="text-sm font-medium">Plan Start:</span>
+                      <span className="text-sm">{extractedClientData.plan_start_date || 'Not found'}</span>
+                    </div>
+                    <div className="flex justify-between items-center p-2 bg-blue-50 rounded">
+                      <span className="text-sm font-medium">Plan End:</span>
+                      <span className="text-sm">{extractedClientData.plan_end_date || 'Not found'}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="space-y-4">
+                <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                  <h4 className="font-medium text-blue-800 mb-2">What would you like to do with this data?</h4>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <Button 
+                      onClick={() => applyOCRToClient()}
+                      className="w-full"
+                    >
+                      <Plus className="w-4 h-4 mr-2" />
+                      Create New Client
+                    </Button>
+                    <Button 
+                      variant="outline"
+                      onClick={() => {
+                        setShowOCRReviewDialog(false);
+                        // Open client selection dialog (to be implemented)
+                        alert('Select an existing client to update...');
+                      }}
+                      className="w-full"
+                    >
+                      <Edit className="w-4 h-4 mr-2" />
+                      Update Existing Client
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Raw text preview (collapsible) */}
+                <div className="border rounded-lg">
+                  <div className="p-3 bg-gray-50 border-b">
+                    <h4 className="font-medium text-sm text-gray-700">📄 Extracted Text Preview</h4>
+                  </div>
+                  <div className="p-3 max-h-32 overflow-y-auto text-xs text-gray-600 font-mono bg-gray-50">
+                    {ocrResults?.extracted_text?.slice(0, 500)}
+                    {ocrResults?.extracted_text?.length > 500 && '...'}
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex justify-end space-x-2 pt-4 border-t">
+                <Button variant="outline" onClick={() => {
+                  setShowOCRReviewDialog(false);
+                  resetOCRStates();
+                }}>
+                  Cancel
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
       
     </div>
   );
