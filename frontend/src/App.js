@@ -1619,8 +1619,26 @@ function App() {
       'image/heif', 'image/heic', 'image/heif-sequence', 'image/heic-sequence'
     ];
     
+    // Additional iOS/mobile-specific MIME types that are sometimes used
+    const mobileCompatibleTypes = [
+      'application/octet-stream',  // iOS Safari often uses this for PDFs
+      'application/binary',
+      'application/download',
+      'text/plain'  // Sometimes used by mobile browsers
+    ];
+    
     const invalidFiles = files.filter(file => {
-      return !allowedTypes.includes(file.type) || file.size > maxSize;
+      const isPdfByExtension = file.name.toLowerCase().endsWith('.pdf');
+      const isHeifByExtension = file.name.toLowerCase().endsWith('.heif') || file.name.toLowerCase().endsWith('.heic');
+      const isMobileCompatible = mobileCompatibleTypes.includes(file.type) && (isPdfByExtension || isHeifByExtension);
+      
+      const validType = allowedTypes.includes(file.type) || isMobileCompatible;
+      const validSize = file.size <= maxSize;
+      
+      // Log file details for debugging mobile uploads
+      console.log(`Drag & Drop validation: ${file.name}, Type: ${file.type}, Size: ${file.size}, Valid: ${validType && validSize}`);
+      
+      return !validType || !validSize;
     });
 
     if (invalidFiles.length > 0) {
