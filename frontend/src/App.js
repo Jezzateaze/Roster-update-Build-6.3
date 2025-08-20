@@ -2668,21 +2668,10 @@ function App() {
     
     // Mobile-responsive classes
     const isMobile = window.innerWidth <= 768;
-    const containerClasses = isMobile 
-      ? `min-h-[100px] sm:min-h-[120px] p-1 sm:p-2 border-r border-b border-slate-200 ${backgroundClass} group hover:bg-slate-50 transition-colors relative`
-      : `min-h-[200px] p-2 border-r border-b border-slate-200 ${backgroundClass} group hover:bg-slate-50 transition-colors relative`;
-    
-    const dayNumberClasses = isMobile 
-      ? `font-medium text-xs sm:text-sm mb-1 sm:mb-3 flex items-center justify-between ${textClass} day-number-mobile`
-      : `font-medium text-sm mb-3 flex items-center justify-between ${textClass}`;
-    
-    const contentClasses = isMobile 
-      ? 'calendar-day-mobile overflow-y-auto'
-      : '';
     
     return (
-      <div className={containerClasses}>
-        <div className={dayNumberClasses}>
+      <div className={`calendar-day-container p-2 border-r border-b border-slate-200 ${backgroundClass} group hover:bg-slate-50 transition-colors relative`}>
+        <div className={`font-medium ${isMobile ? 'text-xs mb-1' : 'text-sm mb-2'} flex items-center justify-between ${textClass} day-number-mobile`}>
           <span>{date.getDate()}</span>
           <div className="flex items-center space-x-1">
             {!isCurrentMonth && (
@@ -2735,7 +2724,8 @@ function App() {
           </div>
         </div>
         
-        <div className={`space-y-1 ${contentClasses}`}>
+        {/* Dynamic content area that expands with shifts */}
+        <div className="calendar-day-content flex-1">
           {/* Calendar Events */}
           {dayEvents.map(event => (
             <div
@@ -2774,11 +2764,11 @@ function App() {
             </div>
           ))}
           
-          {/* Shift Entries - Mobile Responsive */}
+          {/* Shift Entries - Dynamic layout that expands */}
           {dayEntries.map(entry => {
             const shiftClasses = isMobile 
-              ? "text-xs p-1 rounded cursor-pointer hover:bg-slate-200 transition-colors group/shift relative border border-slate-100 shift-entry-mobile"
-              : "text-xs p-2 rounded cursor-pointer hover:bg-slate-200 transition-colors group/shift relative border border-slate-100";
+              ? "text-xs p-1 mb-1 rounded cursor-pointer hover:bg-slate-200 transition-colors group/shift relative border border-slate-100 shift-entry-mobile"
+              : "text-xs p-2 mb-1 rounded cursor-pointer hover:bg-slate-200 transition-colors group/shift relative border border-slate-100";
             
             const timeClasses = isMobile 
               ? "shift-time-mobile font-medium"
@@ -2861,12 +2851,12 @@ function App() {
           })}
         </div>
 
-        {/* Daily totals footer - only show for current month with shifts - Mobile optimized */}
+        {/* Daily totals footer - positioned to never overlap content */}
         {isCurrentMonth && dayEntries.length > 0 && (
-          <div className={isMobile 
-            ? "absolute bottom-0.5 left-1 right-1 text-xs bg-slate-50 rounded px-1 py-0.5 border border-slate-200 daily-total-mobile"
-            : "absolute bottom-1 left-2 right-2 text-xs bg-slate-50 rounded px-1 py-0.5 border border-slate-200"
-          }>
+          <div className={`daily-totals-bar ${isMobile 
+            ? "text-xs px-1 py-0.5 daily-total-mobile"
+            : "text-xs px-2 py-1"
+          }`}>
             <div className="flex justify-between items-center">
               <span className="font-medium text-slate-600">
                 📊 {dailyTotals.totalShifts} shift{dailyTotals.totalShifts !== 1 ? 's' : ''}
