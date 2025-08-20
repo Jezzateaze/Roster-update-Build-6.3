@@ -361,6 +361,44 @@ class StaffAvailability(BaseModel):
     created_at: Optional[datetime] = None
     is_active: bool = True
 
+# OCR Document Processing Models
+class OCRTaskStatus(str, Enum):
+    PROCESSING = "processing"
+    COMPLETED = "completed"
+    FAILED = "failed"
+
+class DocumentType(str, Enum):
+    PDF = "pdf"
+    IMAGE = "image"
+
+class OCRTask(BaseModel):
+    id: Optional[str] = None
+    client_id: Optional[str] = None  # Link to client profile
+    filename: str
+    file_type: str
+    status: OCRTaskStatus = OCRTaskStatus.PROCESSING
+    progress: int = 0
+    result: Optional[Dict[str, Any]] = None
+    error: Optional[str] = None
+    extracted_text: Optional[str] = None
+    extracted_data: Optional[Dict[str, Any]] = None  # Parsed NDIS plan data
+    created_at: datetime = datetime.now()
+    completed_at: Optional[datetime] = None
+    created_by: str = ""
+
+class ExtractedNDISData(BaseModel):
+    full_name: Optional[str] = None
+    date_of_birth: Optional[str] = None
+    ndis_number: Optional[str] = None
+    plan_start_date: Optional[str] = None
+    plan_end_date: Optional[str] = None
+    funding_categories: List[Dict[str, Any]] = []
+    disability_condition: Optional[str] = None
+    address: Optional[str] = None
+    mobile: Optional[str] = None
+    confidence_score: float = 0.0
+
+# Notification Models
 class Notification(BaseModel):
     id: Optional[str] = None
     user_id: str
