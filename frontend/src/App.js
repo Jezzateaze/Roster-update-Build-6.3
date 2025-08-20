@@ -962,6 +962,8 @@ function App() {
   const [extractedClientData, setExtractedClientData] = useState(null);
   const [showOCRReviewDialog, setShowOCRReviewDialog] = useState(false);
   const [selectedFile, setSelectedFile] = useState(null);
+  const [processedFileCount, setProcessedFileCount] = useState(0);
+  const [totalFileCount, setTotalFileCount] = useState(0);
 
   // Fetch all clients
   const fetchClients = async () => {
