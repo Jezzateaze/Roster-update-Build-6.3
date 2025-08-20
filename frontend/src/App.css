@@ -30,7 +30,7 @@
   touch-action: pan-y;
 }
 
-/* Enhanced calendar cells - larger and no scrolling limitations */
+/* Enhanced calendar cells - responsive and adaptive */
 .calendar-cell {
   min-height: 200px;
   position: relative;
@@ -41,7 +41,7 @@
   max-height: none;
 }
 
-/* Calendar grid optimization for larger cells */
+/* Calendar grid optimization - responsive */
 .calendar-grid {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
@@ -54,7 +54,7 @@
   flex: 1;
 }
 
-/* Enhanced delete button visibility on mobile */
+/* Mobile Responsive Calendar Improvements */
 @media (max-width: 768px) {
   .mobile-delete-visible {
     opacity: 1 !important;
@@ -65,9 +65,55 @@
     opacity: 1 !important;
   }
   
-  /* Slightly smaller calendar cells on mobile while keeping them large enough */
+  /* Optimized calendar cells for mobile */
   .calendar-grid > div {
-    min-height: 180px;
+    min-height: 120px; /* Reduced from 180px for better mobile view */
+    padding: 0.5rem; /* Add proper padding */
+  }
+  
+  /* Mobile calendar day content optimization */
+  .calendar-day-mobile {
+    overflow-y: auto;
+    max-height: 120px;
+  }
+  
+  /* Mobile shift entry improvements */
+  .shift-entry-mobile {
+    font-size: 0.6rem; /* Smaller text for mobile */
+    padding: 0.25rem;
+    margin: 0.125rem 0;
+    line-height: 1.2;
+    border-radius: 0.25rem;
+  }
+  
+  /* Mobile day number styling */
+  .day-number-mobile {
+    font-size: 0.75rem;
+    font-weight: 600;
+  }
+}
+
+/* Extra small screens (iPhone SE, etc.) */
+@media (max-width: 375px) {
+  .calendar-grid > div {
+    min-height: 100px; /* Even smaller for very small screens */
+    padding: 0.25rem;
+  }
+  
+  .calendar-day-mobile {
+    max-height: 100px;
+  }
+  
+  .shift-entry-mobile {
+    font-size: 0.55rem;
+    padding: 0.125rem 0.25rem;
+  }
+}
+
+/* Tablet improvements */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .calendar-grid > div {
+    min-height: 150px; /* Medium size for tablets */
   }
 }
 
