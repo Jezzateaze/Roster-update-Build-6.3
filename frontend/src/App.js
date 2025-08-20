@@ -1277,16 +1277,22 @@ function App() {
   const combineMultipleOCRResults = (results) => {
     const successfulResults = results.filter(r => r.success && r.data);
     
+    console.log(`🔄 Combining results from ${successfulResults.length} successful files out of ${results.length} total`);
+    
     if (successfulResults.length === 0) {
+      console.warn('❌ No successful results to combine');
       return null;
     }
 
-    // If only one successful result, return it
+    // If only one successful result, return it with proper formatting
     if (successfulResults.length === 1) {
+      const result = successfulResults[0];
+      console.log(`✅ Single successful result from: ${result.filename}`);
       return {
-        ...successfulResults[0].data,
-        sources: [successfulResults[0].filename],
-        confidence_score: successfulResults[0].data.confidence_score || 0
+        ...result.data,
+        sources: [result.filename],
+        confidence_score: result.data?.confidence_score || 0,
+        fieldSources: {}
       };
     }
 
@@ -1318,15 +1324,18 @@ function App() {
       let bestConfidence = -1;
 
       successfulResults.forEach(result => {
-        const value = result.data[field];
-        const confidence = result.data.confidence_score || 0;
+        const value = result.data?.[field];
+        const confidence = result.data?.confidence_score || 0;
         
-        if (value && value.trim() !== '') {
+        if (value && typeof value === 'string' && value.trim() !== '') {
           // Prefer non-empty values with higher confidence
-          if (bestValue === null || confidence > bestConfidence) {
-            bestValue = value;
+          // Also prefer longer values (more complete information)
+          const valueScore = confidence + (value.length * 0.1);
+          
+          if (bestValue === null || valueScore > bestConfidence) {
+            bestValue = value.trim();
             bestSource = result.filename;
-            bestConfidence = confidence;
+            bestConfidence = valueScore;
           }
         }
       });
@@ -1334,13 +1343,28 @@ function App() {
       if (bestValue) {
         combined[field] = bestValue;
         combined.fieldSources[field] = bestSource;
+        console.log(`📄 Field '${field}' = '${bestValue}' from ${bestSource}`);
       }
     });
 
-    // Calculate average confidence
-    const totalConfidence = successfulResults.reduce((sum, r) => sum + (r.data.confidence_score || 0), 0);
-    combined.confidence_score = totalConfidence / successfulResults.length;
+    // Calculate average confidence, weighted by successful extractions
+    const confidenceScores = successfulResults
+      .map(r => r.data?.confidence_score || 0)
+      .filter(score => score > 0);
+    
+    if (confidenceScores.length > 0) {
+      combined.confidence_score = confidenceScores.reduce((sum, score) => sum + score, 0) / confidenceScores.length;
+    }
 
+    // Bonus confidence if multiple sources agree on key fields
+    const keyFields = ['full_name', 'ndis_number', 'date_of_birth'];
+    const foundKeyFields = keyFields.filter(field => combined[field]).length;
+    if (foundKeyFields >= 2) {
+      combined.confidence_score = Math.min(100, combined.confidence_score * 1.1);
+    }
+
+    console.log(`✅ Combined data with ${foundKeyFields}/${keyFields.length} key fields and ${combined.confidence_score.toFixed(1)}% confidence`);
+    
     return combined;
   };
   const processOCRDocument = async (file) => {
