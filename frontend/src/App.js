@@ -4929,7 +4929,7 @@ function App() {
                 </CardContent>
               </Card>
 
-              {/* Staff Availability Section */}
+              {/* Enhanced Staff Availability Section with Admin CRUD */}
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center justify-between">
@@ -4937,15 +4937,27 @@ function App() {
                       <CalendarViewIcon className="w-5 h-5" />
                       <span>{isStaff() ? 'My Availability' : 'Staff Availability'}</span>
                     </div>
-                    <Button onClick={() => setShowAvailabilityDialog(true)}>
-                      <Plus className="w-4 h-4 mr-2" />
-                      {isStaff() ? 'Update My Availability' : 'Add Availability'}
-                    </Button>
+                    <div className="flex items-center space-x-2">
+                      <Button onClick={() => setShowAvailabilityDialog(true)}>
+                        <Plus className="w-4 h-4 mr-2" />
+                        {isStaff() ? 'Update My Availability' : 'Add Availability'}
+                      </Button>
+                      {isAdmin() && staffAvailability.length > 0 && (
+                        <Button 
+                          variant="destructive" 
+                          size="sm"
+                          onClick={clearAllStaffAvailability}
+                        >
+                          <Trash2 className="w-4 h-4 mr-2" />
+                          Clear All
+                        </Button>
+                      )}
+                    </div>
                   </CardTitle>
                   <p className="text-sm text-slate-600">
                     {isStaff() ? 
                       'Manage your availability, time off requests, and preferred shifts' :
-                      'View and manage all staff availability and preferences'
+                      'View and manage all staff availability and preferences - edit, delete, or clear records'
                     }
                   </p>
                 </CardHeader>
@@ -4954,6 +4966,13 @@ function App() {
                     <div className="text-center py-8 text-slate-500">
                       <CalendarViewIcon className="w-12 h-12 mx-auto mb-3 opacity-50" />
                       <p>No availability records</p>
+                      <Button 
+                        className="mt-3"
+                        onClick={() => setShowAvailabilityDialog(true)}
+                      >
+                        <Plus className="w-4 h-4 mr-2" />
+                        {isStaff() ? 'Add My First Availability' : 'Create First Record'}
+                      </Button>
                     </div>
                   ) : (
                     <div className="space-y-3">
@@ -4992,27 +5011,33 @@ function App() {
                               </div>
                             </div>
                             
-                            {(isAdmin() || (isStaff() && availability.staff_id === currentUser?.staff_id)) && (
-                              <Button 
-                                variant="ghost" 
-                                size="sm"
-                                onClick={async () => {
-                                  if (window.confirm('Are you sure you want to remove this availability record?')) {
-                                    try {
-                                      await axios.delete(`${API_BASE_URL}/api/staff-availability/${availability.id}`, {
-                                        headers: { 'Authorization': `Bearer ${authToken}` }
-                                      });
-                                      fetchStaffAvailability();
-                                      alert('✅ Availability record removed');
-                                    } catch (error) {
-                                      alert('❌ Error removing availability');
-                                    }
-                                  }
-                                }}
-                              >
-                                Remove
-                              </Button>
-                            )}
+                            {/* Enhanced Action Buttons */}
+                            <div className="flex flex-col space-y-2 ml-4">
+                              {/* Admin or Own Record Actions */}
+                              {(isAdmin() || (isStaff() && availability.staff_id === currentUser?.staff_id)) && (
+                                <div className="flex space-x-2">
+                                  <Button 
+                                    variant="ghost" 
+                                    size="sm"
+                                    onClick={() => {
+                                      setEditingStaffAvailability(availability);
+                                      setShowEditStaffAvailabilityDialog(true);
+                                    }}
+                                  >
+                                    <Edit className="w-4 h-4 mr-1" />
+                                    Edit
+                                  </Button>
+                                  <Button 
+                                    variant="ghost" 
+                                    size="sm"
+                                    onClick={() => deleteStaffAvailability(availability.id)}
+                                  >
+                                    <Trash2 className="w-4 h-4 mr-1" />
+                                    Delete
+                                  </Button>
+                                </div>
+                              )}
+                            </div>
                           </div>
                         </div>
                       ))}
