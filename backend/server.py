@@ -497,7 +497,7 @@ def calculate_ndis_charges(roster_entry: RosterEntry, settings: Settings, shift_
         roster_entry.ndis_hourly_charge = 0.0  # Not applicable for sleepovers
         roster_entry.ndis_shift_charge = sleepover_charge["rate"]
         roster_entry.ndis_total_charge = sleepover_charge["rate"]
-        roster_entry.ndis_line_item_code = sleepover_charge["code"]
+        roster_entry.ndis_line_item_code = sleepover_charge["line_item_code"]
         roster_entry.ndis_description = sleepover_charge["description"]
         
         # Add any additional wake hours beyond 2 hours at hourly rate
