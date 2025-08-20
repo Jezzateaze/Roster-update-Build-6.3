@@ -1066,61 +1066,77 @@ function App() {
   const processMultipleOCRDocuments = async (files) => {
     if (!files || files.length === 0) return;
 
+    console.log(`🔄 Starting batch OCR processing for ${files.length} files`);
     setOCRProcessing(true);
     setOCRProgress(0);
     setOCRResults(null);
     setExtractedClientData(null);
+    setProcessedFileCount(0);
+    setTotalFileCount(files.length);
 
     const totalFiles = files.length;
     const results = [];
     let completedFiles = 0;
 
     try {
+      console.log(`Processing ${totalFiles} files sequentially...`);
+      
       // Process files sequentially to avoid overwhelming the server
       for (let i = 0; i < files.length; i++) {
         const file = files[i];
-        console.log(`Processing file ${i + 1}/${totalFiles}: ${file.name}`);
+        const currentFileNum = i + 1;
+        
+        console.log(`📄 Processing file ${currentFileNum}/${totalFiles}: ${file.name}`);
         
         // Update progress for current file
         const baseProgress = (i / totalFiles) * 100;
         setOCRProgress(baseProgress);
+        setProcessedFileCount(i);
 
         const formData = new FormData();
         formData.append('file', file);
         formData.append('extract_client_data', 'true');
 
         try {
+          console.log(`🚀 Uploading file ${currentFileNum}: ${file.name}`);
+          
           const response = await axios.post(`${API_BASE_URL}/api/ocr/process`, formData, {
             headers: { 
               'Authorization': `Bearer ${authToken}`,
               'Content-Type': 'multipart/form-data'
-            }
+            },
+            timeout: 60000 // 60 second timeout per file
           });
 
           const taskId = response.data.task_id;
+          console.log(`✅ File ${currentFileNum} uploaded, task ID: ${taskId}`);
           
           // If processing completed immediately
           if (response.data.status === 'completed') {
+            console.log(`✅ File ${currentFileNum} processed immediately`);
             results.push({
               filename: file.name,
               taskId: taskId,
               data: response.data.extracted_data,
-              success: true
+              success: true,
+              fileNumber: currentFileNum
             });
           } else {
             // Poll for results for this specific file
-            const result = await pollSingleOCRResult(taskId, file.name);
+            console.log(`⏳ Polling results for file ${currentFileNum}: ${file.name}`);
+            const result = await pollSingleOCRResult(taskId, file.name, currentFileNum);
             results.push(result);
           }
 
         } catch (error) {
-          console.error(`Error processing file ${file.name}:`, error);
+          console.error(`❌ Error processing file ${currentFileNum} (${file.name}):`, error);
           results.push({
             filename: file.name,
             taskId: null,
             data: null,
             success: false,
-            error: error.response?.data?.detail || error.message
+            error: error.response?.data?.detail || error.message || 'Processing failed',
+            fileNumber: currentFileNum
           });
         }
 
@@ -1128,33 +1144,57 @@ function App() {
         // Update progress after each file
         const fileProgress = (completedFiles / totalFiles) * 100;
         setOCRProgress(fileProgress);
+        setProcessedFileCount(completedFiles);
+        
+        console.log(`📊 Progress: ${completedFiles}/${totalFiles} files completed (${fileProgress.toFixed(1)}%)`);
+      }
+
+      // Process completed - analyze results
+      const successfulResults = results.filter(r => r.success);
+      const failedResults = results.filter(r => !r.success);
+      
+      console.log(`✅ Batch processing complete: ${successfulResults.length}/${totalFiles} successful, ${failedResults.length} failed`);
+
+      if (successfulResults.length === 0) {
+        // All files failed
+        alert(`❌ All ${totalFiles} files failed to process. Please check the file formats and try again.`);
+        setOCRProcessing(false);
+        setOCRProgress(0);
+        return;
       }
 
       // Combine results and find best data
+      console.log('🔄 Combining results from successful files...');
       const combinedData = combineMultipleOCRResults(results);
       
-      setOCRResults({
+      const ocrResultData = {
         type: 'multiple',
         totalFiles: totalFiles,
-        successfulFiles: results.filter(r => r.success).length,
-        failedFiles: results.filter(r => !r.success).length,
+        successfulFiles: successfulResults.length,
+        failedFiles: failedResults.length,
         individualResults: results,
         combinedData: combinedData
-      });
+      };
       
+      console.log('📊 Final OCR results:', ocrResultData);
+      
+      setOCRResults(ocrResultData);
       setExtractedClientData(combinedData);
       setOCRProgress(100);
       setOCRProcessing(false);
       
-      if (combinedData) {
+      if (combinedData && combinedData.confidence_score > 0) {
+        console.log('✅ Showing OCR review dialog');
         setShowOCRReviewDialog(true);
+      } else {
+        alert(`⚠️ Processing completed but no usable data was extracted from any of the ${totalFiles} files. Please try with clearer images or different files.`);
       }
 
     } catch (error) {
-      console.error('Error processing multiple OCR documents:', error);
+      console.error('❌ Critical error during batch OCR processing:', error);
       setOCRProcessing(false);
       setOCRProgress(0);
-      alert(`❌ Error processing documents: ${error.message}`);
+      alert(`❌ Critical error processing documents: ${error.message}\n\nPlease try with fewer files or check your connection.`);
     }
   };
 
