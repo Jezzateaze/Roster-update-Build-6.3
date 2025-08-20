@@ -636,7 +636,32 @@ function App() {
       });
     } catch (error) {
       console.error('Error creating availability:', error);
-      alert(`❌ Error: ${error.response?.data?.detail || error.message}`);
+      
+      // Better error message handling to avoid [object Object] display
+      let errorMessage = 'Unknown error occurred';
+      
+      if (error.response?.data) {
+        if (typeof error.response.data === 'string') {
+          errorMessage = error.response.data;
+        } else if (error.response.data.detail) {
+          // Handle both string and object detail responses
+          if (typeof error.response.data.detail === 'string') {
+            errorMessage = error.response.data.detail;
+          } else if (typeof error.response.data.detail === 'object') {
+            // Convert object to readable string
+            errorMessage = JSON.stringify(error.response.data.detail);
+          }
+        } else if (error.response.data.message) {
+          errorMessage = error.response.data.message;
+        } else {
+          // Fallback: convert entire response data to string
+          errorMessage = JSON.stringify(error.response.data);
+        }
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
+      alert(`❌ Error: ${errorMessage}`);
     }
   };
 
