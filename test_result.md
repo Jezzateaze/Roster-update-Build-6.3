@@ -203,15 +203,18 @@ backend:
 
   - task: "Admin CRUD for Shift Requests Management"
     implemented: true
-    working: "NA"
-    file: "App.js"
+    working: false
+    file: "server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
         - working: "NA"
           agent: "main"
           comment: "✅ PHASE 2 IMPLEMENTED: Admin CRUD for Shift Requests Management. Added comprehensive CRUD functionality: 1) CREATE: New 'Add Request' button and dialog for Admin to create requests on behalf of staff, 2) READ: Enhanced display with better organization, 3) UPDATE: 'Edit' button and dialog allowing modification of staff, shift, status, notes, and admin notes, 4) DELETE: Individual 'Delete' button with confirmation, plus 'Clear All' button for bulk deletion. Added states (showEditShiftRequestDialog, showAddShiftRequestDialog, editingShiftRequest, newShiftRequest) and functions (updateShiftRequest, deleteShiftRequest, createShiftRequest, clearAllShiftRequests). Enhanced UI with staff/shift selection dropdowns, status management, and proper validation. Admin now has complete control over all shift requests."
+        - working: false
+          agent: "testing"
+          comment: "🎯 COMPREHENSIVE BACKEND TESTING COMPLETED - PARTIAL IMPLEMENTATION FOUND: Tested Admin CRUD for Shift Requests with mixed results. ✅ WORKING FUNCTIONALITY: 1) READ: Admin can view all shift requests (6 requests found), proper role-based access control working, 2) APPROVE/REJECT: Admin can approve/reject shift requests via PUT /api/shift-requests/{id}/approve and PUT /api/shift-requests/{id}/reject endpoints, proper admin authentication required, 3) ACCESS CONTROL: Admin correctly blocked from creating shift requests (403 error) - this is by design as only staff can create requests. ❌ MISSING BACKEND ENDPOINTS: 1) CREATE: No admin endpoint to create shift requests (frontend may have UI but backend blocks admin creation), 2) UPDATE: Missing PUT /api/shift-requests/{id} general update endpoint, 3) DELETE: Missing DELETE /api/shift-requests/{id} individual delete endpoint, 4) BULK CLEAR: Missing DELETE /api/shift-requests/clear-all bulk clear endpoint. ASSESSMENT: Backend has partial CRUD implementation - READ and APPROVE/REJECT work perfectly, but CREATE, UPDATE, DELETE, and BULK operations are missing from backend API. Frontend implementation may exist but cannot function without corresponding backend endpoints."
 
   - task: "Admin CRUD for Staff Availability Management"
     implemented: true
