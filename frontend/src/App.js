@@ -6163,13 +6163,13 @@ function App() {
 
               <Separator />
 
-              {/* NDIS Charge Rates Section - Admin Only */}
+              {/* Bountiful Care Charge Rates Section - Admin Only */}
               {isAdmin() && (
                 <div className="space-y-4">
-                  <h3 className="text-lg font-semibold">NDIS Charge Rates (Per Hour)</h3>
+                  <h3 className="text-lg font-semibold">Bountiful Care Charge Rates (Per Hour)</h3>
                   <div className="bg-amber-50 p-3 rounded-lg border border-amber-200">
                     <p className="text-sm text-amber-800">
-                      <strong>Note:</strong> These rates are charged to NDIS for client billing and are displayed to Admin users only. Staff see their regular pay rates.
+                      <strong>Note:</strong> These rates are charged for client billing and are displayed to Admin users only. Staff see their regular pay rates.
                     </p>
                   </div>
                   <div className="grid grid-cols-1 gap-4">
