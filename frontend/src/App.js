@@ -4383,7 +4383,7 @@ function App() {
                 </Card>
               )}
 
-              {/* Unassigned Shifts Section */}
+              {/* Enhanced Unassigned Shifts Section with Tabbed Views */}
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center space-x-2">
@@ -4394,52 +4394,236 @@ function App() {
                     {isStaff() ? 'Request to fill any unassigned shifts below' : 'Shifts waiting for staff assignment'}
                   </p>
                 </CardHeader>
-                <CardContent>
-                  {unassignedShifts.length === 0 ? (
-                    <div className="text-center py-8 text-slate-500">
-                      <Clock className="w-12 h-12 mx-auto mb-3 opacity-50" />
-                      <p>No unassigned shifts available</p>
+                <CardContent className="space-y-4">
+                  {/* View Mode Selector for Unassigned Shifts */}
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-4">
+                      <Label className="font-medium">View:</Label>
+                      <div className="flex space-x-1">
+                        <Button
+                          variant={unassignedShiftsViewMode === 'daily' ? 'default' : 'outline'}
+                          size="sm"
+                          onClick={() => setUnassignedShiftsViewMode('daily')}
+                        >
+                          Daily
+                        </Button>
+                        <Button
+                          variant={unassignedShiftsViewMode === 'weekly' ? 'default' : 'outline'}
+                          size="sm"
+                          onClick={() => setUnassignedShiftsViewMode('weekly')}
+                        >
+                          Weekly
+                        </Button>
+                        <Button
+                          variant={unassignedShiftsViewMode === 'monthly' ? 'default' : 'outline'}
+                          size="sm"
+                          onClick={() => setUnassignedShiftsViewMode('monthly')}
+                        >
+                          Monthly
+                        </Button>
+                        <Button
+                          variant={unassignedShiftsViewMode === 'calendar' ? 'default' : 'outline'}
+                          size="sm"
+                          onClick={() => setUnassignedShiftsViewMode('calendar')}
+                        >
+                          Calendar
+                        </Button>
+                        <Button
+                          variant={unassignedShiftsViewMode === 'search' ? 'default' : 'outline'}
+                          size="sm"
+                          onClick={() => setUnassignedShiftsViewMode('search')}
+                        >
+                          Search Date
+                        </Button>
+                      </div>
                     </div>
-                  ) : (
-                    <div className="space-y-3">
-                      {unassignedShifts.map((shift) => (
-                        <div key={shift.id} className="border rounded-lg p-4 hover:bg-slate-50 transition-colors">
-                          <div className="flex items-center justify-between">
-                            <div className="flex-1">
-                              <div className="flex items-center space-x-4">
-                                <div className="text-lg font-medium text-slate-800">
-                                  {formatDateString(shift.date)}
-                                </div>
-                                <div className="text-slate-600">
-                                  {formatTime(shift.start_time, settings.time_format === '24hr')} - {formatTime(shift.end_time, settings.time_format === '24hr')}
-                                </div>
-                                <div className="flex items-center space-x-2">
-                                  {getShiftTypeBadge(shift)}
-                                  <Badge variant="outline" className="text-emerald-600">
-                                    {getPayDisplayText(shift)}
-                                  </Badge>
-                                </div>
-                              </div>
-                              <div className="text-sm text-slate-500 mt-1">
-                                {shift.hours_worked?.toFixed(1)} hours • {shift.is_sleepover ? 'Sleepover shift' : 'Regular shift'}
-                              </div>
-                            </div>
-                            {isStaff() && (
-                              <Button 
-                                onClick={() => {
-                                  setSelectedUnassignedShift(shift);
-                                  setShowShiftRequestDialog(true);
-                                }}
-                                className="ml-4"
-                              >
-                                Request Shift
-                              </Button>
-                            )}
-                          </div>
-                        </div>
-                      ))}
+                    
+                    {/* Date Navigation for Daily/Weekly/Monthly */}
+                    {['daily', 'weekly', 'monthly'].includes(unassignedShiftsViewMode) && (
+                      <div className="flex items-center space-x-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            const newDate = new Date(currentDate);
+                            if (unassignedShiftsViewMode === 'daily') {
+                              newDate.setDate(newDate.getDate() - 1);
+                            } else if (unassignedShiftsViewMode === 'weekly') {
+                              newDate.setDate(newDate.getDate() - 7);
+                            } else if (unassignedShiftsViewMode === 'monthly') {
+                              newDate.setMonth(newDate.getMonth() - 1);
+                            }
+                            setCurrentDate(newDate);
+                          }}
+                        >
+                          ←
+                        </Button>
+                        <span className="text-sm font-medium text-slate-700 min-w-[120px] text-center">
+                          {unassignedShiftsViewMode === 'daily' && currentDate.toLocaleDateString('en-AU')}
+                          {unassignedShiftsViewMode === 'weekly' && `Week of ${currentDate.toLocaleDateString('en-AU')}`}
+                          {unassignedShiftsViewMode === 'monthly' && currentDate.toLocaleDateString('en-AU', { month: 'long', year: 'numeric' })}
+                        </span>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            const newDate = new Date(currentDate);
+                            if (unassignedShiftsViewMode === 'daily') {
+                              newDate.setDate(newDate.getDate() + 1);
+                            } else if (unassignedShiftsViewMode === 'weekly') {
+                              newDate.setDate(newDate.getDate() + 7);
+                            } else if (unassignedShiftsViewMode === 'monthly') {
+                              newDate.setMonth(newDate.getMonth() + 1);
+                            }
+                            setCurrentDate(newDate);
+                          }}
+                        >
+                          →
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Search Date Input */}
+                  {unassignedShiftsViewMode === 'search' && (
+                    <div className="flex items-center space-x-4">
+                      <Label htmlFor="search-date">Select Date:</Label>
+                      <Input
+                        id="search-date"
+                        type="date"
+                        value={unassignedShiftsSearchDate}
+                        onChange={(e) => setUnassignedShiftsSearchDate(e.target.value)}
+                        className="w-48"
+                      />
                     </div>
                   )}
+
+                  {/* Filtered Unassigned Shifts Display */}
+                  {(() => {
+                    const filteredShifts = filterUnassignedShiftsByViewMode(
+                      unassignedShifts, 
+                      unassignedShiftsViewMode, 
+                      currentDate, 
+                      unassignedShiftsSearchDate
+                    );
+                    
+                    if (filteredShifts.length === 0) {
+                      return (
+                        <div className="text-center py-8 text-slate-500">
+                          <Clock className="w-12 h-12 mx-auto mb-3 opacity-50" />
+                          <p>No unassigned shifts available for {unassignedShiftsViewMode} view</p>
+                          {unassignedShifts.length > 0 && (
+                            <p className="text-sm mt-1">
+                              Try switching to a different view or date range. Total unassigned shifts: {unassignedShifts.length}
+                            </p>
+                          )}
+                        </div>
+                      );
+                    }
+
+                    if (unassignedShiftsViewMode === 'calendar' || ['weekly', 'monthly'].includes(unassignedShiftsViewMode)) {
+                      // Group by date for multi-day views
+                      const groupedShifts = groupUnassignedShiftsByDate(filteredShifts);
+                      return (
+                        <div className="space-y-4">
+                          {Object.entries(groupedShifts).map(([date, shifts]) => (
+                            <div key={date} className="border rounded-lg p-4">
+                              <h4 className="font-semibold text-slate-800 mb-3 flex items-center space-x-2">
+                                <CalendarIcon className="w-4 h-4" />
+                                <span>{new Date(date).toLocaleDateString('en-AU', { 
+                                  weekday: 'long', 
+                                  year: 'numeric', 
+                                  month: 'long', 
+                                  day: 'numeric' 
+                                })}</span>
+                                <Badge variant="secondary" className="text-xs">
+                                  {shifts.length} shift{shifts.length !== 1 ? 's' : ''}
+                                </Badge>
+                              </h4>
+                              <div className="space-y-2">
+                                {shifts.map((shift) => (
+                                  <div key={shift.id} className="border rounded-lg p-3 hover:bg-slate-50 transition-colors">
+                                    <div className="flex items-center justify-between">
+                                      <div className="flex-1">
+                                        <div className="flex items-center space-x-4">
+                                          <div className="text-slate-600">
+                                            {formatTime(shift.start_time, settings.time_format === '24hr')} - {formatTime(shift.end_time, settings.time_format === '24hr')}
+                                          </div>
+                                          <div className="flex items-center space-x-2">
+                                            {getShiftTypeBadge(shift)}
+                                            <Badge variant="outline" className="text-emerald-600">
+                                              {getPayDisplayText(shift)}
+                                            </Badge>
+                                          </div>
+                                        </div>
+                                        <div className="text-sm text-slate-500 mt-1">
+                                          {shift.hours_worked?.toFixed(1)} hours • {shift.is_sleepover ? 'Sleepover shift' : 'Regular shift'}
+                                        </div>
+                                      </div>
+                                      {isStaff() && (
+                                        <Button 
+                                          onClick={() => {
+                                            setSelectedUnassignedShift(shift);
+                                            setShowShiftRequestDialog(true);
+                                          }}
+                                          size="sm"
+                                          className="ml-4"
+                                        >
+                                          Request Shift
+                                        </Button>
+                                      )}
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      );
+                    } else {
+                      // Simple list for daily view
+                      return (
+                        <div className="space-y-3">
+                          {filteredShifts.map((shift) => (
+                            <div key={shift.id} className="border rounded-lg p-4 hover:bg-slate-50 transition-colors">
+                              <div className="flex items-center justify-between">
+                                <div className="flex-1">
+                                  <div className="flex items-center space-x-4">
+                                    <div className="text-lg font-medium text-slate-800">
+                                      {formatDateString(shift.date)}
+                                    </div>
+                                    <div className="text-slate-600">
+                                      {formatTime(shift.start_time, settings.time_format === '24hr')} - {formatTime(shift.end_time, settings.time_format === '24hr')}
+                                    </div>
+                                    <div className="flex items-center space-x-2">
+                                      {getShiftTypeBadge(shift)}
+                                      <Badge variant="outline" className="text-emerald-600">
+                                        {getPayDisplayText(shift)}
+                                      </Badge>
+                                    </div>
+                                  </div>
+                                  <div className="text-sm text-slate-500 mt-1">
+                                    {shift.hours_worked?.toFixed(1)} hours • {shift.is_sleepover ? 'Sleepover shift' : 'Regular shift'}
+                                  </div>
+                                </div>
+                                {isStaff() && (
+                                  <Button 
+                                    onClick={() => {
+                                      setSelectedUnassignedShift(shift);
+                                      setShowShiftRequestDialog(true);
+                                    }}
+                                    className="ml-4"
+                                  >
+                                    Request Shift
+                                  </Button>
+                                )}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      );
+                    }
+                  })()}
                 </CardContent>
               </Card>
 
