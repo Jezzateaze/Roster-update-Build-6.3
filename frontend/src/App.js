@@ -2903,8 +2903,13 @@ function App() {
             const dayEntries = getDayEntries(date);
             const dayEvents = getDayEvents(date);
             
-            // Calculate day total based on user role
+            // Calculate day total based on user role - ONLY for assigned shifts
             const dayTotal = dayEntries.reduce((sum, entry) => {
+              // Only count shifts that are assigned to staff members
+              if (!entry.staff_id || !entry.staff_name) {
+                return sum; // Skip unassigned shifts
+              }
+              
               if (isStaff() && entry.staff_id !== currentUser?.staff_id) {
                 return sum; // Staff users don't see other staff's pay in totals
               }
