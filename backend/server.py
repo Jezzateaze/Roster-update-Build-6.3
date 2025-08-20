@@ -109,43 +109,43 @@ class Settings(BaseModel):
     ndis_charge_rates: Dict[str, Dict] = {
         "weekday_day": {
             "rate": 70.23,
-            "code": "01_801_0115_1_1",
+            "line_item_code": "01_801_0115_1_1",
             "description": "Assistance in Supported Independent Living - Standard - Weekday Daytime",
             "time_range": "6am-8pm (Starts at/after 6:00am, ends at/before 8:00pm)"
         },
         "weekday_evening": {
             "rate": 77.38,
-            "code": "01_802_0115_1_1", 
+            "line_item_code": "01_802_0115_1_1", 
             "description": "Assistance in Supported Independent Living - Standard - Weekday Evening",
             "time_range": "After 8pm (Starts after 8:00pm OR extends past 8:00pm)"
         },
         "weekday_night": {
             "rate": 78.81,
-            "code": "01_803_0115_1_1",
+            "line_item_code": "01_803_0115_1_1",
             "description": "Assistance in Supported Independent Living - Standard - Weekday Night", 
             "time_range": "Overnight (Commences at/before midnight and finishes after midnight)"
         },
         "saturday": {
             "rate": 98.83,
-            "code": "01_804_0115_1_1",
+            "line_item_code": "01_804_0115_1_1",
             "description": "Assistance in Supported Independent Living - Standard - Saturday",
             "time_range": "All hours on Saturday"
         },
         "sunday": {
             "rate": 122.59,
-            "code": "01_805_0115_1_1", 
+            "line_item_code": "01_805_0115_1_1", 
             "description": "Assistance in Supported Independent Living - Standard - Sunday",
             "time_range": "All hours on Sunday"
         },
         "public_holiday": {
             "rate": 150.10,
-            "code": "01_806_0115_1_1",
+            "line_item_code": "01_806_0115_1_1",
             "description": "Assistance in Supported Independent Living - Standard - Public Holiday",
             "time_range": "All hours on public holidays"
         },
         "sleepover_default": {
             "rate": 286.56,
-            "code": "01_832_0115_1_1",
+            "line_item_code": "01_832_0115_1_1",
             "description": "Assistance in Supported Independent Living - Night-Time Sleepover",
             "time_range": "8-hour sleepover period (includes up to 2 hours active support)",
             "unit": "per_shift"
