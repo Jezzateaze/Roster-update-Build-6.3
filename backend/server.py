@@ -2044,6 +2044,28 @@ async def create_staff_availability(availability: StaffAvailability, current_use
     if current_user["role"] == "staff":
         availability.staff_id = current_user.get("staff_id", current_user["id"])
         availability.staff_name = current_user.get("first_name") or current_user.get("username")
+    else:
+        # Admin users must provide valid staff_id and staff_name
+        if not availability.staff_id or not availability.staff_name:
+            raise HTTPException(
+                status_code=422, 
+                detail="Admin must provide staff_id and staff_name when creating availability"
+            )
+        
+        # Validate that the staff member exists
+        staff_member = db.staff.find_one({"id": availability.staff_id, "active": True})
+        if not staff_member:
+            raise HTTPException(
+                status_code=404, 
+                detail="Staff member not found or inactive"
+            )
+    
+    # Additional validation for all users
+    if not availability.staff_id or not availability.staff_name:
+        raise HTTPException(
+            status_code=422, 
+            detail="staff_id and staff_name are required fields"
+        )
     
     availability.id = str(uuid.uuid4())
     availability.created_at = datetime.utcnow()
