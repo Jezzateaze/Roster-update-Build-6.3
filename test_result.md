@@ -109,13 +109,16 @@ backend:
     implemented: true
     working: false
     file: "/app/backend/server.py"
-    stuck_count: 0
+    stuck_count: 1
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
         - working: false
           agent: "main"
           comment: "Implemented new calculate_cross_midnight_pay function to split overnight shifts at midnight and calculate each portion at correct day's rate. Added helper functions get_hourly_rate_for_shift_type, is_public_holiday_date, calculate_pay_regular. Updated main calculate_pay to use new cross-midnight logic."
+        - working: false
+          agent: "testing"
+          comment: "🎯 COMPREHENSIVE CROSS-MIDNIGHT TESTING COMPLETED - PARTIAL SUCCESS WITH CRITICAL ISSUES: Tested all 4 scenarios from review request with mixed results (10/13 tests passed, 76.9% success rate). ✅ WORKING CORRECTLY: 1) Friday 11:30pm-7:30am: Perfect calculation (0.5h Friday evening $44.50 + 7.5h Saturday $57.50 = $453.50) ✅, 2) Saturday 11:30pm-7:30am: Perfect calculation (0.5h Saturday $57.50 + 7.5h Sunday $74.00 = $583.75) ✅, 3) All regular shifts (9am-5pm, 3:30pm-11:30pm, Saturday/Sunday day shifts) working correctly ✅, 4) All sleepover shifts maintain $175 flat rate and are NOT affected by cross-midnight logic ✅, 5) Edge case: shifts ending exactly at midnight (11:30pm-12:00am) working correctly ✅. ❌ CRITICAL ISSUES FOUND: 1) Sunday 11:30pm-7:30am INCORRECT: Got $400.75, expected $352.00 (0.5h Sunday $74 + 7.5h Monday $42) - the Monday portion is being calculated as WEEKDAY_NIGHT ($52/hr) instead of WEEKDAY_DAY ($42/hr) because determine_shift_type() classifies any shift starting before 6am as night shift, 2) Midnight-start shifts INCORRECT: 00:00-08:00 shift got $388 instead of $336 (should be 8h × $42 weekday_day rate) - same issue with determine_shift_type() logic, 3) Very short cross-midnight shifts have minor calculation discrepancies. ROOT CAUSE IDENTIFIED: The determine_shift_type() function at line 370 uses 'if start_hour < 6' which incorrectly classifies post-midnight segments of cross-midnight shifts as WEEKDAY_NIGHT instead of WEEKDAY_DAY. The cross-midnight splitting logic is working correctly, but the shift type determination for the second day segment needs refinement to consider the context of cross-midnight shifts rather than just the start time."
   - task: "Staff Account Restrictions Implementation"
     implemented: true
     working: true
