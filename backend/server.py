@@ -3408,9 +3408,12 @@ async def process_document(
     # Generate unique task ID
     task_id = str(uuid.uuid4())
     
+    logging.info(f"🔄 Starting OCR processing for {file.filename} (task: {task_id}, user: {current_user.get('username')})")
+    
     try:
         # Validate and save file
         file_path = await validate_and_save_file(file)
+        logging.info(f"✅ File saved successfully: {file_path}")
         
         # Initialize processing status
         ocr_results[task_id] = {
@@ -3424,18 +3427,24 @@ async def process_document(
             'created_by': current_user["username"]
         }
         
+        logging.info(f"🚀 Processing document: {file.filename} (type: {file.content_type})")
+        
         # Process document based on type
-        if file.content_type == 'application/pdf':
+        if file.content_type == 'application/pdf' or file.filename.lower().endswith('.pdf'):
+            logging.info(f"📄 Processing as PDF: {file.filename}")
             result = await process_pdf_async(file_path, task_id)
         else:
+            logging.info(f"🖼️ Processing as image: {file.filename}")
             result = await process_image_async(file_path, task_id)
         
         # Extract text for parsing
         extracted_text = result.get('combined_text', result.get('text', ''))
+        logging.info(f"📝 Extracted {len(extracted_text)} characters of text from {file.filename}")
         
         # Parse NDIS plan data if requested
         extracted_data = None
         if extract_client_data and extracted_text:
+            logging.info(f"🔍 Parsing NDIS plan data from {file.filename}")
             extracted_data = ocr_processor.parse_ndis_plan_text(extracted_text)
         
         # Update results
@@ -3448,6 +3457,8 @@ async def process_document(
             'progress': 100
         })
         
+        logging.info(f"✅ OCR processing completed successfully for {file.filename}")
+        
         # Clean up file
         file_path.unlink(missing_ok=True)
         
@@ -3458,19 +3469,21 @@ async def process_document(
             'extracted_data': extracted_data.dict() if extracted_data else None
         })
         
-    except HTTPException:
+    except HTTPException as e:
+        logging.error(f"❌ HTTP Exception during OCR processing: {e.detail}")
         raise
     except Exception as e:
-        logging.error(f"Processing error for task {task_id}: {str(e)}")
+        error_msg = str(e)
+        logging.error(f"❌ Critical error during OCR processing for {file.filename}: {error_msg}")
         ocr_results[task_id] = {
             'id': task_id,
             'filename': file.filename,
             'status': 'failed',
-            'error': str(e),
+            'error': error_msg,
             'created_at': datetime.now().isoformat(),
             'created_by': current_user["username"]
         }
-        raise HTTPException(status_code=500, detail=f"Processing failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Processing failed: {error_msg}")
 
 @app.get("/api/ocr/status/{task_id}")
 async def get_processing_status(task_id: str, current_user: dict = Depends(get_current_user)):
