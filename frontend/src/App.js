@@ -6259,10 +6259,10 @@ function App() {
                     ))}
                   </div>
                   
-                  {/* NDIS Sleepover Rates */}
+                  {/* Bountiful Care Sleepover Rates */}
                   {settings.ndis_charge_rates && settings.ndis_charge_rates.sleepover_default && (
                     <div className="border rounded-lg p-4 bg-blue-50 border-blue-200">
-                      <h4 className="text-sm font-semibold text-blue-800 mb-3">NDIS Sleepover Charges</h4>
+                      <h4 className="text-sm font-semibold text-blue-800 mb-3">Bountiful Care Sleepover Charges</h4>
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <div>
                           <Label className="text-sm font-medium">Line Item Code</Label>
