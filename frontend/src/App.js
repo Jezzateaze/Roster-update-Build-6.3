@@ -948,6 +948,103 @@ function App() {
     return currentUser && currentUser.role === 'staff';
   };
 
+  // =====================================
+  // CLIENT PROFILE MANAGEMENT FUNCTIONS
+  // =====================================
+
+  // Fetch all clients
+  const fetchClients = async () => {
+    try {
+      const response = await axios.get(`${API_BASE_URL}/api/clients`, {
+        headers: { 'Authorization': `Bearer ${authToken}` }
+      });
+      setClients(response.data);
+    } catch (error) {
+      console.error('Error fetching clients:', error);
+    }
+  };
+
+  // Create new client profile (Admin only)
+  const createClientProfile = async (clientData) => {
+    try {
+      const response = await axios.post(`${API_BASE_URL}/api/clients`, clientData, {
+        headers: { 'Authorization': `Bearer ${authToken}` }
+      });
+      alert('✅ Client profile created successfully!');
+      fetchClients();
+      setShowClientDialog(false);
+      setNewClient({
+        full_name: '',
+        date_of_birth: '',
+        sex: 'Male',
+        disability_condition: '',
+        mobile: '',
+        address: '',
+        emergency_contacts: [
+          { name: '', relationship: '', mobile: '', address: '' }
+        ],
+        current_ndis_plan: null
+      });
+    } catch (error) {
+      console.error('Error creating client profile:', error);
+      alert(`❌ Error: ${error.response?.data?.detail || error.message}`);
+    }
+  };
+
+  // Update client profile (Admin only)
+  const updateClientProfile = async (clientId, clientData) => {
+    try {
+      await axios.put(`${API_BASE_URL}/api/clients/${clientId}`, clientData, {
+        headers: { 'Authorization': `Bearer ${authToken}` }
+      });
+      alert('✅ Client profile updated successfully!');
+      fetchClients();
+      setShowClientDialog(false);
+      setEditingClient(null);
+    } catch (error) {
+      console.error('Error updating client profile:', error);
+      alert(`❌ Error: ${error.response?.data?.detail || error.message}`);
+    }
+  };
+
+  // Delete client profile (Admin only)
+  const deleteClientProfile = async (clientId) => {
+    if (!window.confirm('Are you sure you want to delete this client profile?')) {
+      return;
+    }
+    
+    try {
+      await axios.delete(`${API_BASE_URL}/api/clients/${clientId}`, {
+        headers: { 'Authorization': `Bearer ${authToken}` }
+      });
+      alert('✅ Client profile deleted successfully');
+      fetchClients();
+    } catch (error) {
+      console.error('Error deleting client profile:', error);
+      alert(`❌ Error: ${error.response?.data?.detail || error.message}`);
+    }
+  };
+
+  // Get client budget summary
+  const getClientBudgetSummary = async (clientId) => {
+    try {
+      const response = await axios.get(`${API_BASE_URL}/api/clients/${clientId}/budget-summary`, {
+        headers: { 'Authorization': `Bearer ${authToken}` }
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching budget summary:', error);
+      return null;
+    }
+  };
+
+  // Load client data when authenticated
+  useEffect(() => {
+    if (isAuthenticated && authToken) {
+      fetchClients();
+    }
+  }, [isAuthenticated, authToken]);
+
   // Fetch available users for login dropdown
   const fetchAvailableUsers = async () => {
     try {
