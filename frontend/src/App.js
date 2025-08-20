@@ -440,6 +440,8 @@ function App() {
     staff_id: '' // For admin to select which staff member
   });
   const [showNotifications, setShowNotifications] = useState(false);
+  const [unassignedShiftsViewMode, setUnassignedShiftsViewMode] = useState('daily');
+  const [unassignedShiftsSearchDate, setUnassignedShiftsSearchDate] = useState('');
   
   // Touch/swipe handling for mobile
   const [touchStart, setTouchStart] = useState(null);
