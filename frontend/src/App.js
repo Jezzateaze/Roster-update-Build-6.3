@@ -1620,7 +1620,7 @@ function App() {
         messages.push(`... and ${invalidFiles.length - 5} more files`);
       }
       
-      alert(`❌ Invalid files detected (${invalidFiles.length}/${files.length}):\n${messages.join('\n')}\n\nPlease select only PDF or image files (JPG, PNG, TIFF, BMP) under 50MB each.`);
+      alert(`❌ Invalid files detected (${invalidFiles.length}/${files.length}):\n${messages.join('\n')}\n\nPlease select only PDF or image files (JPG, PNG, TIFF, BMP, HEIF/HEIC) under 50MB each.`);
       return;
     }
 
