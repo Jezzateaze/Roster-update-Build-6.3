@@ -102,7 +102,7 @@
 # Testing Data - Main Agent and testing sub agent both should log testing data below this section  
 #====================================================================================================
 
-user_problem_statement: "Implement comprehensive staff account restrictions and enhancements: 1) Hide roster management buttons (Select Multiple, Add Shift, Save Template, Load Template, Manage Templates, Clear Roster, Generate Roster) for staff, 2) Remove ability to click on shifts for editing/deletion, remove edit icons and action buttons, 3) Make settings view-only for staff, 4) Hide Mon First button for staff, 5) Enhanced Pay Summary with YTD calculations for staff, 6) Hide Add Staff button for staff, 7) Enhanced Shift Times page for staff with view-only access but showing pay rates and total amounts, 8) Enhanced staff profile editing capabilities, 9) Then implement comprehensive YTD calculations with Australian tax and superannuation."
+user_problem_statement: "Enhance the 'Shift & Staff Availability' section with improved layout and admin management capabilities: 1) Reorganize 'Available Unassigned Shifts' layout into tabbed views (Daily, Weekly, Monthly, Calendar, Search Date) similar to main roster for easier viewing, 2) Admin CRUD operations for 'All Shift Requests' section (modify, clear, edit, add, delete), 3) Admin CRUD operations for 'Staff Availability' section (modify, clear, edit, add, delete), 4) Enhanced '+ Add Availability' functionality allowing Admin to select any staff member in dropdown for all availability types (Available, Unavailable, Time Off Request, Preferred Shifts) with manual request entry capability."
 
 backend:
   - task: "Staff Account Restrictions Implementation"
