@@ -612,10 +612,21 @@ function App() {
       // Prepare the availability data
       const availabilityData = {
         ...availability,
-        // For staff users, automatically use their own staff_id
-        // For admin users, use the selected staff_id
+        // For staff users, automatically use their own staff_id and name
+        // For admin users, use the selected staff_id and find the corresponding name
         staff_id: isStaff() ? currentUser?.staff_id : availability.staff_id
       };
+      
+      // Add staff_name which is required by the backend
+      if (isStaff()) {
+        availabilityData.staff_name = currentUser?.name || currentUser?.username;
+      } else if (isAdmin() && availability.staff_id) {
+        // Find the staff member's name from the staff list
+        const selectedStaff = staff.find(s => s.id === availability.staff_id);
+        if (selectedStaff) {
+          availabilityData.staff_name = selectedStaff.name;
+        }
+      }
 
       await axios.post(`${API_BASE_URL}/api/staff-availability`, availabilityData, {
         headers: { 'Authorization': `Bearer ${authToken}` }
