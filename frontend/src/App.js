@@ -1595,7 +1595,11 @@ function App() {
 
     // Validate all files
     const maxSize = 50 * 1024 * 1024; // 50MB per file
-    const allowedTypes = ['application/pdf', 'image/jpeg', 'image/jpg', 'image/png', 'image/tiff', 'image/bmp'];
+    const allowedTypes = [
+      'application/pdf', 
+      'image/jpeg', 'image/jpg', 'image/png', 'image/tiff', 'image/bmp',
+      'image/heif', 'image/heic', 'image/heif-sequence', 'image/heic-sequence'
+    ];
     
     const invalidFiles = files.filter(file => {
       return !allowedTypes.includes(file.type) || file.size > maxSize;
