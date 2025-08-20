@@ -367,19 +367,16 @@ def determine_shift_type_with_context(date_str: str, start_time: str, end_time: 
     
     # Special handling for post-midnight segments of cross-midnight shifts
     if is_post_midnight_segment:
-        # For post-midnight segments (00:01-XX:XX), classify based on end time for the new day
-        # If ending before 6am, it's typically a night shift continuation
-        # If ending at 6am or after, it's typically transitioning to day shift
+        # For post-midnight segments (00:01-XX:XX), classify based on the end time
+        # Since this segment starts at midnight, we determine the rate based on 
+        # what type of shift it would be considered ending at that time
         
-        # For shifts ending before 6am (e.g., 00:01-05:30), keep as night
-        if end_hour < 6:
-            return ShiftType.WEEKDAY_NIGHT
-        # For shifts ending between 6am-8pm, classify as day shift
-        elif end_hour < 20:
+        # If the segment ends at 6am or later, it's entering day shift territory
+        if end_hour >= 6:
             return ShiftType.WEEKDAY_DAY
-        # For shifts ending at 8pm or later, classify as evening
+        # If ending before 6am, it's still night shift
         else:
-            return ShiftType.WEEKDAY_EVENING
+            return ShiftType.WEEKDAY_NIGHT
     
     # Original logic for regular shifts and first segments of cross-midnight shifts
     # Night: starts before 6am OR ends after midnight
