@@ -2559,6 +2559,353 @@ async def check_assignment_conflicts(data: dict, current_user: dict = Depends(ge
         "message": f"Found {len(conflicts)} potential conflicts" if conflicts else "No conflicts found"
     }
 
+# ===========================================
+# CLIENT PROFILE MANAGEMENT ENDPOINTS
+# ===========================================
+
+@app.get("/api/clients")
+async def get_clients(current_user: dict = Depends(get_current_user)):
+    """Get all client profiles with role-based filtering"""
+    
+    # For staff, return limited information (basic details only, no NDIS plan details)
+    if current_user["role"] == "staff":
+        clients = list(db.clients.find({}, {
+            "_id": 0,
+            "id": 1,
+            "full_name": 1,
+            "date_of_birth": 1,
+            "age": 1,
+            "sex": 1,
+            "disability_condition": 1,
+            "mobile": 1,
+            "address": 1,
+            "emergency_contacts": 1,
+            "created_at": 1
+        }))
+    else:
+        # Admin and Supervisor get full access
+        clients = list(db.clients.find({}, {"_id": 0}))
+    
+    return sorted(clients, key=lambda x: x.get('full_name', ''))
+
+@app.get("/api/clients/{client_id}")
+async def get_client_profile(client_id: str, current_user: dict = Depends(get_current_user)):
+    """Get specific client profile with role-based filtering"""
+    
+    if current_user["role"] == "staff":
+        # Staff get limited view (no NDIS plan financial details)
+        client = db.clients.find_one({"id": client_id}, {
+            "_id": 0,
+            "id": 1,
+            "full_name": 1,
+            "date_of_birth": 1,
+            "age": 1,
+            "sex": 1,
+            "disability_condition": 1,
+            "mobile": 1,
+            "address": 1,
+            "emergency_contacts": 1,
+            "created_at": 1,
+            "current_ndis_plan.plan_type": 1,
+            "current_ndis_plan.ndis_number": 1,
+            "current_ndis_plan.plan_start_date": 1,
+            "current_ndis_plan.plan_end_date": 1
+        })
+    else:
+        # Full access for Admin and Supervisor
+        client = db.clients.find_one({"id": client_id}, {"_id": 0})
+    
+    if not client:
+        raise HTTPException(status_code=404, detail="Client not found")
+    
+    return client
+
+@app.post("/api/clients")
+async def create_client_profile(client: ClientProfile, current_user: dict = Depends(get_current_user)):
+    """Create new client profile (Admin only)"""
+    if current_user["role"] != "admin":
+        raise HTTPException(status_code=403, detail="Admin access required")
+    
+    # Generate ID and set creation fields
+    client.id = str(uuid.uuid4())
+    client.created_by = current_user["username"]
+    client.created_at = datetime.utcnow()
+    client.updated_at = datetime.utcnow()
+    
+    # Calculate age if date of birth provided
+    if client.date_of_birth:
+        try:
+            birth_date = datetime.strptime(client.date_of_birth, "%d/%m/%Y")
+            today = datetime.now()
+            client.age = today.year - birth_date.year - ((today.month, today.day) < (birth_date.month, birth_date.day))
+        except ValueError:
+            # If date format is different, skip age calculation
+            pass
+    
+    # Insert client profile
+    db.clients.insert_one(client.dict())
+    return client
+
+@app.put("/api/clients/{client_id}")
+async def update_client_profile(client_id: str, client_update: ClientProfile, current_user: dict = Depends(get_current_user)):
+    """Update client profile (Admin only)"""
+    if current_user["role"] != "admin":
+        raise HTTPException(status_code=403, detail="Admin access required")
+    
+    # Check if client exists
+    existing_client = db.clients.find_one({"id": client_id})
+    if not existing_client:
+        raise HTTPException(status_code=404, detail="Client not found")
+    
+    # Update fields
+    update_data = client_update.dict(exclude_unset=True)
+    update_data["updated_at"] = datetime.utcnow()
+    
+    # Recalculate age if date of birth is updated
+    if "date_of_birth" in update_data:
+        try:
+            birth_date = datetime.strptime(update_data["date_of_birth"], "%d/%m/%Y")
+            today = datetime.now()
+            update_data["age"] = today.year - birth_date.year - ((today.month, today.day) < (birth_date.month, birth_date.day))
+        except ValueError:
+            pass
+    
+    result = db.clients.update_one(
+        {"id": client_id},
+        {"$set": update_data}
+    )
+    
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Client not found")
+    
+    return {"message": "Client profile updated successfully"}
+
+@app.delete("/api/clients/{client_id}")
+async def delete_client_profile(client_id: str, current_user: dict = Depends(get_current_user)):
+    """Delete client profile (Admin only)"""
+    if current_user["role"] != "admin":
+        raise HTTPException(status_code=403, detail="Admin access required")
+    
+    # Check if client exists
+    existing_client = db.clients.find_one({"id": client_id})
+    if not existing_client:
+        raise HTTPException(status_code=404, detail="Client not found")
+    
+    # Soft delete (mark as inactive instead of removing)
+    result = db.clients.update_one(
+        {"id": client_id},
+        {"$set": {"is_active": False, "deleted_at": datetime.utcnow()}}
+    )
+    
+    return {"message": "Client profile deleted successfully"}
+
+@app.post("/api/clients/{client_id}/ndis-plan")
+async def update_ndis_plan(client_id: str, ndis_plan: NDISPlan, current_user: dict = Depends(get_current_user)):
+    """Update NDIS plan for client (Admin only)"""
+    if current_user["role"] != "admin":
+        raise HTTPException(status_code=403, detail="Admin access required")
+    
+    # Check if client exists
+    existing_client = db.clients.find_one({"id": client_id})
+    if not existing_client:
+        raise HTTPException(status_code=404, detail="Client not found")
+    
+    # Calculate remaining amounts for funding categories
+    for category in ndis_plan.funding_categories:
+        category.remaining_amount = category.total_amount - category.spent_amount
+    
+    # Update NDIS plan
+    result = db.clients.update_one(
+        {"id": client_id},
+        {
+            "$set": {
+                "current_ndis_plan": ndis_plan.dict(),
+                "updated_at": datetime.utcnow()
+            }
+        }
+    )
+    
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Client not found")
+    
+    return {"message": "NDIS plan updated successfully"}
+
+@app.get("/api/clients/{client_id}/budget-summary")
+async def get_client_budget_summary(client_id: str, current_user: dict = Depends(get_current_user)):
+    """Get budget summary for client's NDIS plan (Admin/Supervisor only)"""
+    if current_user["role"] == "staff":
+        raise HTTPException(status_code=403, detail="Access denied - insufficient permissions")
+    
+    client = db.clients.find_one({"id": client_id})
+    if not client:
+        raise HTTPException(status_code=404, detail="Client not found")
+    
+    ndis_plan = client.get("current_ndis_plan")
+    if not ndis_plan:
+        return {"message": "No NDIS plan found for this client"}
+    
+    # Calculate budget summary
+    budget_summary = {
+        "plan_overview": {
+            "ndis_number": ndis_plan.get("ndis_number"),
+            "plan_start": ndis_plan.get("plan_start_date"),
+            "plan_end": ndis_plan.get("plan_end_date"),
+            "plan_management": ndis_plan.get("plan_management")
+        },
+        "funding_summary": {
+            "total_funding": 0,
+            "total_spent": 0,
+            "total_remaining": 0,
+            "categories": []
+        }
+    }
+    
+    for category in ndis_plan.get("funding_categories", []):
+        category_data = {
+            "category_name": category.get("category_name"),
+            "total_amount": category.get("total_amount", 0),
+            "spent_amount": category.get("spent_amount", 0),
+            "remaining_amount": category.get("remaining_amount", category.get("total_amount", 0) - category.get("spent_amount", 0)),
+            "utilization_percentage": round((category.get("spent_amount", 0) / category.get("total_amount", 1)) * 100, 2) if category.get("total_amount", 0) > 0 else 0,
+            "funding_period": category.get("funding_period")
+        }
+        
+        budget_summary["funding_summary"]["categories"].append(category_data)
+        budget_summary["funding_summary"]["total_funding"] += category.get("total_amount", 0)
+        budget_summary["funding_summary"]["total_spent"] += category.get("spent_amount", 0)
+        budget_summary["funding_summary"]["total_remaining"] += category_data["remaining_amount"]
+    
+    # Overall utilization percentage
+    total_funding = budget_summary["funding_summary"]["total_funding"]
+    budget_summary["funding_summary"]["overall_utilization"] = round(
+        (budget_summary["funding_summary"]["total_spent"] / total_funding) * 100, 2
+    ) if total_funding > 0 else 0
+    
+    return budget_summary
+
+# Initialize database with sample client if not exists (for demonstration)
+def initialize_sample_client():
+    """Initialize sample client data if not exists"""
+    sample_client = db.clients.find_one({"full_name": "Jeremy James Tomlinson"})
+    if not sample_client:
+        print("Creating sample client profile...")
+        
+        # Create Jeremy's emergency contacts
+        emergency_contacts = [
+            EmergencyContact(
+                name="Jo-ann Tomlinson",
+                relationship="Mother",
+                mobile="0412110888",
+                address="21 Dialba CRS, Tingalpa 4173, Brisbane, QLD"
+            ),
+            EmergencyContact(
+                name="Brett Tomlinson",
+                relationship="Father",
+                mobile="0448066351",
+                address="21 Dialba CRS, Tingalpa 4173, Brisbane, QLD"
+            )
+        ]
+        
+        # Create plan manager details
+        plan_manager = PlanManagerDetails(
+            provider_name="Charter Care Plan Management",
+            contact_person="Kirsty Condon",
+            phone="0474464163",
+            email="kirsty.condon@ccpms.au"
+        )
+        
+        # Create funding categories
+        funding_categories = [
+            NDISFundingCategory(
+                category_name="Consumables",
+                total_amount=3167.81,
+                funding_period=FundingPeriod.QUARTERLY,
+                description="Continence aid total $2,167.81 for a year, $1000 for low cost AT",
+                spent_amount=0.0
+            ),
+            NDISFundingCategory(
+                category_name="Home and Living",
+                total_amount=885331.00,
+                funding_period=FundingPeriod.MONTHLY,
+                description="$865,798.34 for regular SIL supports, $19,532.66 for irregular SIL supports",
+                spent_amount=0.0
+            ),
+            NDISFundingCategory(
+                category_name="Social Community and Civic Participation",
+                total_amount=67101.10,
+                funding_period=FundingPeriod.QUARTERLY,
+                description="2 hours per day high intensity 1:1 support including weekend and public holiday",
+                spent_amount=0.0
+            ),
+            NDISFundingCategory(
+                category_name="Transport",
+                total_amount=1784.00,
+                funding_period=FundingPeriod.QUARTERLY,
+                description="Support to access community activities",
+                spent_amount=0.0
+            ),
+            NDISFundingCategory(
+                category_name="Support Coordination",
+                total_amount=21251.60,
+                funding_period=FundingPeriod.QUARTERLY,
+                description="Level 2: 60 hours ($6,008.40), Level 3: 80 hours ($15,243.20)",
+                spent_amount=0.0
+            ),
+            NDISFundingCategory(
+                category_name="Improved Daily Living",
+                total_amount=48999.83,
+                funding_period=FundingPeriod.QUARTERLY,
+                description="OT, Physiotherapy, Dietitian, Speech pathology, Psychology, Therapy assistance, Registered nurse",
+                spent_amount=0.0
+            ),
+            NDISFundingCategory(
+                category_name="Assistive Technology",
+                total_amount=5050.00,
+                funding_period=FundingPeriod.QUARTERLY,
+                description="Maintenance, repair and rental of AT equipment",
+                spent_amount=0.0
+            ),
+            NDISFundingCategory(
+                category_name="Specialist Disability Accommodation (SDA)",
+                total_amount=78660.00,
+                funding_period=FundingPeriod.MONTHLY,
+                description="High physical support, Apartment, two bedrooms, Brisbane South",
+                spent_amount=0.0
+            )
+        ]
+        
+        # Create NDIS plan
+        ndis_plan = NDISPlan(
+            plan_type="PACE",
+            ndis_number="431525388",
+            plan_start_date="31/07/2025",
+            plan_end_date="30/07/2026",
+            plan_management=PlanManagement.PLAN_MANAGED,
+            plan_manager=plan_manager,
+            funding_categories=funding_categories
+        )
+        
+        # Create client profile
+        sample_client = ClientProfile(
+            id=str(uuid.uuid4()),
+            full_name="Jeremy James Tomlinson",
+            date_of_birth="17/09/1988",
+            age=36,  # Will be calculated automatically
+            sex="Male",
+            disability_condition="Refractory Polymyositis, FSHD Type 2",
+            mobile="0490821919",
+            address="20/384 Stanley Rd, Carina 4152, Brisbane, QLD",
+            emergency_contacts=emergency_contacts,
+            current_ndis_plan=ndis_plan,
+            created_by="System",
+            created_at=datetime.utcnow()
+        )
+        
+        db.clients.insert_one(sample_client.dict())
+        print("✅ Sample client profile created: Jeremy James Tomlinson")
+    else:
+        print("✅ Sample client already exists")
+
 # Initialize database with default admin user if not exists
 def initialize_admin():
     """Initialize default admin user if not exists"""
