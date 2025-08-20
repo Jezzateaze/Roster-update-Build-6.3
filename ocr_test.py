@@ -337,9 +337,12 @@ startxref
                     
                     if success:
                         extracted_data = result_data.get('extracted_data', {})
-                        print(f"      Extracted name: {extracted_data.get('full_name', 'N/A')}")
-                        print(f"      Extracted NDIS number: {extracted_data.get('ndis_number', 'N/A')}")
-                        print(f"      Confidence score: {extracted_data.get('confidence_score', 0)}%")
+                        if extracted_data:
+                            print(f"      Extracted name: {extracted_data.get('full_name', 'N/A')}")
+                            print(f"      Extracted NDIS number: {extracted_data.get('ndis_number', 'N/A')}")
+                            print(f"      Confidence score: {extracted_data.get('confidence_score', 0)}%")
+                        else:
+                            print(f"      ⚠️  No extracted data returned")
                     break
                 elif status == 'failed':
                     error = status_data.get('error', 'Unknown error')
