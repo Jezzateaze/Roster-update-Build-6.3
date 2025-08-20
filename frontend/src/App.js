@@ -2082,12 +2082,13 @@ function App() {
 
   // Check if current user should see NDIS charge information (Admin only)
   const canViewNDISCharges = () => {
-    return currentUser && currentUser.role === 'admin';
+    if (!isAuthenticated || !currentUser) return false;
+    return currentUser.role === 'admin';
   };
 
   // Get appropriate amount to display based on user role
   const getDisplayAmount = (entry, entryStaffId = null) => {
-    if (!canViewPayInformation(entryStaffId)) {
+    if (!isAuthenticated || !currentUser || !canViewPayInformation(entryStaffId)) {
       return null; // No pay information visible
     }
     
