@@ -536,6 +536,237 @@ def calculate_ndis_charges(roster_entry: RosterEntry, settings: Settings, shift_
     
     return roster_entry
 
+def calculate_cross_midnight_pay(roster_entry: RosterEntry, settings: Settings) -> RosterEntry:
+    """Calculate pay for shifts that cross midnight, splitting by actual days"""
+    from datetime import datetime, timedelta
+    
+    # Parse the shift date and times
+    shift_date = datetime.strptime(roster_entry.date, "%Y-%m-%d")
+    start_hour, start_min = map(int, roster_entry.start_time.split(":"))
+    end_hour, end_min = map(int, roster_entry.end_time.split(":"))
+    
+    start_minutes = start_hour * 60 + start_min
+    end_minutes = end_hour * 60 + end_min
+    
+    # Check if shift crosses midnight
+    crosses_midnight = end_minutes <= start_minutes
+    
+    if not crosses_midnight:
+        # Regular shift - use existing logic
+        return calculate_pay_regular(roster_entry, settings)
+    
+    # Shift crosses midnight - split into segments
+    is_sleepover = roster_entry.manual_sleepover if roster_entry.manual_sleepover is not None else roster_entry.is_sleepover
+    
+    if is_sleepover:
+        # Sleepover shifts don't need splitting - use existing logic
+        return calculate_pay_regular(roster_entry, settings)
+    
+    # Split the shift at midnight
+    # Segment 1: start_time to 23:59 on the first day
+    first_day_end_minutes = 24 * 60  # midnight
+    first_day_duration_minutes = first_day_end_minutes - start_minutes
+    first_day_hours = first_day_duration_minutes / 60.0
+    
+    # Segment 2: 00:00 to end_time on the second day
+    second_day_start_minutes = 0  # midnight
+    second_day_duration_minutes = end_minutes
+    second_day_hours = second_day_duration_minutes / 60.0
+    
+    # Get the second day date
+    second_day_date = shift_date + timedelta(days=1)
+    second_day_date_str = second_day_date.strftime("%Y-%m-%d")
+    
+    # Calculate pay for first day segment
+    first_day_shift_type = determine_shift_type(
+        roster_entry.date, 
+        roster_entry.start_time, 
+        "23:59",
+        roster_entry.is_public_holiday
+    )
+    first_day_rate = get_hourly_rate_for_shift_type(first_day_shift_type, settings)
+    first_day_pay = first_day_hours * first_day_rate
+    
+    # Calculate pay for second day segment
+    # Check if second day is a public holiday
+    second_day_is_holiday = is_public_holiday_date(second_day_date_str, settings)
+    
+    second_day_shift_type = determine_shift_type(
+        second_day_date_str,
+        "00:01",  # Just after midnight
+        roster_entry.end_time,
+        second_day_is_holiday
+    )
+    second_day_rate = get_hourly_rate_for_shift_type(second_day_shift_type, settings)
+    second_day_pay = second_day_hours * second_day_rate
+    
+    # Set the calculated values
+    roster_entry.hours_worked = first_day_hours + second_day_hours
+    roster_entry.base_pay = first_day_pay + second_day_pay
+    roster_entry.sleepover_allowance = 0
+    roster_entry.total_pay = roster_entry.base_pay
+    
+    # Calculate NDIS charges - use the primary (first day) shift type
+    if roster_entry.manual_shift_type:
+        ndis_shift_type = roster_entry.manual_shift_type
+    else:
+        # Use first day shift type for NDIS (primary segment)
+        if first_day_shift_type == ShiftType.PUBLIC_HOLIDAY:
+            ndis_shift_type = "public_holiday"
+        elif first_day_shift_type == ShiftType.SATURDAY:
+            ndis_shift_type = "saturday"
+        elif first_day_shift_type == ShiftType.SUNDAY:
+            ndis_shift_type = "sunday"
+        elif first_day_shift_type == ShiftType.WEEKDAY_EVENING:
+            ndis_shift_type = "weekday_evening"
+        elif first_day_shift_type == ShiftType.WEEKDAY_NIGHT:
+            ndis_shift_type = "weekday_night"
+        else:
+            ndis_shift_type = "weekday_day"
+    
+    # Calculate NDIS charges
+    roster_entry = calculate_ndis_charges(roster_entry, settings, ndis_shift_type)
+    
+    return roster_entry
+
+def get_hourly_rate_for_shift_type(shift_type: ShiftType, settings: Settings) -> float:
+    """Get hourly rate for a given shift type"""
+    if shift_type == ShiftType.PUBLIC_HOLIDAY:
+        return settings.rates["public_holiday"]
+    elif shift_type == ShiftType.SATURDAY:
+        return settings.rates["saturday"]
+    elif shift_type == ShiftType.SUNDAY:
+        return settings.rates["sunday"]
+    elif shift_type == ShiftType.WEEKDAY_EVENING:
+        return settings.rates["weekday_evening"]
+    elif shift_type == ShiftType.WEEKDAY_NIGHT:
+        return settings.rates["weekday_night"]
+    else:
+        return settings.rates["weekday_day"]
+
+def is_public_holiday_date(date_str: str, settings: Settings) -> bool:
+    """Check if a specific date is a public holiday"""
+    # This is a simplified check - you may want to implement proper holiday checking
+    # For now, returning False, but you can enhance this with actual holiday data
+    return False
+
+def calculate_pay_regular(roster_entry: RosterEntry, settings: Settings) -> RosterEntry:
+    """Original calculate_pay logic for non-cross-midnight shifts"""
+    hours = calculate_hours_worked(roster_entry.start_time, roster_entry.end_time)
+    roster_entry.hours_worked = hours
+    
+    # Determine if this is a sleepover shift
+    is_sleepover = roster_entry.manual_sleepover if roster_entry.manual_sleepover is not None else roster_entry.is_sleepover
+    
+    if is_sleepover:
+        # Sleepover calculation: $175 flat rate includes 2 hours
+        roster_entry.sleepover_allowance = 175.00  # Fixed $175 per night
+        
+        # Additional wake hours beyond 2 hours at applicable hourly rate
+        wake_hours = roster_entry.wake_hours if roster_entry.wake_hours else 0
+        extra_wake_hours = max(0, wake_hours - 2) if wake_hours > 2 else 0
+        
+        if extra_wake_hours > 0:
+            # Get applicable hourly rate for extra wake time
+            if roster_entry.manual_hourly_rate:
+                hourly_rate = roster_entry.manual_hourly_rate
+            else:
+                # Determine rate based on shift type or manual override
+                if roster_entry.manual_shift_type:
+                    shift_type_map = {
+                        "weekday_day": ShiftType.WEEKDAY_DAY,
+                        "weekday_evening": ShiftType.WEEKDAY_EVENING,
+                        "weekday_night": ShiftType.WEEKDAY_NIGHT,
+                        "saturday": ShiftType.SATURDAY,
+                        "sunday": ShiftType.SUNDAY,
+                        "public_holiday": ShiftType.PUBLIC_HOLIDAY
+                    }
+                    shift_type = shift_type_map.get(roster_entry.manual_shift_type, ShiftType.WEEKDAY_DAY)
+                else:
+                    shift_type = determine_shift_type(
+                        roster_entry.date, 
+                        roster_entry.start_time, 
+                        roster_entry.end_time,
+                        roster_entry.is_public_holiday
+                    )
+                
+                hourly_rate = get_hourly_rate_for_shift_type(shift_type, settings)
+            
+            roster_entry.base_pay = extra_wake_hours * hourly_rate
+        else:
+            roster_entry.base_pay = 0  # Only sleepover allowance
+        
+        # Calculate NDIS charges for sleepover
+        # For sleepover shifts, NDIS charges are per-shift based
+        roster_entry = calculate_ndis_charges(roster_entry, settings, "sleepover_default")
+            
+    else:
+        # Regular shift calculation
+        roster_entry.sleepover_allowance = 0
+        
+        # Use manual hourly rate if provided
+        if roster_entry.manual_hourly_rate:
+            hourly_rate = roster_entry.manual_hourly_rate
+        else:
+            # Use manual shift type if provided, otherwise determine automatically
+            if roster_entry.manual_shift_type:
+                shift_type_map = {
+                    "weekday_day": ShiftType.WEEKDAY_DAY,
+                    "weekday_evening": ShiftType.WEEKDAY_EVENING,
+                    "weekday_night": ShiftType.WEEKDAY_NIGHT,
+                    "saturday": ShiftType.SATURDAY,
+                    "sunday": ShiftType.SUNDAY,
+                    "public_holiday": ShiftType.PUBLIC_HOLIDAY
+                }
+                shift_type = shift_type_map.get(roster_entry.manual_shift_type, ShiftType.WEEKDAY_DAY)
+            else:
+                # Determine shift type automatically
+                shift_type = determine_shift_type(
+                    roster_entry.date, 
+                    roster_entry.start_time, 
+                    roster_entry.end_time,
+                    roster_entry.is_public_holiday
+                )
+            
+            hourly_rate = get_hourly_rate_for_shift_type(shift_type, settings)
+        
+        roster_entry.base_pay = hours * hourly_rate
+    
+    # Calculate NDIS charges - determine shift type for NDIS calculation
+    # Skip NDIS calculation for sleepover shifts as it's already calculated above
+    is_sleepover = roster_entry.manual_sleepover if roster_entry.manual_sleepover is not None else roster_entry.is_sleepover
+    
+    if not is_sleepover:
+        if roster_entry.manual_shift_type:
+            ndis_shift_type = roster_entry.manual_shift_type
+        else:
+            # Determine shift type automatically for NDIS calculation
+            shift_type_enum = determine_shift_type(
+                roster_entry.date, 
+                roster_entry.start_time, 
+                roster_entry.end_time,
+                roster_entry.is_public_holiday
+            )
+            # Convert enum to string for NDIS calculation
+            if shift_type_enum == ShiftType.PUBLIC_HOLIDAY:
+                ndis_shift_type = "public_holiday"
+            elif shift_type_enum == ShiftType.SATURDAY:
+                ndis_shift_type = "saturday"
+            elif shift_type_enum == ShiftType.SUNDAY:
+                ndis_shift_type = "sunday"
+            elif shift_type_enum == ShiftType.WEEKDAY_EVENING:
+                ndis_shift_type = "weekday_evening"
+            elif shift_type_enum == ShiftType.WEEKDAY_NIGHT:
+                ndis_shift_type = "weekday_night"
+            else:
+                ndis_shift_type = "weekday_day"
+        
+        # Calculate NDIS charges for regular shifts only
+        roster_entry = calculate_ndis_charges(roster_entry, settings, ndis_shift_type)
+    
+    roster_entry.total_pay = roster_entry.base_pay + roster_entry.sleepover_allowance
+    return roster_entry
+
 def calculate_pay(roster_entry: RosterEntry, settings: Settings) -> RosterEntry:
     """Calculate pay for a roster entry with sleepover logic"""
     hours = calculate_hours_worked(roster_entry.start_time, roster_entry.end_time)
