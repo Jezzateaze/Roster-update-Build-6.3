@@ -3743,14 +3743,15 @@ function App() {
             {/* View Mode Selector */}
             <Card>
               <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-4">
-                    <Label className="font-medium">View:</Label>
-                    <div className="flex space-x-1">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0">
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-2 sm:space-y-0 sm:space-x-4 w-full sm:w-auto">
+                    <Label className="font-medium text-sm">View:</Label>
+                    <div className="flex flex-wrap gap-1 view-selector">
                       <Button
                         variant={viewMode === 'daily' ? 'default' : 'outline'}
                         size="sm"
                         onClick={() => setViewMode('daily')}
+                        className="text-xs sm:text-sm px-2 sm:px-3 py-1.5"
                       >
                         Daily
                       </Button>
@@ -3758,6 +3759,7 @@ function App() {
                         variant={viewMode === 'weekly' ? 'default' : 'outline'}
                         size="sm"
                         onClick={() => setViewMode('weekly')}
+                        className="text-xs sm:text-sm px-2 sm:px-3 py-1.5"
                       >
                         Weekly
                       </Button>
@@ -3765,6 +3767,7 @@ function App() {
                         variant={viewMode === 'monthly' ? 'default' : 'outline'}
                         size="sm"
                         onClick={() => setViewMode('monthly')}
+                        className="text-xs sm:text-sm px-2 sm:px-3 py-1.5"
                       >
                         Monthly
                       </Button>
@@ -3772,6 +3775,7 @@ function App() {
                         variant={viewMode === 'calendar' ? 'default' : 'outline'}
                         size="sm"
                         onClick={() => setViewMode('calendar')}
+                        className="text-xs sm:text-sm px-2 sm:px-3 py-1.5"
                       >
                         Calendar
                       </Button>
