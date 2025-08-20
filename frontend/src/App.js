@@ -126,6 +126,71 @@ const convertTo24Hour = (timeString) => {
   return `${String(hour24).padStart(2, '0')}:${minutes}`;
 };
 
+// Helper functions for unassigned shifts filtering
+const filterUnassignedShiftsByViewMode = (shifts, viewMode, currentDate, searchDate) => {
+  if (!shifts || shifts.length === 0) return [];
+  
+  const today = getBrisbaneDate();
+  const targetDate = viewMode === 'search' && searchDate ? new Date(searchDate) : currentDate;
+  
+  switch (viewMode) {
+    case 'daily':
+      const todayStr = formatDateString(targetDate);
+      return shifts.filter(shift => shift.date === todayStr);
+      
+    case 'weekly':
+      const startOfWeek = new Date(targetDate);
+      const day = startOfWeek.getDay();
+      const diff = startOfWeek.getDate() - day + (day === 0 ? -6 : 1); // Adjust when day is Sunday
+      startOfWeek.setDate(diff);
+      
+      const endOfWeek = new Date(startOfWeek);
+      endOfWeek.setDate(startOfWeek.getDate() + 6);
+      
+      return shifts.filter(shift => {
+        const shiftDate = new Date(shift.date);
+        return shiftDate >= startOfWeek && shiftDate <= endOfWeek;
+      });
+      
+    case 'monthly':
+      const startOfMonth = new Date(targetDate.getFullYear(), targetDate.getMonth(), 1);
+      const endOfMonth = new Date(targetDate.getFullYear(), targetDate.getMonth() + 1, 0);
+      
+      return shifts.filter(shift => {
+        const shiftDate = new Date(shift.date);
+        return shiftDate >= startOfMonth && shiftDate <= endOfMonth;
+      });
+      
+    case 'search':
+      if (!searchDate) return shifts;
+      return shifts.filter(shift => shift.date === searchDate);
+      
+    case 'calendar':
+    default:
+      return shifts;
+  }
+};
+
+const groupUnassignedShiftsByDate = (shifts) => {
+  const grouped = {};
+  shifts.forEach(shift => {
+    const date = shift.date;
+    if (!grouped[date]) {
+      grouped[date] = [];
+    }
+    grouped[date].push(shift);
+  });
+  
+  // Sort dates
+  const sortedDates = Object.keys(grouped).sort();
+  const result = {};
+  sortedDates.forEach(date => {
+    result[date] = grouped[date].sort((a, b) => a.start_time.localeCompare(b.start_time));
+  });
+  
+  return result;
+};
+
 function App() {
   // Authentication State
   const [isAuthenticated, setIsAuthenticated] = useState(false);
