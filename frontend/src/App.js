@@ -11058,7 +11058,6 @@ function App() {
                   onChange={handleOCRFileSelect}
                   className="hidden"
                   multiple
-                  capture="environment"
                 />
               </div>
             )}
