@@ -105,6 +105,17 @@
 user_problem_statement: "Enhance the 'Shift & Staff Availability' section with improved layout and admin management capabilities: 1) Reorganize 'Available Unassigned Shifts' layout into tabbed views (Daily, Weekly, Monthly, Calendar, Search Date) similar to main roster for easier viewing, 2) Admin CRUD operations for 'All Shift Requests' section (modify, clear, edit, add, delete), 3) Admin CRUD operations for 'Staff Availability' section (modify, clear, edit, add, delete), 4) Enhanced '+ Add Availability' functionality allowing Admin to select any staff member in dropdown for all availability types (Available, Unavailable, Time Off Request, Preferred Shifts) with manual request entry capability."
 
 backend:
+  - task: "Cross-midnight shift pay calculation fix"
+    implemented: true
+    working: false
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: false
+          agent: "main"
+          comment: "Implemented new calculate_cross_midnight_pay function to split overnight shifts at midnight and calculate each portion at correct day's rate. Added helper functions get_hourly_rate_for_shift_type, is_public_holiday_date, calculate_pay_regular. Updated main calculate_pay to use new cross-midnight logic."
   - task: "Staff Account Restrictions Implementation"
     implemented: true
     working: true
