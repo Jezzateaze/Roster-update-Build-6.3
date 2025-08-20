@@ -534,7 +534,18 @@ class NDISOCRProcessor:
     def process_pdf(self, pdf_path: Path) -> List[Dict]:
         """Convert PDF pages to images and extract text"""
         try:
+            self.logger.info(f"📄 Starting PDF processing: {pdf_path}")
+            
+            # Check if file exists and is accessible
+            if not pdf_path.exists():
+                raise FileNotFoundError(f"PDF file not found: {pdf_path}")
+            
+            # Log file size for debugging
+            file_size = pdf_path.stat().st_size
+            self.logger.info(f"📊 PDF file size: {file_size} bytes")
+            
             # Convert PDF pages to images
+            self.logger.info(f"🔄 Converting PDF pages to images (DPI: {self.dpi})")
             pages = convert_from_path(
                 str(pdf_path), 
                 dpi=self.dpi,
@@ -543,9 +554,13 @@ class NDISOCRProcessor:
                 thread_count=1
             )
             
+            self.logger.info(f"✅ Successfully converted PDF to {len(pages)} pages")
+            
             extracted_texts = []
             
             for page_num, page in enumerate(pages, 1):
+                self.logger.info(f"🔍 Processing page {page_num}/{len(pages)}")
+                
                 # Convert PIL image to numpy array
                 page_array = np.array(page)
                 
@@ -558,17 +573,36 @@ class NDISOCRProcessor:
                     config=self.tesseract_config
                 )
                 
+                word_count = len(text.split()) if text.strip() else 0
+                self.logger.info(f"📝 Page {page_num}: extracted {word_count} words")
+                
                 extracted_texts.append({
                     'page': page_num,
                     'text': text.strip(),
-                    'word_count': len(text.split()) if text.strip() else 0
+                    'word_count': word_count
                 })
                 
+            total_words = sum(page['word_count'] for page in extracted_texts)
+            self.logger.info(f"✅ PDF processing complete: {len(pages)} pages, {total_words} total words")
+            
             return extracted_texts
             
+        except FileNotFoundError as e:
+            self.logger.error(f"❌ PDF file not found: {str(e)}")
+            raise HTTPException(status_code=404, detail=f"PDF file not found: {str(e)}")
         except Exception as e:
-            self.logger.error(f"Error processing PDF {pdf_path}: {str(e)}")
-            raise HTTPException(status_code=500, detail=f"PDF processing failed: {str(e)}")
+            error_msg = str(e)
+            self.logger.error(f"❌ Error processing PDF {pdf_path}: {error_msg}")
+            
+            # More specific error messages
+            if "poppler" in error_msg.lower():
+                raise HTTPException(status_code=500, detail="PDF processing tools not available. Please contact support.")
+            elif "permission" in error_msg.lower():
+                raise HTTPException(status_code=500, detail="Permission error accessing PDF file.")
+            elif "corrupt" in error_msg.lower() or "damaged" in error_msg.lower():
+                raise HTTPException(status_code=400, detail="PDF file appears to be corrupted or damaged.")
+            else:
+                raise HTTPException(status_code=500, detail=f"PDF processing failed: {error_msg}")
     
     def process_image(self, image_path: Path) -> Dict[str, Any]:
         """Process image file and extract text"""
