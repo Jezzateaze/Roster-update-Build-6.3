@@ -3381,9 +3381,10 @@ function App() {
 
     return (
       <div className="bg-white rounded-lg border border-slate-200 overflow-hidden">
+        {/* Mobile-responsive week headers */}
         <div className="grid grid-cols-7 bg-slate-50">
           {weekHeaders.map(day => (
-            <div key={day} className="p-3 text-center font-semibold text-slate-700 border-r border-slate-200 last:border-r-0">
+            <div key={day} className="p-2 sm:p-3 text-center font-semibold text-slate-700 border-r border-slate-200 last:border-r-0 text-xs sm:text-sm calendar-header">
               {day}
             </div>
           ))}
@@ -3401,19 +3402,19 @@ function App() {
           </div>
         ))}
         
-        {/* Legend for different month indicators */}
-        <div className="p-3 bg-slate-50 border-t border-slate-200 flex items-center justify-center space-x-6 text-xs text-slate-600">
-          <div className="flex items-center space-x-2">
-            <div className="w-3 h-3 bg-white border border-slate-300 rounded"></div>
-            <span>Current Month</span>
+        {/* Legend for different month indicators - Mobile responsive */}
+        <div className="p-2 sm:p-3 bg-slate-50 border-t border-slate-200 flex items-center justify-center space-x-3 sm:space-x-6 text-xs text-slate-600">
+          <div className="flex items-center space-x-1 sm:space-x-2">
+            <div className="w-2 h-2 sm:w-3 sm:h-3 bg-white border border-slate-300 rounded"></div>
+            <span>Current</span>
           </div>
-          <div className="flex items-center space-x-2">
-            <div className="w-3 h-3 bg-slate-100 border border-slate-300 rounded"></div>
-            <span>Previous Month</span>
+          <div className="flex items-center space-x-1 sm:space-x-2">
+            <div className="w-2 h-2 sm:w-3 sm:h-3 bg-slate-100 border border-slate-300 rounded"></div>
+            <span>Previous</span>
           </div>
-          <div className="flex items-center space-x-2">
-            <div className="w-3 h-3 bg-slate-50 border border-slate-300 rounded"></div>
-            <span>Next Month</span>
+          <div className="flex items-center space-x-1 sm:space-x-2">
+            <div className="w-2 h-2 sm:w-3 sm:h-3 bg-slate-50 border border-slate-300 rounded"></div>
+            <span>Next</span>
           </div>
         </div>
       </div>
