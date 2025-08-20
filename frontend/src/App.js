@@ -9352,7 +9352,10 @@ function App() {
                       <button 
                         type="button"
                         className="ml-1 text-blue-600 hover:text-blue-800 underline"
-                        onClick={() => setUseDropdown(true)}
+                        onClick={() => {
+                          console.log('Switching to dropdown, available users:', availableUsers);
+                          setUseDropdown(true);
+                        }}
                       >
                         Select from list
                       </button>
