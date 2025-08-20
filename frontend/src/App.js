@@ -2735,7 +2735,7 @@ function App() {
           </div>
         </div>
         
-        <div className="space-y-1">
+        <div className={`space-y-1 ${contentClasses}`}>
           {/* Calendar Events */}
           {dayEvents.map(event => (
             <div
@@ -2774,86 +2774,99 @@ function App() {
             </div>
           ))}
           
-          {/* Shift Entries */}
-          {dayEntries.map(entry => (
-            <div
-              key={entry.id}
-              className="text-xs p-2 rounded cursor-pointer hover:bg-slate-200 transition-colors group/shift relative border border-slate-100"
-            >
-              {bulkSelectionMode && (
-                <div className="absolute top-1 left-1 z-30 bg-white rounded p-0.5 shadow-sm border border-slate-300">
-                  <input
-                    type="checkbox"
-                    checked={selectedShifts.has(entry.id)}
-                    onChange={() => toggleShiftSelection(entry.id)}
-                    className="w-3 h-3 rounded border-gray-300 border-2 text-blue-600 focus:ring-blue-500"
-                    onClick={(e) => e.stopPropagation()}
-                  />
-                </div>
-              )}
-              <div 
-                className={`flex-1 ${bulkSelectionMode ? 'ml-5' : ''}`}
-                onClick={() => {
-                  if (!isAdmin()) return; // Staff cannot edit shifts
-                  if (bulkSelectionMode) {
-                    toggleShiftSelection(entry.id);
-                  } else {
-                    setSelectedShift(entry);
-                    setShowShiftDialog(true);
-                  }
-                }}
-                style={{ cursor: isAdmin() ? 'pointer' : 'default' }}
+          {/* Shift Entries - Mobile Responsive */}
+          {dayEntries.map(entry => {
+            const shiftClasses = isMobile 
+              ? "text-xs p-1 rounded cursor-pointer hover:bg-slate-200 transition-colors group/shift relative border border-slate-100 shift-entry-mobile"
+              : "text-xs p-2 rounded cursor-pointer hover:bg-slate-200 transition-colors group/shift relative border border-slate-100";
+            
+            const timeClasses = isMobile 
+              ? "shift-time-mobile font-medium"
+              : "font-medium";
+            
+            return (
+              <div
+                key={entry.id}
+                className={shiftClasses}
               >
-                <div className="font-medium flex items-center justify-between">
-                  <span className={`${isCurrentMonth ? '' : 'opacity-75'} font-semibold`}>
-                    {formatTime(entry.start_time, settings.time_format === '24hr')}-{formatTime(entry.end_time, settings.time_format === '24hr')}
-                  </span>
-                  {!bulkSelectionMode && isAdmin() && (
-                    <Edit className="w-3 h-3 opacity-0 group-hover/shift:opacity-100 transition-opacity" />
-                  )}
-                </div>
-                
-                {/* Enhanced shift details with hours */}
-                <div className="mt-1 space-y-1">
-                  <div className={`text-slate-600 ${isCurrentMonth ? '' : 'opacity-75'} flex items-center justify-between`}>
-                    <span>{entry.staff_name || 'Unassigned'}</span>
-                    <span className="text-xs font-medium text-blue-600">
-                      {entry.hours_worked ? `${entry.hours_worked.toFixed(1)}h` : '0h'}
+                {bulkSelectionMode && (
+                  <div className="absolute top-1 left-1 z-30 bg-white rounded p-0.5 shadow-sm border border-slate-300">
+                    <input
+                      type="checkbox"
+                      checked={selectedShifts.has(entry.id)}
+                      onChange={() => toggleShiftSelection(entry.id)}
+                      className="w-3 h-3 rounded border-gray-300 border-2 text-blue-600 focus:ring-blue-500"
+                      onClick={(e) => e.stopPropagation()}
+                    />
+                  </div>
+                )}
+                <div 
+                  className={`flex-1 ${bulkSelectionMode ? 'ml-5' : ''}`}
+                  onClick={() => {
+                    if (!isAdmin()) return; // Staff cannot edit shifts
+                    if (bulkSelectionMode) {
+                      toggleShiftSelection(entry.id);
+                    } else {
+                      setSelectedShift(entry);
+                      setShowShiftDialog(true);
+                    }
+                  }}
+                  style={{ cursor: isAdmin() ? 'pointer' : 'default' }}
+                >
+                  <div className="font-medium flex items-center justify-between">
+                    <span className={`${isCurrentMonth ? '' : 'opacity-75'} ${timeClasses}`}>
+                      {formatTime(entry.start_time, settings.time_format === '24hr')}-{formatTime(entry.end_time, settings.time_format === '24hr')}
                     </span>
+                    {!bulkSelectionMode && isAdmin() && (
+                      <Edit className="w-3 h-3 opacity-0 group-hover/shift:opacity-100 transition-opacity" />
+                    )}
                   </div>
                   
-                  <div className="flex items-center justify-between">
-                    <div className={isCurrentMonth ? '' : 'opacity-75'}>
-                      {getShiftTypeBadge(entry)}
+                  {/* Enhanced shift details with hours - Mobile optimized */}
+                  <div className={isMobile ? "mt-0.5 space-y-0.5" : "mt-1 space-y-1"}>
+                    <div className={`text-slate-600 ${isCurrentMonth ? '' : 'opacity-75'} flex items-center justify-between`}>
+                      <span className={isMobile ? "truncate text-xs" : ""}>{entry.staff_name || 'Unassigned'}</span>
+                      <span className={`font-medium text-blue-600 ${isMobile ? "text-xs" : "text-xs"}`}>
+                        {entry.hours_worked ? `${entry.hours_worked.toFixed(1)}h` : '0h'}
+                      </span>
                     </div>
-                    <span className={`font-medium text-emerald-600 ${isCurrentMonth ? '' : 'opacity-75'}`}>
-                      {getPayDisplayText(entry, entry.staff_id)}
-                    </span>
+                    
+                    <div className="flex items-center justify-between">
+                      <div className={isCurrentMonth ? '' : 'opacity-75'}>
+                        {getShiftTypeBadge(entry)}
+                      </div>
+                      <span className={`font-medium text-emerald-600 ${isCurrentMonth ? '' : 'opacity-75'} ${isMobile ? "text-xs" : ""}`}>
+                        {getPayDisplayText(entry, entry.staff_id)}
+                      </span>
+                    </div>
                   </div>
                 </div>
+                {/* Action buttons - Admin only */}
+                {!bulkSelectionMode && isAdmin() && (
+                  <button
+                    className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white rounded-full text-xs opacity-0 group-hover/shift:opacity-100 flex items-center justify-center hover:bg-red-600 transition-all z-10 shadow-sm border border-white"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      e.preventDefault();
+                      deleteShift(entry.id);
+                    }}
+                    title="Delete shift"
+                    style={{ fontSize: '8px' }}
+                  >
+                    ✕
+                  </button>
+                )}
               </div>
-              {/* Action buttons - Admin only */}
-              {!bulkSelectionMode && isAdmin() && (
-                <button
-                  className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white rounded-full text-xs opacity-0 group-hover/shift:opacity-100 flex items-center justify-center hover:bg-red-600 transition-all z-10 shadow-sm border border-white"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    e.preventDefault();
-                    deleteShift(entry.id);
-                  }}
-                  title="Delete shift"
-                  style={{ fontSize: '8px' }}
-                >
-                  ✕
-                </button>
-              )}
-            </div>
-          ))}
+            );
+          })}
         </div>
 
-        {/* Daily totals footer - only show for current month with shifts */}
+        {/* Daily totals footer - only show for current month with shifts - Mobile optimized */}
         {isCurrentMonth && dayEntries.length > 0 && (
-          <div className="absolute bottom-1 left-2 right-2 text-xs bg-slate-50 rounded px-1 py-0.5 border border-slate-200">
+          <div className={isMobile 
+            ? "absolute bottom-0.5 left-1 right-1 text-xs bg-slate-50 rounded px-1 py-0.5 border border-slate-200 daily-total-mobile"
+            : "absolute bottom-1 left-2 right-2 text-xs bg-slate-50 rounded px-1 py-0.5 border border-slate-200"
+          }>
             <div className="flex justify-between items-center">
               <span className="font-medium text-slate-600">
                 📊 {dailyTotals.totalShifts} shift{dailyTotals.totalShifts !== 1 ? 's' : ''}
