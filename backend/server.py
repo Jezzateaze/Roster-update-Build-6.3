@@ -2027,6 +2027,68 @@ async def reject_shift_request(request_id: str, admin_notes: Optional[str] = Non
     
     return {"message": "Shift request rejected"}
 
+# Additional CRUD endpoints for shift requests (Admin only)
+@app.put("/api/shift-requests/{request_id}")
+async def update_shift_request(request_id: str, request_update: ShiftRequest, current_user: dict = Depends(get_current_user)):
+    """Update a shift request (Admin only)"""
+    if current_user["role"] != "admin":
+        raise HTTPException(status_code=403, detail="Admin access required")
+    
+    # Check if request exists
+    existing_request = db.shift_requests.find_one({"id": request_id})
+    if not existing_request:
+        raise HTTPException(status_code=404, detail="Shift request not found")
+    
+    # Update the request
+    update_data = request_update.dict(exclude_unset=True)
+    update_data["updated_at"] = datetime.utcnow()
+    
+    result = db.shift_requests.update_one(
+        {"id": request_id},
+        {"$set": update_data}
+    )
+    
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Shift request not found")
+    
+    return {"message": "Shift request updated successfully"}
+
+@app.delete("/api/shift-requests/{request_id}")
+async def delete_shift_request(request_id: str, current_user: dict = Depends(get_current_user)):
+    """Delete a shift request (Admin only)"""
+    if current_user["role"] != "admin":
+        raise HTTPException(status_code=403, detail="Admin access required")
+    
+    # Check if request exists
+    existing_request = db.shift_requests.find_one({"id": request_id})
+    if not existing_request:
+        raise HTTPException(status_code=404, detail="Shift request not found")
+    
+    # Delete the request
+    result = db.shift_requests.delete_one({"id": request_id})
+    
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Shift request not found")
+    
+    return {"message": "Shift request deleted successfully"}
+
+@app.delete("/api/shift-requests")
+async def clear_all_shift_requests(current_user: dict = Depends(get_current_user)):
+    """Clear all shift requests (Admin only)"""
+    if current_user["role"] != "admin":
+        raise HTTPException(status_code=403, detail="Admin access required")
+    
+    # Count existing requests
+    existing_count = db.shift_requests.count_documents({})
+    
+    # Delete all requests
+    result = db.shift_requests.delete_many({})
+    
+    return {
+        "message": f"Cleared {result.deleted_count} shift requests successfully",
+        "deleted_count": result.deleted_count
+    }
+
 @app.get("/api/staff-availability")
 async def get_staff_availability(current_user: dict = Depends(get_current_user)):
     """Get staff availability - staff see their own, admin sees all"""
