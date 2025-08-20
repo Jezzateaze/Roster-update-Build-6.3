@@ -450,6 +450,362 @@ def send_reset_email(email: str, temp_pin: str):
 # Initialize admin user on startup
 create_admin_user()
 
+# OCR Configuration and Processing
+UPLOAD_DIR = Path("uploads")
+UPLOAD_DIR.mkdir(exist_ok=True)
+
+ALLOWED_EXTENSIONS = {
+    'image/jpeg', 'image/jpg', 'image/png', 'image/tiff', 'image/bmp',
+    'application/pdf'
+}
+MAX_FILE_SIZE = 50 * 1024 * 1024  # 50MB
+
+# In-memory storage for OCR results (use Redis or database in production)
+ocr_results: Dict[str, Dict[str, Any]] = {}
+
+class NDISOCRProcessor:
+    """OCR processor specialized for NDIS plan documents"""
+    
+    def __init__(self):
+        # Tesseract configuration optimized for forms and structured documents
+        self.tesseract_config = r'--oem 3 --psm 6 -l eng'
+        self.dpi = 300  # Optimal DPI for OCR accuracy
+        self.logger = logging.getLogger(__name__)
+        
+    def preprocess_image(self, image: np.ndarray) -> np.ndarray:
+        """Apply preprocessing techniques optimized for NDIS documents"""
+        # Convert to grayscale
+        if len(image.shape) == 3:
+            gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+        else:
+            gray = image
+            
+        # Apply denoising
+        denoised = cv2.fastNlMeansDenoising(gray)
+        
+        # Enhance contrast using CLAHE
+        clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8,8))
+        enhanced = clahe.apply(denoised)
+        
+        # Apply adaptive thresholding
+        binary = cv2.adaptiveThreshold(
+            enhanced, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, 
+            cv2.THRESH_BINARY, 11, 2
+        )
+        
+        # Deskew the image
+        deskewed = self.correct_skew(binary)
+        
+        return deskewed
+    
+    def correct_skew(self, image: np.ndarray) -> np.ndarray:
+        """Correct document skew for better OCR accuracy"""
+        coords = np.column_stack(np.where(image > 0))
+        if len(coords) == 0:
+            return image
+            
+        angle = cv2.minAreaRect(coords)[-1]
+        
+        # Normalize angle
+        if angle < -45:
+            angle = -(90 + angle)
+        else:
+            angle = -angle
+            
+        # Only correct if angle is significant
+        if abs(angle) > 0.5:
+            (h, w) = image.shape[:2]
+            center = (w // 2, h // 2)
+            M = cv2.getRotationMatrix2D(center, angle, 1.0)
+            rotated = cv2.warpAffine(
+                image, M, (w, h),
+                flags=cv2.INTER_CUBIC,
+                borderMode=cv2.BORDER_REPLICATE
+            )
+            return rotated
+        
+        return image
+    
+    def process_pdf(self, pdf_path: Path) -> List[Dict]:
+        """Convert PDF pages to images and extract text"""
+        try:
+            # Convert PDF pages to images
+            pages = convert_from_path(
+                str(pdf_path), 
+                dpi=self.dpi,
+                first_page=1,
+                last_page=None,
+                thread_count=1
+            )
+            
+            extracted_texts = []
+            
+            for page_num, page in enumerate(pages, 1):
+                # Convert PIL image to numpy array
+                page_array = np.array(page)
+                
+                # Preprocess the image
+                processed_image = self.preprocess_image(page_array)
+                
+                # Extract text using Tesseract
+                text = pytesseract.image_to_string(
+                    processed_image, 
+                    config=self.tesseract_config
+                )
+                
+                extracted_texts.append({
+                    'page': page_num,
+                    'text': text.strip(),
+                    'word_count': len(text.split()) if text.strip() else 0
+                })
+                
+            return extracted_texts
+            
+        except Exception as e:
+            self.logger.error(f"Error processing PDF {pdf_path}: {str(e)}")
+            raise HTTPException(status_code=500, detail=f"PDF processing failed: {str(e)}")
+    
+    def process_image(self, image_path: Path) -> Dict[str, Any]:
+        """Process image file and extract text"""
+        try:
+            # Load image
+            image = cv2.imread(str(image_path))
+            if image is None:
+                raise ValueError("Could not load image")
+            
+            # Preprocess the image
+            processed_image = self.preprocess_image(image)
+            
+            # Extract text using Tesseract
+            text = pytesseract.image_to_string(
+                processed_image, 
+                config=self.tesseract_config
+            )
+            
+            return {
+                'text': text.strip(),
+                'word_count': len(text.split()) if text.strip() else 0,
+                'confidence': self.get_text_confidence(processed_image)
+            }
+            
+        except Exception as e:
+            self.logger.error(f"Error processing image {image_path}: {str(e)}")
+            raise HTTPException(status_code=500, detail=f"Image processing failed: {str(e)}")
+    
+    def get_text_confidence(self, image: np.ndarray) -> float:
+        """Calculate OCR confidence score"""
+        try:
+            data = pytesseract.image_to_data(
+                image, 
+                output_type=pytesseract.Output.DICT,
+                config=self.tesseract_config
+            )
+            
+            confidences = [int(conf) for conf in data['conf'] if int(conf) > 0]
+            
+            if confidences:
+                return sum(confidences) / len(confidences)
+            return 0.0
+            
+        except Exception:
+            return 0.0
+    
+    def parse_ndis_plan_text(self, text: str) -> ExtractedNDISData:
+        """Parse NDIS plan information from extracted text"""
+        extracted_data = ExtractedNDISData()
+        
+        # Split text into lines for parsing
+        lines = [line.strip() for line in text.split('\n') if line.strip()]
+        
+        # Common patterns for NDIS plan documents
+        import re
+        
+        try:
+            # Name patterns
+            name_patterns = [
+                r'(?:participant|name|full name|client name):\s*(.+?)(?:\n|$)',
+                r'name\s*[:\-]\s*(.+?)(?:\n|$)',
+                r'participant\s+name\s*[:\-]\s*(.+?)(?:\n|$)',
+            ]
+            
+            for pattern in name_patterns:
+                match = re.search(pattern, text, re.IGNORECASE | re.MULTILINE)
+                if match and not extracted_data.full_name:
+                    extracted_data.full_name = match.group(1).strip()
+                    break
+            
+            # NDIS number patterns
+            ndis_patterns = [
+                r'(?:ndis|participant)\s*(?:number|id|#):\s*(\d{9})',
+                r'(?:ndis|participant)\s*(?:number|id|#)\s*[:\-]\s*(\d{9})',
+                r'participant\s+id\s*[:\-]\s*(\d{9})',
+            ]
+            
+            for pattern in ndis_patterns:
+                match = re.search(pattern, text, re.IGNORECASE)
+                if match and not extracted_data.ndis_number:
+                    extracted_data.ndis_number = match.group(1).strip()
+                    break
+            
+            # Date of birth patterns
+            dob_patterns = [
+                r'(?:date of birth|dob|born):\s*(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4})',
+                r'(?:date of birth|dob|born)\s*[:\-]\s*(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4})',
+            ]
+            
+            for pattern in dob_patterns:
+                match = re.search(pattern, text, re.IGNORECASE)
+                if match and not extracted_data.date_of_birth:
+                    extracted_data.date_of_birth = match.group(1).strip()
+                    break
+            
+            # Plan period patterns
+            plan_start_patterns = [
+                r'plan\s+(?:starts?|from):\s*(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4})',
+                r'start\s+date:\s*(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4})',
+                r'plan\s+period:\s*(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4})',
+            ]
+            
+            for pattern in plan_start_patterns:
+                match = re.search(pattern, text, re.IGNORECASE)
+                if match and not extracted_data.plan_start_date:
+                    extracted_data.plan_start_date = match.group(1).strip()
+                    break
+            
+            plan_end_patterns = [
+                r'(?:plan\s+(?:ends?|to)|end\s+date):\s*(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4})',
+                r'plan\s+period:.*?to\s*(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4})',
+            ]
+            
+            for pattern in plan_end_patterns:
+                match = re.search(pattern, text, re.IGNORECASE)
+                if match and not extracted_data.plan_end_date:
+                    extracted_data.plan_end_date = match.group(1).strip()
+                    break
+            
+            # Disability condition patterns
+            disability_patterns = [
+                r'(?:primary disability|disability|condition):\s*(.+?)(?:\n|$)',
+                r'(?:diagnosis|condition|disability)\s*[:\-]\s*(.+?)(?:\n|$)',
+            ]
+            
+            for pattern in disability_patterns:
+                match = re.search(pattern, text, re.IGNORECASE | re.MULTILINE)
+                if match and not extracted_data.disability_condition:
+                    extracted_data.disability_condition = match.group(1).strip()
+                    break
+            
+            # Address patterns
+            address_patterns = [
+                r'address:\s*(.+?)(?:\n|$)',
+                r'address\s*[:\-]\s*(.+?)(?:\n|$)',
+            ]
+            
+            for pattern in address_patterns:
+                match = re.search(pattern, text, re.IGNORECASE | re.MULTILINE)
+                if match and not extracted_data.address:
+                    extracted_data.address = match.group(1).strip()
+                    break
+            
+            # Mobile phone patterns
+            mobile_patterns = [
+                r'(?:mobile|phone|contact):\s*(\d{10}|\(\d{2}\)\s*\d{4}\s*\d{4})',
+                r'(?:mobile|phone)\s*[:\-]\s*(\d{10}|\(\d{2}\)\s*\d{4}\s*\d{4})',
+            ]
+            
+            for pattern in mobile_patterns:
+                match = re.search(pattern, text, re.IGNORECASE)
+                if match and not extracted_data.mobile:
+                    extracted_data.mobile = match.group(1).strip()
+                    break
+            
+            # Calculate confidence based on how many fields we found
+            fields_found = sum(1 for field in [
+                extracted_data.full_name,
+                extracted_data.ndis_number,
+                extracted_data.date_of_birth,
+                extracted_data.plan_start_date,
+                extracted_data.plan_end_date
+            ] if field)
+            
+            extracted_data.confidence_score = (fields_found / 5.0) * 100
+            
+        except Exception as e:
+            self.logger.error(f"Error parsing NDIS plan text: {str(e)}")
+        
+        return extracted_data
+
+# OCR processor instance
+ocr_processor = NDISOCRProcessor()
+
+async def validate_and_save_file(file: UploadFile) -> Path:
+    """Validate and save uploaded file"""
+    # Check file size
+    file_content = await file.read()
+    if len(file_content) > MAX_FILE_SIZE:
+        raise HTTPException(status_code=413, detail="File too large (max 50MB)")
+    
+    # Validate file type
+    file_type = magic.from_buffer(file_content[:1024], mime=True)
+    if file_type not in ALLOWED_EXTENSIONS:
+        raise HTTPException(status_code=400, detail=f"Unsupported file type: {file_type}")
+    
+    # Save file with timestamp
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    safe_filename = f"{timestamp}_{file.filename}"
+    file_path = UPLOAD_DIR / safe_filename
+    
+    with open(file_path, 'wb') as buffer:
+        buffer.write(file_content)
+    
+    return file_path
+
+async def process_pdf_async(file_path: Path, task_id: str) -> Dict[str, Any]:
+    """Asynchronously process PDF file"""
+    def run_ocr():
+        return ocr_processor.process_pdf(file_path)
+    
+    # Update progress
+    if task_id in ocr_results:
+        ocr_results[task_id]['progress'] = 50
+    
+    # Run OCR in thread pool to avoid blocking
+    loop = asyncio.get_event_loop()
+    pages_text = await loop.run_in_executor(None, run_ocr)
+    
+    # Combine all text for parsing
+    combined_text = "\n".join(page['text'] for page in pages_text)
+    
+    return {
+        'document_type': 'pdf',
+        'total_pages': len(pages_text),
+        'pages': pages_text,
+        'combined_text': combined_text,
+        'total_words': sum(page['word_count'] for page in pages_text),
+        'extracted_at': datetime.now().isoformat()
+    }
+
+async def process_image_async(file_path: Path, task_id: str) -> Dict[str, Any]:
+    """Asynchronously process image file"""
+    def run_ocr():
+        return ocr_processor.process_image(file_path)
+    
+    # Update progress
+    if task_id in ocr_results:
+        ocr_results[task_id]['progress'] = 50
+    
+    # Run OCR in thread pool
+    loop = asyncio.get_event_loop()
+    result = await loop.run_in_executor(None, run_ocr)
+    
+    return {
+        'document_type': 'image',
+        'text': result['text'],
+        'word_count': result['word_count'],
+        'confidence': result['confidence'],
+        'extracted_at': datetime.now().isoformat()
+    }
+
 # Pay calculation functions
 def determine_shift_type_with_context(date_str: str, start_time: str, end_time: str, is_public_holiday: bool, is_post_midnight_segment: bool = False) -> ShiftType:
     """Determine the shift type with context for cross-midnight calculations"""
