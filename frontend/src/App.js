@@ -4405,6 +4405,126 @@ function App() {
             </Card>
           </TabsContent>
 
+          <TabsContent value="clients" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <CardTitle className="flex items-center space-x-2">
+                    <Users className="w-5 h-5" />
+                    <span>Client Profile Management</span>
+                  </CardTitle>
+                  {/* Admin controls */}
+                  {isAdmin() && (
+                    <Button onClick={() => {
+                      setEditingClient(null);
+                      setShowClientDialog(true);
+                    }}>
+                      <Plus className="w-4 h-4 mr-2" />
+                      Add Client Profile
+                    </Button>
+                  )}
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {clients.length === 0 ? (
+                  <div className="text-center py-8">
+                    <Users className="w-12 h-12 mx-auto text-gray-400 mb-4" />
+                    <p className="text-gray-600">No client profiles found</p>
+                    {isAdmin() && (
+                      <p className="text-sm text-gray-500 mt-2">Click "Add Client Profile" to create the first client profile</p>
+                    )}
+                  </div>
+                ) : (
+                  <div className="grid gap-4">
+                    {clients.map(client => (
+                      <div key={client.id} className="border rounded-lg p-4 hover:bg-gray-50 transition-colors">
+                        <div className="flex items-center justify-between">
+                          <div className="flex-1">
+                            <div className="flex items-center space-x-4">
+                              <div>
+                                <h3 className="font-semibold text-lg">{client.full_name}</h3>
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-2 mt-2 text-sm text-gray-600">
+                                  <div>
+                                    <strong>DOB:</strong> {client.date_of_birth}
+                                    {client.age && <span> (Age: {client.age})</span>}
+                                  </div>
+                                  <div>
+                                    <strong>Sex:</strong> {client.sex}
+                                  </div>
+                                  <div>
+                                    <strong>Mobile:</strong> {client.mobile}
+                                  </div>
+                                </div>
+                                <div className="mt-2 text-sm text-gray-600">
+                                  <div><strong>Condition:</strong> {client.disability_condition}</div>
+                                  <div><strong>Address:</strong> {client.address}</div>
+                                </div>
+                                
+                                {/* NDIS Plan Summary - Admin/Supervisor Only */}
+                                {(isAdmin() || (currentUser && currentUser.role === 'supervisor')) && client.current_ndis_plan && (
+                                  <div className="mt-3 p-2 bg-blue-50 rounded border">
+                                    <div className="text-sm">
+                                      <strong>NDIS Plan:</strong> {client.current_ndis_plan.plan_type} (#{client.current_ndis_plan.ndis_number})
+                                    </div>
+                                    <div className="text-xs text-blue-600">
+                                      Plan Period: {client.current_ndis_plan.plan_start_date} to {client.current_ndis_plan.plan_end_date}
+                                    </div>
+                                  </div>
+                                )}
+
+                                {/* Emergency Contacts Summary */}
+                                {client.emergency_contacts && client.emergency_contacts.length > 0 && (
+                                  <div className="mt-2 text-xs text-gray-500">
+                                    <strong>Emergency Contacts:</strong> {client.emergency_contacts.length} contact{client.emergency_contacts.length !== 1 ? 's' : ''} on file
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                          
+                          <div className="flex items-center space-x-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                setSelectedClient(client);
+                                setShowClientProfileDialog(true);
+                              }}
+                            >
+                              View Profile
+                            </Button>
+                            
+                            {isAdmin() && (
+                              <>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => {
+                                    setEditingClient(client);
+                                    setShowClientDialog(true);
+                                  }}
+                                >
+                                  Edit
+                                </Button>
+                                <Button
+                                  variant="destructive"
+                                  size="sm"
+                                  onClick={() => deleteClientProfile(client.id)}
+                                >
+                                  Delete
+                                </Button>
+                              </>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
           <TabsContent value="staff" className="space-y-6">
             <Card>
               <CardHeader>
