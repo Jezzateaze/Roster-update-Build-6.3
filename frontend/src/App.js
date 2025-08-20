@@ -2202,12 +2202,11 @@ function App() {
     let assignedShifts = 0;
 
     dayEntries.forEach(entry => {
-      // Include all shifts for hours calculation but only assigned for pay
-      totalHours += entry.hours_worked || 0;
-      
+      // Only include assigned shifts for both hours and pay calculations
       if (entry.staff_id && entry.staff_name) {
         const staffMember = staff.find(s => s.id === entry.staff_id);
         if (staffMember && staffMember.active) {
+          totalHours += entry.hours_worked || 0;
           const displayAmount = getDisplayAmount(entry, entry.staff_id) || 0;
           totalPay += displayAmount;
           assignedShifts++;
