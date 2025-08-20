@@ -548,7 +548,7 @@ def calculate_ndis_charges(roster_entry: RosterEntry, settings: Settings, shift_
             roster_entry.ndis_hourly_charge = ndis_rate_info["rate"]
             roster_entry.ndis_shift_charge = 0.0  # Not applicable for regular shifts
             roster_entry.ndis_total_charge = roster_entry.hours_worked * ndis_rate_info["rate"]
-            roster_entry.ndis_line_item_code = ndis_rate_info["code"]
+            roster_entry.ndis_line_item_code = ndis_rate_info["line_item_code"]
             roster_entry.ndis_description = ndis_rate_info["description"]
         else:
             # Default to weekday_day if shift type not found
