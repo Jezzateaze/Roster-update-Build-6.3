@@ -1060,7 +1060,233 @@ function App() {
   // OCR DOCUMENT PROCESSING FUNCTIONS
   // =====================================
 
-  // Process uploaded NDIS plan document
+  // Process multiple uploaded NDIS plan documents
+  const processMultipleOCRDocuments = async (files) => {
+    if (!files || files.length === 0) return;
+
+    setOCRProcessing(true);
+    setOCRProgress(0);
+    setOCRResults(null);
+    setExtractedClientData(null);
+
+    const totalFiles = files.length;
+    const results = [];
+    let completedFiles = 0;
+
+    try {
+      // Process files sequentially to avoid overwhelming the server
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        console.log(`Processing file ${i + 1}/${totalFiles}: ${file.name}`);
+        
+        // Update progress for current file
+        const baseProgress = (i / totalFiles) * 100;
+        setOCRProgress(baseProgress);
+
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('extract_client_data', 'true');
+
+        try {
+          const response = await axios.post(`${API_BASE_URL}/api/ocr/process`, formData, {
+            headers: { 
+              'Authorization': `Bearer ${authToken}`,
+              'Content-Type': 'multipart/form-data'
+            }
+          });
+
+          const taskId = response.data.task_id;
+          
+          // If processing completed immediately
+          if (response.data.status === 'completed') {
+            results.push({
+              filename: file.name,
+              taskId: taskId,
+              data: response.data.extracted_data,
+              success: true
+            });
+          } else {
+            // Poll for results for this specific file
+            const result = await pollSingleOCRResult(taskId, file.name);
+            results.push(result);
+          }
+
+        } catch (error) {
+          console.error(`Error processing file ${file.name}:`, error);
+          results.push({
+            filename: file.name,
+            taskId: null,
+            data: null,
+            success: false,
+            error: error.response?.data?.detail || error.message
+          });
+        }
+
+        completedFiles++;
+        // Update progress after each file
+        const fileProgress = (completedFiles / totalFiles) * 100;
+        setOCRProgress(fileProgress);
+      }
+
+      // Combine results and find best data
+      const combinedData = combineMultipleOCRResults(results);
+      
+      setOCRResults({
+        type: 'multiple',
+        totalFiles: totalFiles,
+        successfulFiles: results.filter(r => r.success).length,
+        failedFiles: results.filter(r => !r.success).length,
+        individualResults: results,
+        combinedData: combinedData
+      });
+      
+      setExtractedClientData(combinedData);
+      setOCRProgress(100);
+      setOCRProcessing(false);
+      
+      if (combinedData) {
+        setShowOCRReviewDialog(true);
+      }
+
+    } catch (error) {
+      console.error('Error processing multiple OCR documents:', error);
+      setOCRProcessing(false);
+      setOCRProgress(0);
+      alert(`❌ Error processing documents: ${error.message}`);
+    }
+  };
+
+  // Poll OCR result for a single file
+  const pollSingleOCRResult = async (taskId, filename) => {
+    const maxAttempts = 30; // 30 seconds max per file
+    let attempts = 0;
+
+    return new Promise((resolve) => {
+      const poll = async () => {
+        try {
+          attempts++;
+          const response = await axios.get(`${API_BASE_URL}/api/ocr/result/${taskId}`, {
+            headers: { 'Authorization': `Bearer ${authToken}` }
+          });
+
+          if (response.data.status === 'completed') {
+            resolve({
+              filename: filename,
+              taskId: taskId,
+              data: response.data.extracted_data,
+              success: true
+            });
+          } else if (response.data.status === 'failed') {
+            resolve({
+              filename: filename,
+              taskId: taskId,
+              data: null,
+              success: false,
+              error: response.data.error || 'Processing failed'
+            });
+          } else if (attempts < maxAttempts) {
+            // Still processing, try again
+            setTimeout(poll, 1000);
+          } else {
+            // Timeout
+            resolve({
+              filename: filename,
+              taskId: taskId,
+              data: null,
+              success: false,
+              error: 'Processing timeout'
+            });
+          }
+        } catch (error) {
+          console.error(`Error polling OCR result for ${filename}:`, error);
+          if (attempts < maxAttempts) {
+            setTimeout(poll, 1000);
+          } else {
+            resolve({
+              filename: filename,
+              taskId: taskId,
+              data: null,
+              success: false,
+              error: error.message || 'Polling error'
+            });
+          }
+        }
+      };
+
+      poll();
+    });
+  };
+
+  // Combine OCR results from multiple documents
+  const combineMultipleOCRResults = (results) => {
+    const successfulResults = results.filter(r => r.success && r.data);
+    
+    if (successfulResults.length === 0) {
+      return null;
+    }
+
+    // If only one successful result, return it
+    if (successfulResults.length === 1) {
+      return {
+        ...successfulResults[0].data,
+        sources: [successfulResults[0].filename],
+        confidence_score: successfulResults[0].data.confidence_score || 0
+      };
+    }
+
+    // Combine data from multiple sources, preferring higher confidence scores
+    const combined = {
+      full_name: null,
+      date_of_birth: null,
+      ndis_number: null,
+      plan_start_date: null,
+      plan_end_date: null,
+      funding_categories: [],
+      disability_condition: null,
+      address: null,
+      mobile: null,
+      confidence_score: 0,
+      sources: successfulResults.map(r => r.filename),
+      fieldSources: {} // Track which file provided each field
+    };
+
+    const fieldMappings = [
+      'full_name', 'date_of_birth', 'ndis_number', 'plan_start_date', 
+      'plan_end_date', 'disability_condition', 'address', 'mobile'
+    ];
+
+    // For each field, find the best value from all results
+    fieldMappings.forEach(field => {
+      let bestValue = null;
+      let bestSource = null;
+      let bestConfidence = -1;
+
+      successfulResults.forEach(result => {
+        const value = result.data[field];
+        const confidence = result.data.confidence_score || 0;
+        
+        if (value && value.trim() !== '') {
+          // Prefer non-empty values with higher confidence
+          if (bestValue === null || confidence > bestConfidence) {
+            bestValue = value;
+            bestSource = result.filename;
+            bestConfidence = confidence;
+          }
+        }
+      });
+
+      if (bestValue) {
+        combined[field] = bestValue;
+        combined.fieldSources[field] = bestSource;
+      }
+    });
+
+    // Calculate average confidence
+    const totalConfidence = successfulResults.reduce((sum, r) => sum + (r.data.confidence_score || 0), 0);
+    combined.confidence_score = totalConfidence / successfulResults.length;
+
+    return combined;
+  };
   const processOCRDocument = async (file) => {
     if (!file) return;
 
