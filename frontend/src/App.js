@@ -1259,9 +1259,11 @@ function App() {
   // Fetch available users for login dropdown
   const fetchAvailableUsers = async () => {
     try {
+      console.log('Fetching available users...');
       // First, get all staff members
       const staffResponse = await axios.get(`${API_BASE_URL}/api/staff`);
       const staffList = staffResponse.data;
+      console.log('Staff list fetched:', staffList);
       
       // Create user list with Admin + Staff members
       const users = [
@@ -1288,11 +1290,21 @@ function App() {
         }
       });
       
+      console.log('Available users to set:', users);
       setAvailableUsers(users);
     } catch (error) {
       console.error('Error fetching users for dropdown:', error);
-      // If we can't fetch users, fall back to manual input
-      setUseDropdown(false);
+      console.log('Falling back to manual input mode');
+      // If we can't fetch users, provide at least the Admin user and fall back to manual input
+      setAvailableUsers([
+        {
+          username: 'Admin',
+          displayName: '👤 Admin (Administrator)', 
+          type: 'admin'
+        }
+      ]);
+      // Don't disable dropdown if we have at least Admin
+      // setUseDropdown(false);
     }
   };
 
