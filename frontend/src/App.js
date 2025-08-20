@@ -3818,7 +3818,7 @@ function App() {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-6">
+          <TabsList className="grid w-full grid-cols-7">
             <TabsTrigger value="roster" className="flex items-center space-x-2">
               <CalendarIcon className="w-4 h-4" />
               <span>Roster</span>
@@ -3830,6 +3830,10 @@ function App() {
             <TabsTrigger value="availability" className="flex items-center space-x-2">
               <Users className="w-4 h-4" />
               <span>Shift & Staff Availability</span>
+            </TabsTrigger>
+            <TabsTrigger value="clients" className="flex items-center space-x-2">
+              <Users className="w-4 h-4" />
+              <span>Client Profiles</span>
             </TabsTrigger>
             <TabsTrigger value="staff" className="flex items-center space-x-2">
               <Users className="w-4 h-4" />
