@@ -8222,7 +8222,14 @@ function App() {
       <Dialog open={showAvailabilityDialog} onOpenChange={setShowAvailabilityDialog}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
-            <DialogTitle>{isStaff() ? 'Update My Availability' : 'Add Staff Availability'}</DialogTitle>
+            <DialogTitle>
+              {isStaff() ? 'Update My Availability' : 'Add Staff Availability'}
+            </DialogTitle>
+            {isAdmin() && (
+              <p className="text-sm text-slate-600 mt-2">
+                Create availability records for any staff member including Available, Unavailable, Time Off Requests, and Preferred Shifts
+              </p>
+            )}
           </DialogHeader>
           <div className="space-y-4">
             <div>
