@@ -535,7 +535,8 @@ function App() {
         start_time: '',
         end_time: '',
         is_recurring: false,
-        notes: ''
+        notes: '',
+        staff_id: ''
       });
     } catch (error) {
       console.error('Error creating availability:', error);
