@@ -608,11 +608,12 @@ def calculate_cross_midnight_pay(roster_entry: RosterEntry, settings: Settings) 
     # Check if second day is a public holiday
     second_day_is_holiday = is_public_holiday_date(second_day_date_str, settings)
     
-    second_day_shift_type = determine_shift_type(
+    second_day_shift_type = determine_shift_type_with_context(
         second_day_date_str,
         "00:01",  # Just after midnight
         roster_entry.end_time,
-        second_day_is_holiday
+        second_day_is_holiday,
+        is_post_midnight_segment=True  # This is the post-midnight segment
     )
     second_day_rate = get_hourly_rate_for_shift_type(second_day_shift_type, settings)
     second_day_pay = second_day_hours * second_day_rate
