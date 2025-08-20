@@ -2148,6 +2148,10 @@ function App() {
 
   // Get rate type label for display (NDIS vs Staff)
   const getRateTypeLabel = () => {
+    if (!isAuthenticated || !currentUser) {
+      return 'Pay'; // Fallback when not authenticated
+    }
+    
     if (canViewNDISCharges()) {
       return 'NDIS Charge';
     } else {
