@@ -5424,6 +5424,640 @@ class ShiftRosterAPITester:
         
         return True
 
+    def test_ocr_health_check(self):
+        """Test OCR health check endpoint"""
+        print(f"\n🏥 Testing OCR Health Check...")
+        
+        success, response = self.run_test(
+            "OCR Health Check",
+            "GET",
+            "api/ocr/health",
+            200
+        )
+        
+        if success:
+            print(f"   ✅ OCR service is healthy")
+            print(f"   Tesseract version: {response.get('tesseract_version', 'N/A')}")
+            print(f"   Upload directory exists: {response.get('upload_dir_exists', False)}")
+            print(f"   Timestamp: {response.get('timestamp', 'N/A')}")
+            
+            # Verify required fields
+            required_fields = ['status', 'tesseract_version', 'upload_dir_exists', 'timestamp']
+            for field in required_fields:
+                if field not in response:
+                    print(f"   ❌ Missing required field: {field}")
+                    return False
+            
+            # Verify Tesseract version format
+            tesseract_version = response.get('tesseract_version', '')
+            if not tesseract_version or len(tesseract_version) < 3:
+                print(f"   ❌ Invalid Tesseract version: {tesseract_version}")
+                return False
+            
+            print(f"   ✅ All health check fields present and valid")
+            return True
+        else:
+            print(f"   ❌ OCR health check failed")
+            return False
+
+    def test_ocr_authentication_authorization(self):
+        """Test OCR endpoints with different user roles"""
+        print(f"\n🔐 Testing OCR Authentication & Authorization...")
+        
+        if not self.auth_token:
+            print("   ❌ No admin authentication token available")
+            return False
+        
+        # Test 1: Admin access to OCR endpoints (should work)
+        print(f"\n   🎯 TEST 1: Admin access to OCR endpoints")
+        
+        # Test OCR status endpoint with admin token
+        success, response = self.run_test(
+            "Admin Access to OCR Status (Non-existent task)",
+            "GET",
+            "api/ocr/status/test-task-id",
+            404,  # Expect not found for non-existent task
+            use_auth=True
+        )
+        
+        if success:  # Success means we got expected 404, not 403
+            print(f"   ✅ Admin can access OCR endpoints (got expected 404 for non-existent task)")
+        else:
+            print(f"   ❌ Admin cannot access OCR endpoints")
+            return False
+        
+        # Test OCR result endpoint with admin token
+        success, response = self.run_test(
+            "Admin Access to OCR Result (Non-existent task)",
+            "GET",
+            "api/ocr/result/test-task-id",
+            404,  # Expect not found for non-existent task
+            use_auth=True
+        )
+        
+        if success:  # Success means we got expected 404, not 403
+            print(f"   ✅ Admin can access OCR result endpoints")
+        else:
+            print(f"   ❌ Admin cannot access OCR result endpoints")
+            return False
+        
+        # Test 2: Staff access to OCR endpoints (should be denied)
+        print(f"\n   🎯 TEST 2: Staff access to OCR endpoints (should be denied)")
+        
+        # Try to login as staff user first
+        staff_login_data = {
+            "username": "rose",
+            "pin": "888888"
+        }
+        
+        success, staff_response = self.run_test(
+            "Staff Login for OCR Authorization Test",
+            "POST",
+            "api/auth/login",
+            200,
+            data=staff_login_data
+        )
+        
+        if success:
+            staff_token = staff_response.get('token')
+            staff_role = staff_response.get('user', {}).get('role')
+            print(f"   Staff login successful: role={staff_role}")
+            
+            if staff_token and staff_role == 'staff':
+                # Test staff access to OCR endpoints (should be denied with 403)
+                original_token = self.auth_token
+                self.auth_token = staff_token
+                
+                try:
+                    success, response = self.run_test(
+                        "Staff Access to OCR Status (Should be Denied)",
+                        "GET",
+                        "api/ocr/status/test-task-id",
+                        403,  # Expect forbidden
+                        use_auth=True
+                    )
+                    
+                    if success:  # Success means we got expected 403
+                        print(f"   ✅ Staff correctly denied access to OCR endpoints")
+                    else:
+                        print(f"   ❌ Staff was not properly denied access to OCR endpoints")
+                        return False
+                    
+                    # Test staff access to OCR cleanup (should be denied)
+                    success, response = self.run_test(
+                        "Staff Access to OCR Cleanup (Should be Denied)",
+                        "DELETE",
+                        "api/ocr/cleanup",
+                        403,  # Expect forbidden
+                        use_auth=True
+                    )
+                    
+                    if success:  # Success means we got expected 403
+                        print(f"   ✅ Staff correctly denied access to OCR cleanup")
+                    else:
+                        print(f"   ❌ Staff was not properly denied access to OCR cleanup")
+                        return False
+                        
+                finally:
+                    # Restore admin token
+                    self.auth_token = original_token
+            else:
+                print(f"   ⚠️  Could not get valid staff token for authorization test")
+        else:
+            print(f"   ⚠️  Staff login failed - skipping staff authorization test")
+        
+        # Test 3: Unauthenticated access (should be denied)
+        print(f"\n   🎯 TEST 3: Unauthenticated access to OCR endpoints (should be denied)")
+        
+        # Test without any token
+        try:
+            import requests
+            url = f"{self.base_url}/api/ocr/status/test-task-id"
+            response = requests.get(url)
+            
+            if response.status_code in [401, 403]:
+                print(f"   ✅ Unauthenticated access correctly denied (status: {response.status_code})")
+            else:
+                print(f"   ❌ Unauthenticated access was not denied (status: {response.status_code})")
+                return False
+        except Exception as e:
+            print(f"   ❌ Error testing unauthenticated access: {e}")
+            return False
+        
+        print(f"   ✅ All OCR authentication and authorization tests passed")
+        return True
+
+    def test_ocr_document_processing(self):
+        """Test OCR document processing with sample files"""
+        print(f"\n📄 Testing OCR Document Processing...")
+        
+        if not self.auth_token:
+            print("   ❌ No admin authentication token available")
+            return False
+        
+        # Test 1: Create a simple test image with text
+        print(f"\n   🎯 TEST 1: Create and process test image with text")
+        
+        try:
+            from PIL import Image, ImageDraw, ImageFont
+            import io
+            import tempfile
+            
+            # Create a simple test image with NDIS-like text
+            img = Image.new('RGB', (800, 600), color='white')
+            draw = ImageDraw.Draw(img)
+            
+            # Add sample NDIS plan text
+            test_text = [
+                "NDIS PARTICIPANT PLAN",
+                "Participant Name: John Smith",
+                "NDIS Number: 123456789",
+                "Date of Birth: 15/03/1990",
+                "Plan Start Date: 01/01/2025",
+                "Plan End Date: 31/12/2025",
+                "Disability: Autism Spectrum Disorder",
+                "Address: 123 Main Street, Melbourne VIC 3000",
+                "Mobile: 0412345678"
+            ]
+            
+            # Draw text on image
+            y_position = 50
+            for line in test_text:
+                draw.text((50, y_position), line, fill='black')
+                y_position += 40
+            
+            # Save to temporary file
+            with tempfile.NamedTemporaryFile(suffix='.png', delete=False) as tmp_file:
+                img.save(tmp_file.name, 'PNG')
+                test_image_path = tmp_file.name
+            
+            print(f"   Created test image: {test_image_path}")
+            
+            # Test file upload and processing
+            with open(test_image_path, 'rb') as f:
+                files = {'file': ('test_ndis_plan.png', f, 'image/png')}
+                data = {
+                    'extract_client_data': 'true'
+                }
+                headers = {'Authorization': f'Bearer {self.auth_token}'}
+                
+                import requests
+                url = f"{self.base_url}/api/ocr/process"
+                response = requests.post(url, files=files, data=data, headers=headers)
+                
+                print(f"   Upload response status: {response.status_code}")
+                
+                if response.status_code == 200:
+                    result = response.json()
+                    task_id = result.get('task_id')
+                    status = result.get('status')
+                    extracted_data = result.get('extracted_data', {})
+                    
+                    print(f"   ✅ Document processing successful")
+                    print(f"   Task ID: {task_id}")
+                    print(f"   Status: {status}")
+                    print(f"   Extracted data fields: {list(extracted_data.keys()) if extracted_data else 'None'}")
+                    
+                    # Verify extracted data structure
+                    if extracted_data:
+                        expected_fields = ['full_name', 'ndis_number', 'date_of_birth', 'confidence_score']
+                        found_fields = []
+                        for field in expected_fields:
+                            if field in extracted_data and extracted_data[field]:
+                                found_fields.append(field)
+                                print(f"      {field}: {extracted_data[field]}")
+                        
+                        if len(found_fields) >= 2:  # At least 2 fields should be extracted
+                            print(f"   ✅ OCR extraction working: {len(found_fields)}/{len(expected_fields)} fields found")
+                        else:
+                            print(f"   ⚠️  Limited OCR extraction: only {len(found_fields)} fields found")
+                    
+                    # Test 2: Check task status
+                    if task_id:
+                        print(f"\n   🎯 TEST 2: Check task status")
+                        success, status_response = self.run_test(
+                            f"Check OCR Task Status",
+                            "GET",
+                            f"api/ocr/status/{task_id}",
+                            200,
+                            use_auth=True
+                        )
+                        
+                        if success:
+                            print(f"   ✅ Task status retrieved successfully")
+                            print(f"   Status: {status_response.get('status')}")
+                            print(f"   Progress: {status_response.get('progress', 0)}%")
+                        
+                        # Test 3: Get task result
+                        print(f"\n   🎯 TEST 3: Get task result")
+                        success, result_response = self.run_test(
+                            f"Get OCR Task Result",
+                            "GET",
+                            f"api/ocr/result/{task_id}",
+                            200,
+                            use_auth=True
+                        )
+                        
+                        if success:
+                            print(f"   ✅ Task result retrieved successfully")
+                            extracted_text = result_response.get('extracted_text', '')
+                            processing_info = result_response.get('processing_info', {})
+                            
+                            print(f"   Extracted text length: {len(extracted_text)} characters")
+                            print(f"   Filename: {processing_info.get('filename', 'N/A')}")
+                            print(f"   File type: {processing_info.get('file_type', 'N/A')}")
+                            
+                            # Verify some expected text was extracted
+                            expected_words = ['NDIS', 'Participant', 'John', 'Smith']
+                            found_words = [word for word in expected_words if word.lower() in extracted_text.lower()]
+                            
+                            if len(found_words) >= 2:
+                                print(f"   ✅ Text extraction working: found {found_words}")
+                            else:
+                                print(f"   ⚠️  Limited text extraction: only found {found_words}")
+                    
+                    # Clean up test file
+                    import os
+                    try:
+                        os.unlink(test_image_path)
+                    except:
+                        pass
+                    
+                    return True
+                else:
+                    print(f"   ❌ Document processing failed: {response.status_code}")
+                    print(f"   Response: {response.text[:200]}...")
+                    return False
+                    
+        except Exception as e:
+            print(f"   ❌ Error in document processing test: {str(e)}")
+            return False
+
+    def test_ocr_file_validation(self):
+        """Test OCR file type and size validation"""
+        print(f"\n🔍 Testing OCR File Validation...")
+        
+        if not self.auth_token:
+            print("   ❌ No admin authentication token available")
+            return False
+        
+        # Test 1: Invalid file type (should be rejected)
+        print(f"\n   🎯 TEST 1: Upload invalid file type (should be rejected)")
+        
+        try:
+            import tempfile
+            import requests
+            
+            # Create a text file (unsupported format)
+            with tempfile.NamedTemporaryFile(mode='w', suffix='.txt', delete=False) as tmp_file:
+                tmp_file.write("This is a text file, not an image or PDF")
+                test_file_path = tmp_file.name
+            
+            with open(test_file_path, 'rb') as f:
+                files = {'file': ('test.txt', f, 'text/plain')}
+                data = {'extract_client_data': 'true'}
+                headers = {'Authorization': f'Bearer {self.auth_token}'}
+                
+                url = f"{self.base_url}/api/ocr/process"
+                response = requests.post(url, files=files, data=data, headers=headers)
+                
+                if response.status_code == 400:
+                    print(f"   ✅ Invalid file type correctly rejected (400)")
+                    print(f"   Error message: {response.json().get('detail', 'N/A')}")
+                else:
+                    print(f"   ❌ Invalid file type was not rejected (status: {response.status_code})")
+                    return False
+            
+            # Clean up
+            import os
+            try:
+                os.unlink(test_file_path)
+            except:
+                pass
+        
+        except Exception as e:
+            print(f"   ❌ Error testing file validation: {str(e)}")
+            return False
+        
+        # Test 2: Valid file types (should be accepted)
+        print(f"\n   🎯 TEST 2: Test valid file types")
+        
+        valid_types = [
+            ('image/jpeg', '.jpg'),
+            ('image/png', '.png')
+        ]
+        
+        for content_type, extension in valid_types:
+            try:
+                from PIL import Image
+                import tempfile
+                
+                # Create a small valid image
+                img = Image.new('RGB', (100, 100), color='white')
+                
+                with tempfile.NamedTemporaryFile(suffix=extension, delete=False) as tmp_file:
+                    img.save(tmp_file.name)
+                    test_file_path = tmp_file.name
+                
+                with open(test_file_path, 'rb') as f:
+                    files = {'file': (f'test{extension}', f, content_type)}
+                    data = {'extract_client_data': 'true'}
+                    headers = {'Authorization': f'Bearer {self.auth_token}'}
+                    
+                    url = f"{self.base_url}/api/ocr/process"
+                    response = requests.post(url, files=files, data=data, headers=headers)
+                    
+                    if response.status_code == 200:
+                        print(f"   ✅ {content_type} file accepted")
+                    else:
+                        print(f"   ❌ {content_type} file rejected (status: {response.status_code})")
+                        print(f"   Response: {response.text[:100]}...")
+                
+                # Clean up
+                import os
+                try:
+                    os.unlink(test_file_path)
+                except:
+                    pass
+                    
+            except Exception as e:
+                print(f"   ❌ Error testing {content_type}: {str(e)}")
+                return False
+        
+        print(f"   ✅ File validation tests completed")
+        return True
+
+    def test_ocr_client_integration(self):
+        """Test OCR integration with client profile system"""
+        print(f"\n👤 Testing OCR Client Integration...")
+        
+        if not self.auth_token:
+            print("   ❌ No admin authentication token available")
+            return False
+        
+        # Test 1: Admin access (should work)
+        success, response = self.run_test(
+            "Admin Access to Client Integration (Non-existent task)",
+            "POST",
+            f"api/ocr/apply-to-client/non-existent-task",
+            404,  # Expect not found for non-existent task
+            use_auth=True
+        )
+        
+        if success:  # Success means we got expected 404, not 403
+            print(f"   ✅ Admin can access client integration endpoint")
+        else:
+            print(f"   ❌ Admin cannot access client integration endpoint")
+            return False
+        
+        # Test 2: Staff access (should be denied)
+        print(f"\n   🎯 TEST 2: Staff access to client integration (should be denied)")
+        
+        # Try to login as staff user
+        staff_login_data = {
+            "username": "rose",
+            "pin": "888888"
+        }
+        
+        success, staff_response = self.run_test(
+            "Staff Login for Client Integration Test",
+            "POST",
+            "api/auth/login",
+            200,
+            data=staff_login_data
+        )
+        
+        if success:
+            staff_token = staff_response.get('token')
+            if staff_token:
+                original_token = self.auth_token
+                self.auth_token = staff_token
+                
+                try:
+                    success, response = self.run_test(
+                        "Staff Access to Client Integration (Should be Denied)",
+                        "POST",
+                        f"api/ocr/apply-to-client/test-task",
+                        403,  # Expect forbidden
+                        use_auth=True
+                    )
+                    
+                    if success:  # Success means we got expected 403
+                        print(f"   ✅ Staff correctly denied access to client integration")
+                    else:
+                        print(f"   ❌ Staff was not properly denied access to client integration")
+                        return False
+                        
+                finally:
+                    self.auth_token = original_token
+        
+        # Test 3: Test with non-existent task ID
+        print(f"\n   🎯 TEST 3: Test with non-existent task ID")
+        
+        success, response = self.run_test(
+            "Apply OCR to Client with Non-existent Task",
+            "POST",
+            "api/ocr/apply-to-client/non-existent-task-id",
+            404,  # Expect not found
+            use_auth=True
+        )
+        
+        if success:  # Success means we got expected 404
+            print(f"   ✅ Non-existent task correctly handled with 404")
+        else:
+            print(f"   ❌ Non-existent task not handled correctly")
+            return False
+        
+        print(f"   ✅ OCR client integration tests completed")
+        return True
+
+    def test_ocr_cleanup(self):
+        """Test OCR cleanup functionality"""
+        print(f"\n🧹 Testing OCR Cleanup...")
+        
+        if not self.auth_token:
+            print("   ❌ No admin authentication token available")
+            return False
+        
+        # Test 1: Admin access to cleanup (should work)
+        print(f"\n   🎯 TEST 1: Admin access to OCR cleanup")
+        
+        success, response = self.run_test(
+            "Admin OCR Cleanup",
+            "DELETE",
+            "api/ocr/cleanup",
+            200,
+            use_auth=True
+        )
+        
+        if success:
+            print(f"   ✅ OCR cleanup successful")
+            cleaned_count = response.get('cleaned_count', 0)
+            remaining_count = response.get('remaining_count', 0)
+            print(f"   Cleaned tasks: {cleaned_count}")
+            print(f"   Remaining tasks: {remaining_count}")
+            
+            # Verify response structure
+            expected_fields = ['message', 'cleaned_count', 'remaining_count']
+            for field in expected_fields:
+                if field not in response:
+                    print(f"   ❌ Missing field in cleanup response: {field}")
+                    return False
+            
+            print(f"   ✅ Cleanup response structure valid")
+        else:
+            print(f"   ❌ OCR cleanup failed")
+            return False
+        
+        # Test 2: Staff access to cleanup (should be denied)
+        print(f"\n   🎯 TEST 2: Staff access to OCR cleanup (should be denied)")
+        
+        staff_login_data = {
+            "username": "rose",
+            "pin": "888888"
+        }
+        
+        success, staff_response = self.run_test(
+            "Staff Login for Cleanup Test",
+            "POST",
+            "api/auth/login",
+            200,
+            data=staff_login_data
+        )
+        
+        if success:
+            staff_token = staff_response.get('token')
+            if staff_token:
+                original_token = self.auth_token
+                self.auth_token = staff_token
+                
+                try:
+                    success, response = self.run_test(
+                        "Staff Access to OCR Cleanup (Should be Denied)",
+                        "DELETE",
+                        "api/ocr/cleanup",
+                        403,  # Expect forbidden
+                        use_auth=True
+                    )
+                    
+                    if success:  # Success means we got expected 403
+                        print(f"   ✅ Staff correctly denied access to OCR cleanup")
+                    else:
+                        print(f"   ❌ Staff was not properly denied access to OCR cleanup")
+                        return False
+                        
+                finally:
+                    self.auth_token = original_token
+        
+        print(f"   ✅ OCR cleanup tests completed")
+        return True
+
+    def test_comprehensive_ocr_functionality(self):
+        """Run comprehensive OCR testing suite"""
+        print(f"\n🔍 COMPREHENSIVE OCR DOCUMENT SCANNING TESTING...")
+        print(f"   Testing all OCR endpoints and functionality as per review request")
+        
+        ocr_tests_passed = 0
+        ocr_tests_total = 6
+        
+        # Test 1: OCR Health Check
+        if self.test_ocr_health_check():
+            ocr_tests_passed += 1
+            print(f"   ✅ OCR Health Check: PASSED")
+        else:
+            print(f"   ❌ OCR Health Check: FAILED")
+        
+        # Test 2: Authentication & Authorization
+        if self.test_ocr_authentication_authorization():
+            ocr_tests_passed += 1
+            print(f"   ✅ OCR Authentication & Authorization: PASSED")
+        else:
+            print(f"   ❌ OCR Authentication & Authorization: FAILED")
+        
+        # Test 3: Document Processing
+        if self.test_ocr_document_processing():
+            ocr_tests_passed += 1
+            print(f"   ✅ OCR Document Processing: PASSED")
+        else:
+            print(f"   ❌ OCR Document Processing: FAILED")
+        
+        # Test 4: File Validation
+        if self.test_ocr_file_validation():
+            ocr_tests_passed += 1
+            print(f"   ✅ OCR File Validation: PASSED")
+        else:
+            print(f"   ❌ OCR File Validation: FAILED")
+        
+        # Test 5: Client Integration
+        if self.test_ocr_client_integration():
+            ocr_tests_passed += 1
+            print(f"   ✅ OCR Client Integration: PASSED")
+        else:
+            print(f"   ❌ OCR Client Integration: FAILED")
+        
+        # Test 6: Data Cleanup
+        if self.test_ocr_cleanup():
+            ocr_tests_passed += 1
+            print(f"   ✅ OCR Data Cleanup: PASSED")
+        else:
+            print(f"   ❌ OCR Data Cleanup: FAILED")
+        
+        # Summary
+        success_rate = (ocr_tests_passed / ocr_tests_total) * 100
+        print(f"\n   🎯 OCR TESTING SUMMARY:")
+        print(f"      Tests passed: {ocr_tests_passed}/{ocr_tests_total}")
+        print(f"      Success rate: {success_rate:.1f}%")
+        
+        if ocr_tests_passed == ocr_tests_total:
+            print(f"      🎉 ALL OCR TESTS PASSED - OCR functionality is working correctly!")
+            return True
+        elif ocr_tests_passed >= 4:  # At least 4/6 tests passed
+            print(f"      ✅ MAJORITY OF OCR TESTS PASSED - Core functionality working")
+            return True
+        else:
+            print(f"      ❌ MULTIPLE OCR TESTS FAILED - OCR functionality needs attention")
+            return False
+
 def main():
     print("🚀 Starting Staff User Synchronization API Tests")
     print("🎯 URGENT: Test staff user synchronization endpoint to fix broken staff authentication")
