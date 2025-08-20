@@ -524,6 +524,23 @@ function App() {
   // Staff Availability CRUD states
   const [showEditStaffAvailabilityDialog, setShowEditStaffAvailabilityDialog] = useState(false);
   const [editingStaffAvailability, setEditingStaffAvailability] = useState(null);
+
+  // Client Profile Dialog States
+  const [showClientDialog, setShowClientDialog] = useState(false);
+  const [showClientProfileDialog, setShowClientProfileDialog] = useState(false);
+  const [editingClient, setEditingClient] = useState(null);
+  const [newClient, setNewClient] = useState({
+    full_name: '',
+    date_of_birth: '',
+    sex: 'Male',
+    disability_condition: '',
+    mobile: '',
+    address: '',
+    emergency_contacts: [
+      { name: '', relationship: '', mobile: '', address: '' }
+    ],
+    current_ndis_plan: null
+  });
   
   // Touch/swipe handling for mobile
   const [touchStart, setTouchStart] = useState(null);
