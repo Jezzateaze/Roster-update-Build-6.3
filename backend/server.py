@@ -48,6 +48,70 @@ class UserRole(str, Enum):
     SUPERVISOR = "supervisor"
     STAFF = "staff"
 
+class FundingPeriod(str, Enum):
+    MONTHLY = "monthly"
+    QUARTERLY = "3_monthly"
+    ANNUALLY = "annually"
+
+class PlanManagement(str, Enum):
+    SELF_MANAGED = "self_managed"
+    PLAN_MANAGED = "plan_managed"
+    NDIA_MANAGED = "ndia_managed"
+
+# Client Profile Models
+class EmergencyContact(BaseModel):
+    name: str
+    relationship: str
+    mobile: str
+    address: str
+
+class PlanManagerDetails(BaseModel):
+    provider_name: str
+    contact_person: str
+    phone: str
+    email: str
+
+class NDISFundingCategory(BaseModel):
+    category_name: str
+    total_amount: float
+    funding_period: FundingPeriod
+    description: str
+    supports: List[Dict[str, Any]] = []
+    spent_amount: float = 0.0
+    remaining_amount: float = 0.0
+
+class NDISPlan(BaseModel):
+    plan_type: str  # e.g., "PACE"
+    ndis_number: str
+    plan_start_date: str
+    plan_end_date: str
+    plan_management: PlanManagement
+    plan_manager: Optional[PlanManagerDetails] = None
+    funding_categories: List[NDISFundingCategory] = []
+    plan_document_path: Optional[str] = None
+    created_at: datetime = datetime.now()
+    updated_at: datetime = datetime.now()
+
+class ClientProfile(BaseModel):
+    id: str = None
+    # Personal Information
+    full_name: str
+    date_of_birth: str
+    age: Optional[int] = None
+    sex: str
+    disability_condition: str
+    # Contact Information
+    mobile: str
+    address: str
+    # Emergency Contacts
+    emergency_contacts: List[EmergencyContact] = []
+    # NDIS Plan
+    current_ndis_plan: Optional[NDISPlan] = None
+    # System fields
+    created_at: datetime = datetime.now()
+    updated_at: datetime = datetime.now()
+    created_by: str = ""
+
 # Pydantic models
 class Staff(BaseModel):
     id: Optional[str] = None
