@@ -9308,9 +9308,12 @@ function App() {
                   <Label htmlFor="userSelect">Select User</Label>
                   <select
                     id="userSelect"
-                    className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
+                    className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-slate-900"
                     value={loginData.username}
-                    onChange={(e) => setLoginData({ ...loginData, username: e.target.value })}
+                    onChange={(e) => {
+                      console.log('Dropdown selection changed to:', e.target.value);
+                      setLoginData({ ...loginData, username: e.target.value });
+                    }}
                   >
                     <option value="">Choose a user...</option>
                     {availableUsers.map((user, index) => (
@@ -9324,7 +9327,10 @@ function App() {
                     <button 
                       type="button"
                       className="ml-1 text-blue-600 hover:text-blue-800 underline"
-                      onClick={() => setUseDropdown(false)}
+                      onClick={() => {
+                        console.log('Switching to manual input');
+                        setUseDropdown(false);
+                      }}
                     >
                       Type username manually
                     </button>
