@@ -1431,6 +1431,8 @@ function App() {
     setShowOCRReviewDialog(false);
     setSelectedFile(null);
     setCurrentClient(null);
+    setProcessedFileCount(0);
+    setTotalFileCount(0);
   };
 
   // Handle file selection for OCR (multiple files)
