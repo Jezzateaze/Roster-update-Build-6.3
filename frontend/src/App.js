@@ -1202,6 +1202,7 @@ function App() {
     setExtractedClientData(null);
     setShowOCRReviewDialog(false);
     setSelectedFile(null);
+    setCurrentClient(null);
   };
 
   // Handle file selection for OCR
