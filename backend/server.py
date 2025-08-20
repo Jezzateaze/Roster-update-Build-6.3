@@ -556,7 +556,7 @@ def calculate_ndis_charges(roster_entry: RosterEntry, settings: Settings, shift_
             roster_entry.ndis_hourly_charge = default_rate["rate"]
             roster_entry.ndis_shift_charge = 0.0
             roster_entry.ndis_total_charge = roster_entry.hours_worked * default_rate["rate"]
-            roster_entry.ndis_line_item_code = default_rate["code"]
+            roster_entry.ndis_line_item_code = default_rate["line_item_code"]
             roster_entry.ndis_description = default_rate["description"]
     
     return roster_entry
