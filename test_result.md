@@ -167,15 +167,18 @@ backend:
 
   - task: "Enhanced Add Availability with Staff Selection"
     implemented: true
-    working: "NA"
+    working: false
     file: "App.js"
-    stuck_count: 0
+    stuck_count: 1
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
         - working: "NA"
           agent: "main"
           comment: "✅ PHASE 4 IMPLEMENTED: Enhanced Add Availability dialog with staff selection for Admin users. Added staff_id field to newAvailability state, created staff dropdown for Admin users to select any active staff member, updated createStaffAvailability function with validation and proper staff_id handling (auto for staff users, selected for admin), added form validation to ensure required fields are filled, enhanced dialog title and button text. Admin can now create availability records for any staff member across all availability types (Available, Unavailable, Time Off Request, Preferred Shifts)."
+        - working: false
+          agent: "testing"
+          comment: "🎯 COMPREHENSIVE TESTING COMPLETED - MIXED RESULTS: Enhanced Add Availability functionality partially working with critical validation issue found. ✅ WORKING FEATURES: 1) Admin Staff Selection: Admin can successfully create availability records for any staff member - tested all 4 availability types (Available, Unavailable, Time Off Request, Preferred Shifts) with different staff members, all records created successfully with correct staff_id and staff_name assignment, 2) API Endpoint Functionality: POST /api/staff-availability endpoint working correctly, GET /api/staff-availability returns records with proper role-based filtering (admin sees all records, tested 5 records found), PUT and DELETE operations functional for admin users, 3) Staff Authentication: Staff login working (tested rose/888888 successful), staff role and staff_id properly assigned in user data, 4) Role-Based Access: Admin can access all availability records across multiple staff members. ❌ CRITICAL ISSUE FOUND: Backend validation not enforcing required staff selection - Admin was able to create availability record with empty staff_id and staff_name (should return 422 validation error but returned 200 success). This could cause data integrity issues and frontend display problems. ⚠️ PARTIAL TESTING: Could not fully test staff auto-assignment functionality due to some staff login failures (chanelle/888888 failed with 401), but rose/888888 login successful confirming staff authentication system working. RECOMMENDATION: Fix backend validation in POST /api/staff-availability to require non-empty staff_id for all users."
 
   - task: "Enhanced Availability Layout with Tabbed Views"
     implemented: false
