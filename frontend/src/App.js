@@ -6161,6 +6161,193 @@ function App() {
                 </div>
               </div>
 
+              <Separator />
+
+              {/* NDIS Charge Rates Section - Admin Only */}
+              {isAdmin() && (
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold">NDIS Charge Rates (Per Hour)</h3>
+                  <div className="bg-amber-50 p-3 rounded-lg border border-amber-200">
+                    <p className="text-sm text-amber-800">
+                      <strong>Note:</strong> These rates are charged to NDIS for client billing and are displayed to Admin users only. Staff see their regular pay rates.
+                    </p>
+                  </div>
+                  <div className="grid grid-cols-1 gap-4">
+                    {settings.ndis_charge_rates && Object.entries(settings.ndis_charge_rates).map(([key, rateInfo]) => (
+                      <div key={key} className="border rounded-lg p-4 bg-slate-50">
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                          <div>
+                            <Label className="text-sm font-medium">Line Item Code</Label>
+                            <Input
+                              type="text"
+                              value={rateInfo.line_item_code || ''}
+                              disabled={!isAdmin()}
+                              readOnly={!isAdmin()}
+                              onChange={(e) => {
+                                const newSettings = {
+                                  ...settings,
+                                  ndis_charge_rates: {
+                                    ...settings.ndis_charge_rates,
+                                    [key]: {
+                                      ...rateInfo,
+                                      line_item_code: e.target.value
+                                    }
+                                  }
+                                };
+                                setSettings(newSettings);
+                              }}
+                              className="mt-1"
+                            />
+                          </div>
+                          <div>
+                            <Label className="text-sm font-medium">Description</Label>
+                            <Input
+                              type="text"
+                              value={rateInfo.description || ''}
+                              disabled={!isAdmin()}
+                              readOnly={!isAdmin()}
+                              onChange={(e) => {
+                                const newSettings = {
+                                  ...settings,
+                                  ndis_charge_rates: {
+                                    ...settings.ndis_charge_rates,
+                                    [key]: {
+                                      ...rateInfo,
+                                      description: e.target.value
+                                    }
+                                  }
+                                };
+                                setSettings(newSettings);
+                              }}
+                              className="mt-1"
+                            />
+                          </div>
+                          <div>
+                            <Label className="text-sm font-medium">Rate per Hour</Label>
+                            <div className="flex items-center space-x-2 mt-1">
+                              <span className="text-sm">$</span>
+                              <Input
+                                type="number"
+                                step="0.01"
+                                min="0"
+                                value={rateInfo.rate || 0}
+                                disabled={!isAdmin()}
+                                readOnly={!isAdmin()}
+                                onChange={(e) => {
+                                  const newSettings = {
+                                    ...settings,
+                                    ndis_charge_rates: {
+                                      ...settings.ndis_charge_rates,
+                                      [key]: {
+                                        ...rateInfo,
+                                        rate: parseFloat(e.target.value) || 0
+                                      }
+                                    }
+                                  };
+                                  setSettings(newSettings);
+                                }}
+                              />
+                            </div>
+                          </div>
+                        </div>
+                        <div className="mt-2">
+                          <p className="text-xs text-slate-600">
+                            <strong>Shift Type:</strong> {key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  
+                  {/* NDIS Sleepover Rates */}
+                  {settings.ndis_charge_rates && settings.ndis_charge_rates.sleepover_default && (
+                    <div className="border rounded-lg p-4 bg-blue-50 border-blue-200">
+                      <h4 className="text-sm font-semibold text-blue-800 mb-3">NDIS Sleepover Charges</h4>
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div>
+                          <Label className="text-sm font-medium">Line Item Code</Label>
+                          <Input
+                            type="text"
+                            value={settings.ndis_charge_rates.sleepover_default.line_item_code || ''}
+                            disabled={!isAdmin()}
+                            readOnly={!isAdmin()}
+                            onChange={(e) => {
+                              const newSettings = {
+                                ...settings,
+                                ndis_charge_rates: {
+                                  ...settings.ndis_charge_rates,
+                                  sleepover_default: {
+                                    ...settings.ndis_charge_rates.sleepover_default,
+                                    line_item_code: e.target.value
+                                  }
+                                }
+                              };
+                              setSettings(newSettings);
+                            }}
+                            className="mt-1"
+                          />
+                        </div>
+                        <div>
+                          <Label className="text-sm font-medium">Description</Label>
+                          <Input
+                            type="text"
+                            value={settings.ndis_charge_rates.sleepover_default.description || ''}
+                            disabled={!isAdmin()}
+                            readOnly={!isAdmin()}
+                            onChange={(e) => {
+                              const newSettings = {
+                                ...settings,
+                                ndis_charge_rates: {
+                                  ...settings.ndis_charge_rates,
+                                  sleepover_default: {
+                                    ...settings.ndis_charge_rates.sleepover_default,
+                                    description: e.target.value
+                                  }
+                                }
+                              };
+                              setSettings(newSettings);
+                            }}
+                            className="mt-1"
+                          />
+                        </div>
+                        <div>
+                          <Label className="text-sm font-medium">Rate per Shift</Label>
+                          <div className="flex items-center space-x-2 mt-1">
+                            <span className="text-sm">$</span>
+                            <Input
+                              type="number"
+                              step="0.01"
+                              min="0"
+                              value={settings.ndis_charge_rates.sleepover_default.rate || 0}
+                              disabled={!isAdmin()}
+                              readOnly={!isAdmin()}
+                              onChange={(e) => {
+                                const newSettings = {
+                                  ...settings,
+                                  ndis_charge_rates: {
+                                    ...settings.ndis_charge_rates,
+                                    sleepover_default: {
+                                      ...settings.ndis_charge_rates.sleepover_default,
+                                      rate: parseFloat(e.target.value) || 0
+                                    }
+                                  }
+                                };
+                                setSettings(newSettings);
+                              }}
+                            />
+                          </div>
+                        </div>
+                      </div>
+                      <p className="text-xs text-blue-700 mt-2">
+                        <strong>Note:</strong> Sleepover charges are per-shift based, not hourly
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              <Separator />
+
               <div className="flex justify-end space-x-2">
                 <Button variant="outline" onClick={() => setShowSettingsDialog(false)}>
                   {isAdmin() ? 'Cancel' : 'Close'}
