@@ -30,28 +30,49 @@
   touch-action: pan-y;
 }
 
-/* Enhanced calendar cells - responsive and adaptive */
+/* Enhanced calendar cells - dynamic content-based sizing */
 .calendar-cell {
-  min-height: 200px;
   position: relative;
+  display: flex;
+  flex-direction: column;
 }
 
 .calendar-cell-content {
   overflow: visible;
-  max-height: none;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
 }
 
-/* Calendar grid optimization - responsive */
+/* Calendar grid optimization - dynamic sizing */
 .calendar-grid {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
   gap: 0;
-  min-height: 200px;
 }
 
 .calendar-grid > div {
-  min-height: 200px;
+  min-height: 120px; /* Base minimum height */
   flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Dynamic calendar day container - expands with content */
+.calendar-day-container {
+  display: flex;
+  flex-direction: column;
+  min-height: 120px;
+  padding-bottom: 2rem; /* Space for totals bar */
+}
+
+/* Calendar day content area - grows with shifts */
+.calendar-day-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  overflow: visible;
 }
 
 /* Mobile Responsive Calendar Improvements */
@@ -65,21 +86,19 @@
     opacity: 1 !important;
   }
   
-  /* Optimized calendar cells for mobile */
-  .calendar-grid > div {
-    min-height: 120px; /* Reduced from 180px for better mobile view */
-    padding: 0.5rem; /* Add proper padding */
+  /* Mobile calendar day container */
+  .calendar-day-container {
+    min-height: 100px;
+    padding-bottom: 1.5rem; /* Smaller space for mobile totals */
   }
   
-  /* Mobile calendar day content optimization */
-  .calendar-day-mobile {
-    overflow-y: auto;
-    max-height: 120px;
+  .calendar-grid > div {
+    min-height: 100px;
   }
   
   /* Mobile shift entry improvements */
   .shift-entry-mobile {
-    font-size: 0.6rem; /* Smaller text for mobile */
+    font-size: 0.6rem;
     padding: 0.25rem;
     margin: 0.125rem 0;
     line-height: 1.2;
@@ -95,13 +114,13 @@
 
 /* Extra small screens (iPhone SE, etc.) */
 @media (max-width: 375px) {
-  .calendar-grid > div {
-    min-height: 100px; /* Even smaller for very small screens */
-    padding: 0.25rem;
+  .calendar-day-container {
+    min-height: 80px;
+    padding-bottom: 1.25rem;
   }
   
-  .calendar-day-mobile {
-    max-height: 100px;
+  .calendar-grid > div {
+    min-height: 80px;
   }
   
   .shift-entry-mobile {
@@ -112,8 +131,25 @@
 
 /* Tablet improvements */
 @media (min-width: 769px) and (max-width: 1024px) {
+  .calendar-day-container {
+    min-height: 110px;
+    padding-bottom: 1.75rem;
+  }
+  
   .calendar-grid > div {
-    min-height: 150px; /* Medium size for tablets */
+    min-height: 110px;
+  }
+}
+
+/* Large screens */
+@media (min-width: 1025px) {
+  .calendar-day-container {
+    min-height: 140px;
+    padding-bottom: 2rem;
+  }
+  
+  .calendar-grid > div {
+    min-height: 140px;
   }
 }
 
