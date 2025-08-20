@@ -1,6 +1,7 @@
-from fastapi import FastAPI, HTTPException, Depends
+from fastapi import FastAPI, HTTPException, Depends, UploadFile, File, Form
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from fastapi.responses import JSONResponse
 from pymongo import MongoClient
 from pydantic import BaseModel
 from typing import List, Optional, Dict, Any
@@ -10,6 +11,18 @@ import uuid
 import hashlib
 import secrets
 from enum import Enum
+import asyncio
+import tempfile
+from pathlib import Path
+
+# OCR-related imports
+import cv2
+import numpy as np
+import pytesseract
+from pdf2image import convert_from_path
+from PIL import Image, ImageEnhance
+import magic
+import logging
 
 # Database setup
 MONGO_URL = os.environ.get("MONGO_URL", "mongodb://localhost:27017")
