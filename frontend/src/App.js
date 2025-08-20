@@ -3783,6 +3783,8 @@ function App() {
                   </div>
                   <Button
                     variant="outline"
+                    size="sm"
+                    className="text-xs sm:text-sm px-2 sm:px-3 py-1.5 whitespace-nowrap"
                     onClick={() => {
                       setNewEvent({
                         ...newEvent,
@@ -3791,32 +3793,39 @@ function App() {
                       setShowEventDialog(true);
                     }}
                   >
-                    <Plus className="w-4 h-4 mr-2" />
-                    Add Event
+                    <Plus className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+                    <span className="hidden sm:inline">Add Event</span>
+                    <span className="sm:hidden">Add</span>
                   </Button>
                 </div>
               </CardContent>
             </Card>
 
-            {/* Month Navigation */}
+            {/* Month Navigation - Mobile Responsive */}
             <Card>
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-4">
+              <CardContent className="p-3 sm:p-6">
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-0 month-navigation">
+                  <div className="flex items-center space-x-2 sm:space-x-4 w-full sm:w-auto justify-center sm:justify-start">
                     <Button
                       variant="outline"
+                      size="sm"
+                      className="text-xs sm:text-sm px-2 sm:px-3 py-1.5"
                       onClick={() => navigateMonth(-1)}
                     >
-                      Previous Month
+                      <span className="sm:hidden">← Prev</span>
+                      <span className="hidden sm:inline">Previous Month</span>
                     </Button>
-                    <h2 className="text-2xl font-bold text-slate-800">
+                    <h2 className="text-lg sm:text-2xl font-bold text-slate-800 text-center sm:text-left">
                       {currentDate.toLocaleString('default', { month: 'long', year: 'numeric' })}
                     </h2>
                     <Button
                       variant="outline"
+                      size="sm"
+                      className="text-xs sm:text-sm px-2 sm:px-3 py-1.5"
                       onClick={() => navigateMonth(1)}
                     >
-                      Next Month
+                      <span className="sm:hidden">Next →</span>
+                      <span className="hidden sm:inline">Next Month</span>
                     </Button>
                   </div>
                   <div className="space-y-3">
