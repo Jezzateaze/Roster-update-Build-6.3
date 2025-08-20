@@ -2175,6 +2175,26 @@ async def delete_staff_availability(availability_id: str, current_user: dict = D
     
     return {"message": "Availability record deleted"}
 
+@app.delete("/api/staff-availability")
+async def clear_all_staff_availability(current_user: dict = Depends(get_current_user)):
+    """Clear all staff availability records (Admin only)"""
+    if current_user["role"] != "admin":
+        raise HTTPException(status_code=403, detail="Admin access required")
+    
+    # Count existing active records
+    existing_count = db.staff_availability.count_documents({"is_active": True})
+    
+    # Soft delete all availability records
+    result = db.staff_availability.update_many(
+        {"is_active": True},
+        {"$set": {"is_active": False, "deleted_at": datetime.utcnow()}}
+    )
+    
+    return {
+        "message": f"Cleared {result.modified_count} staff availability records successfully",
+        "cleared_count": result.modified_count
+    }
+
 @app.post("/api/admin/sync_staff_users")
 async def sync_staff_users(current_user: dict = Depends(get_current_user)):
     """Create missing user accounts for all active staff members (Admin only)"""
