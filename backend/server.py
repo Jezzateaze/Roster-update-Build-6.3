@@ -456,6 +456,7 @@ UPLOAD_DIR.mkdir(exist_ok=True)
 
 ALLOWED_EXTENSIONS = {
     'image/jpeg', 'image/jpg', 'image/png', 'image/tiff', 'image/bmp',
+    'image/heif', 'image/heic', 'image/heif-sequence', 'image/heic-sequence',
     'application/pdf'
 }
 MAX_FILE_SIZE = 50 * 1024 * 1024  # 50MB
