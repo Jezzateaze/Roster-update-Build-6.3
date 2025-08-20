@@ -378,6 +378,14 @@ def determine_shift_type_with_context(date_str: str, start_time: str, end_time: 
         else:
             return ShiftType.WEEKDAY_NIGHT
     
+    # Special handling for shifts starting exactly at midnight (00:00)
+    if start_hour == 0 and start_min == 0:
+        # Shifts starting at midnight should be classified based on end time
+        if end_hour >= 6:
+            return ShiftType.WEEKDAY_DAY
+        else:
+            return ShiftType.WEEKDAY_NIGHT
+    
     # Original logic for regular shifts and first segments of cross-midnight shifts
     # Night: starts before 6am OR ends after midnight
     if start_hour < 6 or end_minutes > 24 * 60:
