@@ -350,16 +350,29 @@ code {
   color: #dc2626;
 }
 
-/* Calendar specific styles - enhanced for mobile responsiveness */
+/* Calendar specific styles - dynamic expansion with content */
 .calendar-day {
-  min-height: 120px;
   border: 1px solid #e2e8f0;
   transition: all 0.2s ease;
+  display: flex;
+  flex-direction: column;
 }
 
 .calendar-day:hover {
   background-color: #f8fafc;
   border-color: #cbd5e1;
+}
+
+/* Daily totals positioning - always at bottom, never overlapping */
+.daily-totals-bar {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: rgba(248, 250, 252, 0.95);
+  border-top: 1px solid #e2e8f0;
+  backdrop-filter: blur(4px);
+  z-index: 10;
 }
 
 /* Shift badge improvements for mobile */
