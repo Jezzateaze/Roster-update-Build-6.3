@@ -9948,6 +9948,396 @@ function App() {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Client Profile Add/Edit Dialog */}
+      <Dialog open={showClientDialog} onOpenChange={setShowClientDialog}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-bold text-slate-800">
+              {editingClient ? '✏️ Edit Client Profile' : '👤 Add New Client Profile'}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-6 pt-4">
+            
+            {/* Basic Information */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold text-slate-700">📋 Basic Information</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label>Full Name *</Label>
+                  <Input
+                    value={editingClient ? editingClient.full_name : newClient.full_name}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      if (editingClient) {
+                        setEditingClient({...editingClient, full_name: value});
+                      } else {
+                        setNewClient({...newClient, full_name: value});
+                      }
+                    }}
+                    placeholder="Full name"
+                  />
+                </div>
+                <div>
+                  <Label>Date of Birth *</Label>
+                  <Input
+                    value={editingClient ? editingClient.date_of_birth : newClient.date_of_birth}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      if (editingClient) {
+                        setEditingClient({...editingClient, date_of_birth: value});
+                      } else {
+                        setNewClient({...newClient, date_of_birth: value});
+                      }
+                    }}
+                    placeholder="DD/MM/YYYY"
+                  />
+                </div>
+                <div>
+                  <Label>Sex *</Label>
+                  <Select
+                    value={editingClient ? editingClient.sex : newClient.sex}
+                    onValueChange={(value) => {
+                      if (editingClient) {
+                        setEditingClient({...editingClient, sex: value});
+                      } else {
+                        setNewClient({...newClient, sex: value});
+                      }
+                    }}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Male">Male</SelectItem>
+                      <SelectItem value="Female">Female</SelectItem>
+                      <SelectItem value="Other">Other</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label>Mobile *</Label>
+                  <Input
+                    value={editingClient ? editingClient.mobile : newClient.mobile}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      if (editingClient) {
+                        setEditingClient({...editingClient, mobile: value});
+                      } else {
+                        setNewClient({...newClient, mobile: value});
+                      }
+                    }}
+                    placeholder="Mobile number"
+                  />
+                </div>
+              </div>
+              
+              <div>
+                <Label>Disability or Medical Condition *</Label>
+                <Input
+                  value={editingClient ? editingClient.disability_condition : newClient.disability_condition}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    if (editingClient) {
+                      setEditingClient({...editingClient, disability_condition: value});
+                    } else {
+                      setNewClient({...newClient, disability_condition: value});
+                    }
+                  }}
+                  placeholder="Primary disability or medical condition"
+                />
+              </div>
+              
+              <div>
+                <Label>Address *</Label>
+                <Input
+                  value={editingClient ? editingClient.address : newClient.address}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    if (editingClient) {
+                      setEditingClient({...editingClient, address: value});
+                    } else {
+                      setNewClient({...newClient, address: value});
+                    }
+                  }}
+                  placeholder="Full address"
+                />
+              </div>
+            </div>
+
+            {/* Emergency Contacts */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold text-slate-700">🚨 Emergency Contacts</h3>
+              {(editingClient ? editingClient.emergency_contacts : newClient.emergency_contacts).map((contact, index) => (
+                <div key={index} className="p-4 border rounded-lg space-y-3">
+                  <div className="flex items-center justify-between">
+                    <h4 className="font-medium">Emergency Contact {index + 1}</h4>
+                    {index > 0 && (
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        onClick={() => {
+                          const contacts = editingClient ? [...editingClient.emergency_contacts] : [...newClient.emergency_contacts];
+                          contacts.splice(index, 1);
+                          if (editingClient) {
+                            setEditingClient({...editingClient, emergency_contacts: contacts});
+                          } else {
+                            setNewClient({...newClient, emergency_contacts: contacts});
+                          }
+                        }}
+                      >
+                        Remove
+                      </Button>
+                    )}
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div>
+                      <Label>Name</Label>
+                      <Input
+                        value={contact.name}
+                        onChange={(e) => {
+                          const contacts = editingClient ? [...editingClient.emergency_contacts] : [...newClient.emergency_contacts];
+                          contacts[index].name = e.target.value;
+                          if (editingClient) {
+                            setEditingClient({...editingClient, emergency_contacts: contacts});
+                          } else {
+                            setNewClient({...newClient, emergency_contacts: contacts});
+                          }
+                        }}
+                        placeholder="Contact name"
+                      />
+                    </div>
+                    <div>
+                      <Label>Relationship</Label>
+                      <Input
+                        value={contact.relationship}
+                        onChange={(e) => {
+                          const contacts = editingClient ? [...editingClient.emergency_contacts] : [...newClient.emergency_contacts];
+                          contacts[index].relationship = e.target.value;
+                          if (editingClient) {
+                            setEditingClient({...editingClient, emergency_contacts: contacts});
+                          } else {
+                            setNewClient({...newClient, emergency_contacts: contacts});
+                          }
+                        }}
+                        placeholder="e.g., Mother, Father, Sibling"
+                      />
+                    </div>
+                    <div>
+                      <Label>Mobile</Label>
+                      <Input
+                        value={contact.mobile}
+                        onChange={(e) => {
+                          const contacts = editingClient ? [...editingClient.emergency_contacts] : [...newClient.emergency_contacts];
+                          contacts[index].mobile = e.target.value;
+                          if (editingClient) {
+                            setEditingClient({...editingClient, emergency_contacts: contacts});
+                          } else {
+                            setNewClient({...newClient, emergency_contacts: contacts});
+                          }
+                        }}
+                        placeholder="Mobile number"
+                      />
+                    </div>
+                    <div>
+                      <Label>Address</Label>
+                      <Input
+                        value={contact.address}
+                        onChange={(e) => {
+                          const contacts = editingClient ? [...editingClient.emergency_contacts] : [...newClient.emergency_contacts];
+                          contacts[index].address = e.target.value;
+                          if (editingClient) {
+                            setEditingClient({...editingClient, emergency_contacts: contacts});
+                          } else {
+                            setNewClient({...newClient, emergency_contacts: contacts});
+                          }
+                        }}
+                        placeholder="Full address"
+                      />
+                    </div>
+                  </div>
+                </div>
+              ))}
+              
+              <Button
+                variant="outline"
+                onClick={() => {
+                  const contacts = editingClient ? [...editingClient.emergency_contacts] : [...newClient.emergency_contacts];
+                  contacts.push({ name: '', relationship: '', mobile: '', address: '' });
+                  if (editingClient) {
+                    setEditingClient({...editingClient, emergency_contacts: contacts});
+                  } else {
+                    setNewClient({...newClient, emergency_contacts: contacts});
+                  }
+                }}
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Add Emergency Contact
+              </Button>
+            </div>
+
+            {/* Dialog Actions */}
+            <div className="flex justify-end space-x-2 pt-4 border-t">
+              <Button 
+                variant="outline" 
+                onClick={() => {
+                  setShowClientDialog(false);
+                  setEditingClient(null);
+                }}
+              >
+                Cancel
+              </Button>
+              <Button 
+                onClick={() => {
+                  const clientData = editingClient || newClient;
+                  if (editingClient) {
+                    updateClientProfile(editingClient.id, clientData);
+                  } else {
+                    createClientProfile(clientData);
+                  }
+                }}
+              >
+                {editingClient ? 'Update Client' : 'Create Client'}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Client Profile View Dialog */}
+      <Dialog open={showClientProfileDialog} onOpenChange={setShowClientProfileDialog}>
+        <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-bold text-slate-800">
+              👤 {selectedClient?.full_name} - Complete Profile
+            </DialogTitle>
+          </DialogHeader>
+          {selectedClient && (
+            <div className="space-y-6 pt-4">
+              
+              {/* Client Information Summary */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold text-slate-700">📋 Personal Information</h3>
+                  <div className="space-y-2 text-sm">
+                    <div><strong>Full Name:</strong> {selectedClient.full_name}</div>
+                    <div><strong>Date of Birth:</strong> {selectedClient.date_of_birth} {selectedClient.age && `(Age: ${selectedClient.age})`}</div>
+                    <div><strong>Sex:</strong> {selectedClient.sex}</div>
+                    <div><strong>Condition:</strong> {selectedClient.disability_condition}</div>
+                    <div><strong>Mobile:</strong> {selectedClient.mobile}</div>
+                    <div><strong>Address:</strong> {selectedClient.address}</div>
+                  </div>
+                </div>
+
+                {/* Emergency Contacts */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold text-slate-700">🚨 Emergency Contacts</h3>
+                  {selectedClient.emergency_contacts && selectedClient.emergency_contacts.length > 0 ? (
+                    <div className="space-y-3">
+                      {selectedClient.emergency_contacts.map((contact, index) => (
+                        <div key={index} className="p-3 bg-red-50 rounded-lg border text-sm">
+                          <div className="font-semibold">{contact.name}</div>
+                          <div><strong>Relationship:</strong> {contact.relationship}</div>
+                          <div><strong>Mobile:</strong> {contact.mobile}</div>
+                          <div><strong>Address:</strong> {contact.address}</div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-gray-500 text-sm">No emergency contacts on file</p>
+                  )}
+                </div>
+              </div>
+
+              {/* NDIS Plan Information - Admin/Supervisor Only */}
+              {(isAdmin() || (currentUser && currentUser.role === 'supervisor')) && selectedClient.current_ndis_plan && (
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold text-slate-700">💼 NDIS Plan Details</h3>
+                  
+                  {/* Plan Overview */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-3">
+                      <h4 className="font-semibold text-slate-600">Plan Information</h4>
+                      <div className="space-y-2 text-sm">
+                        <div><strong>Plan Type:</strong> {selectedClient.current_ndis_plan.plan_type}</div>
+                        <div><strong>NDIS Number:</strong> {selectedClient.current_ndis_plan.ndis_number}</div>
+                        <div><strong>Plan Period:</strong> {selectedClient.current_ndis_plan.plan_start_date} to {selectedClient.current_ndis_plan.plan_end_date}</div>
+                        <div><strong>Management:</strong> {selectedClient.current_ndis_plan.plan_management?.replace(/_/g, ' ')}</div>
+                      </div>
+                    </div>
+
+                    {/* Plan Manager Details */}
+                    {selectedClient.current_ndis_plan.plan_manager && (
+                      <div className="space-y-3">
+                        <h4 className="font-semibold text-slate-600">Plan Manager</h4>
+                        <div className="space-y-2 text-sm">
+                          <div><strong>Provider:</strong> {selectedClient.current_ndis_plan.plan_manager.provider_name}</div>
+                          <div><strong>Contact Person:</strong> {selectedClient.current_ndis_plan.plan_manager.contact_person}</div>
+                          <div><strong>Phone:</strong> {selectedClient.current_ndis_plan.plan_manager.phone}</div>
+                          <div><strong>Email:</strong> {selectedClient.current_ndis_plan.plan_manager.email}</div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Funding Categories */}
+                  {selectedClient.current_ndis_plan.funding_categories && selectedClient.current_ndis_plan.funding_categories.length > 0 && (
+                    <div className="space-y-4">
+                      <h4 className="font-semibold text-slate-600">💰 Funding Categories</h4>
+                      <div className="grid gap-4">
+                        {selectedClient.current_ndis_plan.funding_categories.map((category, index) => (
+                          <div key={index} className="p-4 border rounded-lg bg-blue-50">
+                            <div className="flex items-center justify-between mb-2">
+                              <h5 className="font-semibold text-blue-800">{category.category_name}</h5>
+                              <Badge className="bg-blue-100 text-blue-800">
+                                {category.funding_period?.replace(/_/g, ' ')}
+                              </Badge>
+                            </div>
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-sm">
+                              <div>
+                                <strong>Total:</strong> ${category.total_amount?.toLocaleString() || '0'}
+                              </div>
+                              <div>
+                                <strong>Spent:</strong> ${category.spent_amount?.toLocaleString() || '0'}
+                              </div>
+                              <div>
+                                <strong>Remaining:</strong> ${((category.total_amount || 0) - (category.spent_amount || 0)).toLocaleString()}
+                              </div>
+                            </div>
+                            {category.description && (
+                              <div className="mt-2 text-xs text-blue-700">
+                                <strong>Description:</strong> {category.description}
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Dialog Actions */}
+              <div className="flex justify-end space-x-2 pt-4 border-t">
+                <Button variant="outline" onClick={() => setShowClientProfileDialog(false)}>
+                  Close
+                </Button>
+                {isAdmin() && (
+                  <Button 
+                    onClick={() => {
+                      setEditingClient(selectedClient);
+                      setShowClientProfileDialog(false);
+                      setShowClientDialog(true);
+                    }}
+                  >
+                    Edit Profile
+                  </Button>
+                )}
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
       
     </div>
   );
