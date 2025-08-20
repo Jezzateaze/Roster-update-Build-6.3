@@ -776,24 +776,52 @@ async def validate_and_save_file(file: UploadFile) -> Path:
     if len(file_content) > MAX_FILE_SIZE:
         raise HTTPException(status_code=413, detail="File too large (max 50MB)")
     
-    # Validate file type - check both MIME type and file extension for HEIF
+    # Validate file type - enhanced for mobile/iOS compatibility
     file_type = magic.from_buffer(file_content[:1024], mime=True)
     file_extension = Path(file.filename).suffix.lower() if file.filename else ''
     
-    # Special handling for HEIF files (MIME detection can be inconsistent)
+    logging.info(f"File validation: {file.filename}, MIME: {file_type}, Extension: {file_extension}")
+    
+    # Enhanced PDF validation for iOS/mobile compatibility
+    is_pdf_by_extension = file_extension in ['.pdf']
+    is_pdf_by_mime = file_type in ['application/pdf']
+    is_pdf_by_content = file_content[:4] == b'%PDF'  # PDF magic bytes
+    
+    # iOS Safari sometimes sends PDFs with generic MIME types
+    ios_pdf_mimes = [
+        'application/octet-stream',  # Common iOS Safari behavior
+        'application/binary',
+        'application/download',
+        'text/plain'  # Sometimes iOS sends this for PDFs
+    ]
+    is_pdf_ios = file_type in ios_pdf_mimes and is_pdf_by_extension and is_pdf_by_content
+    
+    # HEIF/HEIC validation (already implemented)
     is_heif_by_extension = file_extension in ['.heif', '.heic']
     is_heif_by_mime = file_type in ['image/heif', 'image/heic', 'image/heif-sequence', 'image/heic-sequence']
     
-    if not (file_type in ALLOWED_EXTENSIONS or is_heif_by_extension or is_heif_by_mime):
-        # For HEIF files, sometimes MIME detection returns generic types
-        if is_heif_by_extension:
-            # Accept HEIF by extension even if MIME type is not detected correctly
-            pass
-        else:
-            raise HTTPException(
-                status_code=400, 
-                detail=f"Unsupported file type: {file_type} (extension: {file_extension}). Supported formats: PDF, JPG, PNG, TIFF, BMP, HEIF/HEIC"
+    # Check if file is valid
+    valid_file = (
+        file_type in ALLOWED_EXTENSIONS or  # Standard MIME types
+        is_pdf_by_extension and (is_pdf_by_mime or is_pdf_by_content or is_pdf_ios) or  # PDF validation
+        is_heif_by_extension or is_heif_by_mime  # HEIF validation
+    )
+    
+    if not valid_file:
+        error_detail = (
+            f"Unsupported file type: {file_type} (extension: {file_extension}). "
+            f"Supported formats: PDF, JPG, PNG, TIFF, BMP, HEIF/HEIC. "
+        )
+        
+        # Add specific guidance for PDF issues
+        if file_extension == '.pdf':
+            error_detail += (
+                "PDF file detected by extension but content validation failed. "
+                "Please ensure the file is a valid PDF document."
             )
+        
+        logging.error(f"File validation failed: {error_detail}")
+        raise HTTPException(status_code=400, detail=error_detail)
     
     # Save file with timestamp
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -803,7 +831,7 @@ async def validate_and_save_file(file: UploadFile) -> Path:
     with open(file_path, 'wb') as buffer:
         buffer.write(file_content)
     
-    logging.info(f"Saved uploaded file: {safe_filename} (type: {file_type}, extension: {file_extension})")
+    logging.info(f"Successfully saved file: {safe_filename} (MIME: {file_type}, Extension: {file_extension}, PDF checks: mime={is_pdf_by_mime}, content={is_pdf_by_content}, ios={is_pdf_ios})")
     
     return file_path
 
