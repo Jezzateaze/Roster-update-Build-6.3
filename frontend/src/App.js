@@ -757,6 +757,63 @@ function App() {
     }
   };
 
+  // Update staff availability (Admin only)
+  const updateStaffAvailability = async (availabilityId, availabilityData) => {
+    try {
+      await axios.put(`${API_BASE_URL}/api/staff-availability/${availabilityId}`, availabilityData, {
+        headers: { 'Authorization': `Bearer ${authToken}` }
+      });
+      alert('✅ Staff availability updated successfully');
+      fetchStaffAvailability();
+      setShowEditStaffAvailabilityDialog(false);
+      setEditingStaffAvailability(null);
+    } catch (error) {
+      console.error('Error updating staff availability:', error);
+      alert(`❌ Error: ${error.response?.data?.detail || error.message}`);
+    }
+  };
+
+  // Delete staff availability (Admin only or own records for staff)
+  const deleteStaffAvailability = async (availabilityId) => {
+    if (!window.confirm('Are you sure you want to delete this availability record?')) {
+      return;
+    }
+    
+    try {
+      await axios.delete(`${API_BASE_URL}/api/staff-availability/${availabilityId}`, {
+        headers: { 'Authorization': `Bearer ${authToken}` }
+      });
+      alert('✅ Availability record deleted successfully');
+      fetchStaffAvailability();
+    } catch (error) {
+      console.error('Error deleting availability:', error);
+      alert(`❌ Error: ${error.response?.data?.detail || error.message}`);
+    }
+  };
+
+  // Clear all staff availability (Admin only)
+  const clearAllStaffAvailability = async () => {
+    if (!window.confirm('Are you sure you want to clear ALL staff availability records? This cannot be undone.')) {
+      return;
+    }
+    
+    try {
+      // Delete all availability records one by one
+      const deletePromises = staffAvailability.map(availability => 
+        axios.delete(`${API_BASE_URL}/api/staff-availability/${availability.id}`, {
+          headers: { 'Authorization': `Bearer ${authToken}` }
+        })
+      );
+      
+      await Promise.all(deletePromises);
+      alert(`✅ Cleared ${staffAvailability.length} availability records successfully`);
+      fetchStaffAvailability();
+    } catch (error) {
+      console.error('Error clearing staff availability:', error);
+      alert(`❌ Error: ${error.response?.data?.detail || error.message}`);
+    }
+  };
+
   // Mark notification as read
   const markNotificationRead = async (notificationId) => {
     try {
