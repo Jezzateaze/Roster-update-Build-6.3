@@ -273,9 +273,9 @@ agent_communication:
 
   - task: "Frontend NDIS Charge Display"
     implemented: true
-    working: true
+    working: false
     file: "App.js"
-    stuck_count: 1
+    stuck_count: 2
     priority: "high"
     needs_retesting: false
     status_history:
@@ -294,6 +294,9 @@ agent_communication:
         - working: true
           agent: "testing"
           comment: "🎯 FINAL COMPREHENSIVE NDIS TESTING COMPLETED - MIXED RESULTS WITH CLEAR FINDINGS! Conducted thorough testing of all NDIS implementation areas as requested in review. ADMIN TESTING RESULTS: ✅ Admin Login (Admin/0000): Working perfectly, ✅ NDIS Amounts in Roster: EXCELLENT - Found 7 different NDIS amounts ($561.84, $619.04, $612.95, $351.15, $494.15, $790.64, $980.72) with 90+ total occurrences across roster views, ✅ Available Unassigned Shifts: WORKING - Found 5 NDIS amounts ($561.84, $309.52, $365.37, $619.04, $612.95) in expected $561-619 range for 8hr shifts as requested, ❌ Daily Totals Rate Type Labels: NOT FOUND - No 'Daily Total (NDIS Charge)' labels detected in interface, ❌ Shift Times Tab NDIS Rates: NOT WORKING - Still showing staff rates ($175.00 sleepover) instead of NDIS rates (~$70-77/hr), no NDIS hourly rates found. STAFF TESTING RESULTS: ⚠️ Staff Login Issues: Technical difficulties with angela/888888 login prevented full staff testing of 'Daily Total (Staff Pay)' labels. CRITICAL ASSESSMENT: 2/5 tests passed (40% success rate). NDIS charges ARE displaying correctly in main roster and unassigned shifts (core functionality working), but rate type labels and Shift Times tab need implementation fixes. The backend NDIS data is properly populated and being fetched correctly - the issue is frontend display logic in specific areas."
+        - working: false
+          agent: "testing"
+          comment: "❌ CRITICAL FINDING: RATE TYPE LABELS NOT WORKING! Comprehensive testing of the latest rate type label implementation reveals that the labels are NOT displaying as expected. ADMIN TESTING (Admin/0000): ✅ Login successful and main interface loaded with NDIS amounts ($561.84, $351.15, $619.04, etc.), ❌ NO 'NDIS Charge' labels found anywhere in the interface (0 instances), ❌ NO 'Daily Total' labels found (0 instances), ❌ NO parenthetical '(NDIS Charge)' labels found (0 instances). STAFF TESTING (angela/888888): ❌ Staff login failed with 401 authentication error, preventing testing of '(Staff Pay)' labels. ROOT CAUSE ANALYSIS: The getRateTypeLabel() function is implemented in the code (lines 2150-2156) and should return 'NDIS Charge' for Admin users and 'Staff Pay' for Staff users, but the labels are not appearing in the UI. This suggests either: 1) The functions are not being called in the daily total display areas, 2) The daily total components are not rendering, or 3) There's a logic issue preventing the labels from showing. IMPACT: Users cannot distinguish between NDIS charges and staff pay rates, which is a critical requirement for the billing system. The rate type labels are essential for proper financial reporting and user understanding. RECOMMENDATION: Main agent needs to investigate why the getRateTypeLabel() function calls are not working in the daily total display components and ensure staff authentication is fixed for complete testing."
 
   - task: "Enhanced Shift Template Editing"
     implemented: true
