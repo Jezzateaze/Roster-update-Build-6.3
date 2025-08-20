@@ -10899,8 +10899,27 @@ function App() {
               <div className="space-y-4">
                 <div className="flex items-center space-x-3">
                   <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500"></div>
-                  <span className="text-sm font-medium">Processing document...</span>
+                  <span className="text-sm font-medium">
+                    {selectedFile && Array.isArray(selectedFile) 
+                      ? `Processing ${selectedFile.length} documents...` 
+                      : 'Processing document...'}
+                  </span>
                 </div>
+                
+                {/* File List */}
+                {selectedFile && Array.isArray(selectedFile) && selectedFile.length > 1 && (
+                  <div className="text-xs text-gray-600">
+                    <p className="font-medium mb-1">Files to process:</p>
+                    <ul className="space-y-1 max-h-20 overflow-y-auto">
+                      {selectedFile.map((file, index) => (
+                        <li key={index} className="flex items-center space-x-2">
+                          <span className="w-2 h-2 bg-blue-400 rounded-full"></span>
+                          <span className="truncate">{file.name}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
                 
                 {/* Progress Bar */}
                 <div className="w-full bg-gray-200 rounded-full h-2">
@@ -10911,6 +10930,11 @@ function App() {
                 </div>
                 <p className="text-xs text-gray-500 text-center">
                   {ocrProgress}% complete
+                  {selectedFile && Array.isArray(selectedFile) && (
+                    <span className="ml-2">
+                      ({Math.ceil((ocrProgress / 100) * selectedFile.length)} of {selectedFile.length} files)
+                    </span>
+                  )}
                 </p>
               </div>
             )}
