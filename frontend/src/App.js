@@ -4625,7 +4625,7 @@ function App() {
                     <span>Client Profile Management</span>
                   </CardTitle>
                   {/* Admin controls */}
-                  {isAdmin() && (
+                  {(isAdmin() || (currentUser && currentUser.role === 'supervisor')) && (
                     <div className="flex space-x-2">
                       <Button onClick={() => {
                         setEditingClient(null);
