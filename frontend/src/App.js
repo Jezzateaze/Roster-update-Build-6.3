@@ -952,6 +952,16 @@ function App() {
   // CLIENT PROFILE MANAGEMENT FUNCTIONS
   // =====================================
 
+  // OCR-related states
+  const [showOCRDialog, setShowOCRDialog] = useState(false);
+  const [ocrProcessing, setOCRProcessing] = useState(false);
+  const [ocrResults, setOCRResults] = useState(null);
+  const [ocrTaskId, setOCRTaskId] = useState(null);
+  const [ocrProgress, setOCRProgress] = useState(0);
+  const [extractedClientData, setExtractedClientData] = useState(null);
+  const [showOCRReviewDialog, setShowOCRReviewDialog] = useState(false);
+  const [selectedFile, setSelectedFile] = useState(null);
+
   // Fetch all clients
   const fetchClients = async () => {
     try {
