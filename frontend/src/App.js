@@ -662,8 +662,93 @@ function App() {
       );
       alert('✅ Shift request rejected');
       fetchShiftRequests();
+      fetchNotifications(); // Refresh notifications
     } catch (error) {
       console.error('Error rejecting shift request:', error);
+      alert(`❌ Error: ${error.response?.data?.detail || error.message}`);
+    }
+  };
+
+  // Edit/Update shift request (Admin only)
+  const updateShiftRequest = async (requestId, requestData) => {
+    try {
+      await axios.put(`${API_BASE_URL}/api/shift-requests/${requestId}`, requestData, {
+        headers: { 'Authorization': `Bearer ${authToken}` }
+      });
+      alert('✅ Shift request updated successfully');
+      fetchShiftRequests();
+      setShowEditShiftRequestDialog(false);
+      setEditingShiftRequest(null);
+    } catch (error) {
+      console.error('Error updating shift request:', error);
+      alert(`❌ Error: ${error.response?.data?.detail || error.message}`);
+    }
+  };
+
+  // Delete shift request (Admin only)  
+  const deleteShiftRequest = async (requestId) => {
+    if (!window.confirm('Are you sure you want to delete this shift request?')) {
+      return;
+    }
+    
+    try {
+      await axios.delete(`${API_BASE_URL}/api/shift-requests/${requestId}`, {
+        headers: { 'Authorization': `Bearer ${authToken}` }
+      });
+      alert('✅ Shift request deleted successfully');
+      fetchShiftRequests();
+    } catch (error) {
+      console.error('Error deleting shift request:', error);
+      alert(`❌ Error: ${error.response?.data?.detail || error.message}`);
+    }
+  };
+
+  // Create new shift request (Admin only)
+  const createShiftRequest = async (requestData) => {
+    try {
+      // Validate required fields
+      if (!requestData.staff_id || !requestData.roster_entry_id) {
+        alert('❌ Please select both a staff member and a shift');
+        return;
+      }
+
+      await axios.post(`${API_BASE_URL}/api/shift-requests`, requestData, {
+        headers: { 'Authorization': `Bearer ${authToken}` }
+      });
+      alert('✅ Shift request created successfully');
+      fetchShiftRequests();
+      setShowAddShiftRequestDialog(false);
+      setNewShiftRequest({
+        staff_id: '',
+        roster_entry_id: '',
+        notes: '',
+        admin_notes: ''
+      });
+    } catch (error) {
+      console.error('Error creating shift request:', error);
+      alert(`❌ Error: ${error.response?.data?.detail || error.message}`);
+    }
+  };
+
+  // Clear all shift requests (Admin only)
+  const clearAllShiftRequests = async () => {
+    if (!window.confirm('Are you sure you want to clear ALL shift requests? This cannot be undone.')) {
+      return;
+    }
+    
+    try {
+      // Delete all shift requests one by one
+      const deletePromises = shiftRequests.map(request => 
+        axios.delete(`${API_BASE_URL}/api/shift-requests/${request.id}`, {
+          headers: { 'Authorization': `Bearer ${authToken}` }
+        })
+      );
+      
+      await Promise.all(deletePromises);
+      alert(`✅ Cleared ${shiftRequests.length} shift requests successfully`);
+      fetchShiftRequests();
+    } catch (error) {
+      console.error('Error clearing shift requests:', error);
       alert(`❌ Error: ${error.response?.data?.detail || error.message}`);
     }
   };
