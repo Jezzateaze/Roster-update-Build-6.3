@@ -2932,6 +2932,9 @@ def initialize_admin():
 # Initialize admin on startup
 initialize_admin()
 
+# Initialize sample client data
+initialize_sample_client()
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8001)
