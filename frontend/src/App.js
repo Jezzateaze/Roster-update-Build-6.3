@@ -10964,11 +10964,39 @@ function App() {
               <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
                 <div className="flex items-center space-x-2 mb-2">
                   <CheckSquare className="w-5 h-5 text-green-600" />
-                  <span className="font-medium text-green-800">Document successfully processed!</span>
+                  <span className="font-medium text-green-800">
+                    {ocrResults?.type === 'multiple' 
+                      ? `${ocrResults.successfulFiles} of ${ocrResults.totalFiles} documents processed successfully!`
+                      : 'Document successfully processed!'}
+                  </span>
                 </div>
                 <p className="text-sm text-green-700">
-                  Confidence Score: {extractedClientData.confidence_score?.toFixed(1) || 0}%
+                  Overall Confidence Score: {extractedClientData.confidence_score?.toFixed(1) || 0}%
                 </p>
+                
+                {/* Multiple files summary */}
+                {ocrResults?.type === 'multiple' && (
+                  <div className="mt-3 space-y-2">
+                    {ocrResults.failedFiles > 0 && (
+                      <p className="text-sm text-orange-700">
+                        ⚠️ {ocrResults.failedFiles} file(s) failed to process
+                      </p>
+                    )}
+                    
+                    {extractedClientData.sources && extractedClientData.sources.length > 1 && (
+                      <div>
+                        <p className="text-sm text-green-700 font-medium">Data sources:</p>
+                        <div className="flex flex-wrap gap-1 mt-1">
+                          {extractedClientData.sources.map((source, index) => (
+                            <span key={index} className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">
+                              📄 {source}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
 
               {/* Extracted Data Preview */}
@@ -10976,25 +11004,50 @@ function App() {
                 <div className="space-y-4">
                   <h3 className="font-semibold text-slate-700">👤 Personal Information</h3>
                   <div className="space-y-3">
-                    <div className="flex justify-between items-center p-2 bg-gray-50 rounded">
+                    <div className="flex justify-between items-start p-2 bg-gray-50 rounded">
                       <span className="text-sm font-medium">Full Name:</span>
-                      <span className="text-sm">{extractedClientData.full_name || 'Not found'}</span>
+                      <div className="text-right">
+                        <span className="text-sm">{extractedClientData.full_name || 'Not found'}</span>
+                        {extractedClientData.fieldSources?.full_name && (
+                          <p className="text-xs text-gray-500 mt-1">📄 {extractedClientData.fieldSources.full_name}</p>
+                        )}
+                      </div>
                     </div>
-                    <div className="flex justify-between items-center p-2 bg-gray-50 rounded">
+                    <div className="flex justify-between items-start p-2 bg-gray-50 rounded">
                       <span className="text-sm font-medium">Date of Birth:</span>
-                      <span className="text-sm">{extractedClientData.date_of_birth || 'Not found'}</span>
+                      <div className="text-right">
+                        <span className="text-sm">{extractedClientData.date_of_birth || 'Not found'}</span>
+                        {extractedClientData.fieldSources?.date_of_birth && (
+                          <p className="text-xs text-gray-500 mt-1">📄 {extractedClientData.fieldSources.date_of_birth}</p>
+                        )}
+                      </div>
                     </div>
-                    <div className="flex justify-between items-center p-2 bg-gray-50 rounded">
+                    <div className="flex justify-between items-start p-2 bg-gray-50 rounded">
                       <span className="text-sm font-medium">Address:</span>
-                      <span className="text-sm text-right">{extractedClientData.address || 'Not found'}</span>
+                      <div className="text-right">
+                        <span className="text-sm text-right">{extractedClientData.address || 'Not found'}</span>
+                        {extractedClientData.fieldSources?.address && (
+                          <p className="text-xs text-gray-500 mt-1">📄 {extractedClientData.fieldSources.address}</p>
+                        )}
+                      </div>
                     </div>
-                    <div className="flex justify-between items-center p-2 bg-gray-50 rounded">
+                    <div className="flex justify-between items-start p-2 bg-gray-50 rounded">
                       <span className="text-sm font-medium">Mobile:</span>
-                      <span className="text-sm">{extractedClientData.mobile || 'Not found'}</span>
+                      <div className="text-right">
+                        <span className="text-sm">{extractedClientData.mobile || 'Not found'}</span>
+                        {extractedClientData.fieldSources?.mobile && (
+                          <p className="text-xs text-gray-500 mt-1">📄 {extractedClientData.fieldSources.mobile}</p>
+                        )}
+                      </div>
                     </div>
-                    <div className="flex justify-between items-center p-2 bg-gray-50 rounded">
+                    <div className="flex justify-between items-start p-2 bg-gray-50 rounded">
                       <span className="text-sm font-medium">Disability:</span>
-                      <span className="text-sm text-right">{extractedClientData.disability_condition || 'Not found'}</span>
+                      <div className="text-right">
+                        <span className="text-sm text-right">{extractedClientData.disability_condition || 'Not found'}</span>
+                        {extractedClientData.fieldSources?.disability_condition && (
+                          <p className="text-xs text-gray-500 mt-1">📄 {extractedClientData.fieldSources.disability_condition}</p>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -11002,17 +11055,32 @@ function App() {
                 <div className="space-y-4">
                   <h3 className="font-semibold text-slate-700">💼 NDIS Plan Details</h3>
                   <div className="space-y-3">
-                    <div className="flex justify-between items-center p-2 bg-blue-50 rounded">
+                    <div className="flex justify-between items-start p-2 bg-blue-50 rounded">
                       <span className="text-sm font-medium">NDIS Number:</span>
-                      <span className="text-sm">{extractedClientData.ndis_number || 'Not found'}</span>
+                      <div className="text-right">
+                        <span className="text-sm">{extractedClientData.ndis_number || 'Not found'}</span>
+                        {extractedClientData.fieldSources?.ndis_number && (
+                          <p className="text-xs text-gray-500 mt-1">📄 {extractedClientData.fieldSources.ndis_number}</p>
+                        )}
+                      </div>
                     </div>
-                    <div className="flex justify-between items-center p-2 bg-blue-50 rounded">
+                    <div className="flex justify-between items-start p-2 bg-blue-50 rounded">
                       <span className="text-sm font-medium">Plan Start:</span>
-                      <span className="text-sm">{extractedClientData.plan_start_date || 'Not found'}</span>
+                      <div className="text-right">
+                        <span className="text-sm">{extractedClientData.plan_start_date || 'Not found'}</span>
+                        {extractedClientData.fieldSources?.plan_start_date && (
+                          <p className="text-xs text-gray-500 mt-1">📄 {extractedClientData.fieldSources.plan_start_date}</p>
+                        )}
+                      </div>
                     </div>
-                    <div className="flex justify-between items-center p-2 bg-blue-50 rounded">
+                    <div className="flex justify-between items-start p-2 bg-blue-50 rounded">
                       <span className="text-sm font-medium">Plan End:</span>
-                      <span className="text-sm">{extractedClientData.plan_end_date || 'Not found'}</span>
+                      <div className="text-right">
+                        <span className="text-sm">{extractedClientData.plan_end_date || 'Not found'}</span>
+                        {extractedClientData.fieldSources?.plan_end_date && (
+                          <p className="text-xs text-gray-500 mt-1">📄 {extractedClientData.fieldSources.plan_end_date}</p>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </div>
