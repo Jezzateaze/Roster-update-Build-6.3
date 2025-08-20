@@ -2666,9 +2666,23 @@ function App() {
       ? 'text-slate-900' 
       : 'text-slate-500';
     
+    // Mobile-responsive classes
+    const isMobile = window.innerWidth <= 768;
+    const containerClasses = isMobile 
+      ? `min-h-[100px] sm:min-h-[120px] p-1 sm:p-2 border-r border-b border-slate-200 ${backgroundClass} group hover:bg-slate-50 transition-colors relative`
+      : `min-h-[200px] p-2 border-r border-b border-slate-200 ${backgroundClass} group hover:bg-slate-50 transition-colors relative`;
+    
+    const dayNumberClasses = isMobile 
+      ? `font-medium text-xs sm:text-sm mb-1 sm:mb-3 flex items-center justify-between ${textClass} day-number-mobile`
+      : `font-medium text-sm mb-3 flex items-center justify-between ${textClass}`;
+    
+    const contentClasses = isMobile 
+      ? 'calendar-day-mobile overflow-y-auto'
+      : '';
+    
     return (
-      <div className={`min-h-[200px] p-2 border-r border-b border-slate-200 ${backgroundClass} group hover:bg-slate-50 transition-colors relative`}>
-        <div className={`font-medium text-sm mb-3 flex items-center justify-between ${textClass}`}>
+      <div className={containerClasses}>
+        <div className={dayNumberClasses}>
           <span>{date.getDate()}</span>
           <div className="flex items-center space-x-1">
             {!isCurrentMonth && (
