@@ -204,9 +204,11 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Frontend NDIS Charge Display"
-  stuck_tasks:
-    - "Frontend NDIS Charge Display"
+    - "Enhanced Availability Layout with Tabbed Views"
+    - "Admin CRUD for Shift Requests Management"
+    - "Admin CRUD for Staff Availability Management" 
+    - "Enhanced Add Availability with Staff Selection"
+  stuck_tasks: []
   test_all: false
   test_priority: "high_first"
 
