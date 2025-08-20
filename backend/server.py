@@ -21,6 +21,7 @@ import numpy as np
 import pytesseract
 from pdf2image import convert_from_path
 from PIL import Image, ImageEnhance
+import pillow_heif
 import magic
 import logging
 
