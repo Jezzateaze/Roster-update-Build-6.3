@@ -8795,6 +8795,217 @@ function App() {
         </DialogContent>
       </Dialog>
 
+      {/* Add Shift Request Dialog (Admin Only) */}
+      <Dialog open={showAddShiftRequestDialog} onOpenChange={setShowAddShiftRequestDialog}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Add New Shift Request</DialogTitle>
+            <p className="text-sm text-slate-600 mt-2">
+              Create a shift request on behalf of a staff member
+            </p>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label>Select Staff Member *</Label>
+              <Select 
+                value={newShiftRequest.staff_id} 
+                onValueChange={(value) => {
+                  const selectedStaff = staff.find(s => s.id === value);
+                  setNewShiftRequest({
+                    ...newShiftRequest, 
+                    staff_id: value,
+                    staff_name: selectedStaff?.name || ''
+                  });
+                }}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Choose staff member..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {staff.filter(s => s.active).map((staffMember) => (
+                    <SelectItem key={staffMember.id} value={staffMember.id}>
+                      👤 {staffMember.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <Label>Select Shift *</Label>
+              <Select 
+                value={newShiftRequest.roster_entry_id} 
+                onValueChange={(value) => setNewShiftRequest({...newShiftRequest, roster_entry_id: value})}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Choose unassigned shift..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {unassignedShifts.map((shift) => (
+                    <SelectItem key={shift.id} value={shift.id}>
+                      📅 {formatDateString(shift.date)} • 
+                      🕐 {formatTime(shift.start_time)} - {formatTime(shift.end_time)} • 
+                      💰 {getPayDisplayText(shift)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <Label htmlFor="request-notes">Staff Notes</Label>
+              <textarea
+                id="request-notes"
+                className="w-full p-3 border rounded-md mt-1"
+                rows={3}
+                placeholder="Notes from the staff member about this request..."
+                value={newShiftRequest.notes}
+                onChange={(e) => setNewShiftRequest({...newShiftRequest, notes: e.target.value})}
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="admin-notes">Admin Notes (Optional)</Label>
+              <textarea
+                id="admin-notes"
+                className="w-full p-3 border rounded-md mt-1"
+                rows={2}
+                placeholder="Admin notes about this request..."
+                value={newShiftRequest.admin_notes}
+                onChange={(e) => setNewShiftRequest({...newShiftRequest, admin_notes: e.target.value})}
+              />
+            </div>
+
+            <div className="flex justify-end space-x-2">
+              <Button variant="outline" onClick={() => setShowAddShiftRequestDialog(false)}>
+                Cancel
+              </Button>
+              <Button 
+                onClick={() => createShiftRequest(newShiftRequest)}
+                disabled={!newShiftRequest.staff_id || !newShiftRequest.roster_entry_id}
+              >
+                Create Request
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Shift Request Dialog (Admin Only) */}
+      <Dialog open={showEditShiftRequestDialog} onOpenChange={setShowEditShiftRequestDialog}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Edit Shift Request</DialogTitle>
+            <p className="text-sm text-slate-600 mt-2">
+              Modify the shift request details
+            </p>
+          </DialogHeader>
+          {editingShiftRequest && (
+            <div className="space-y-4">
+              <div>
+                <Label>Staff Member</Label>
+                <Select 
+                  value={editingShiftRequest.staff_id} 
+                  onValueChange={(value) => {
+                    const selectedStaff = staff.find(s => s.id === value);
+                    setEditingShiftRequest({
+                      ...editingShiftRequest, 
+                      staff_id: value,
+                      staff_name: selectedStaff?.name || ''
+                    });
+                  }}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {staff.filter(s => s.active).map((staffMember) => (
+                      <SelectItem key={staffMember.id} value={staffMember.id}>
+                        👤 {staffMember.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <Label>Shift</Label>
+                <Select 
+                  value={editingShiftRequest.roster_entry_id} 
+                  onValueChange={(value) => setEditingShiftRequest({...editingShiftRequest, roster_entry_id: value})}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {unassignedShifts.map((shift) => (
+                      <SelectItem key={shift.id} value={shift.id}>
+                        📅 {formatDateString(shift.date)} • 
+                        🕐 {formatTime(shift.start_time)} - {formatTime(shift.end_time)} • 
+                        💰 {getPayDisplayText(shift)}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <Label>Status</Label>
+                <Select 
+                  value={editingShiftRequest.status} 
+                  onValueChange={(value) => setEditingShiftRequest({...editingShiftRequest, status: value})}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="pending">⏳ Pending</SelectItem>
+                    <SelectItem value="approved">✅ Approved</SelectItem>
+                    <SelectItem value="rejected">❌ Rejected</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <Label htmlFor="edit-request-notes">Staff Notes</Label>
+                <textarea
+                  id="edit-request-notes"
+                  className="w-full p-3 border rounded-md mt-1"
+                  rows={3}
+                  placeholder="Notes from the staff member about this request..."
+                  value={editingShiftRequest.notes}
+                  onChange={(e) => setEditingShiftRequest({...editingShiftRequest, notes: e.target.value})}
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="edit-admin-notes">Admin Notes</Label>
+                <textarea
+                  id="edit-admin-notes"
+                  className="w-full p-3 border rounded-md mt-1"
+                  rows={2}
+                  placeholder="Admin notes about this request..."
+                  value={editingShiftRequest.admin_notes}
+                  onChange={(e) => setEditingShiftRequest({...editingShiftRequest, admin_notes: e.target.value})}
+                />
+              </div>
+
+              <div className="flex justify-end space-x-2">
+                <Button variant="outline" onClick={() => setShowEditShiftRequestDialog(false)}>
+                  Cancel
+                </Button>
+                <Button 
+                  onClick={() => updateShiftRequest(editingShiftRequest.id, editingShiftRequest)}
+                  disabled={!editingShiftRequest.staff_id || !editingShiftRequest.roster_entry_id}
+                >
+                  Update Request
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
       {/* Comprehensive Overlap Management Dialog */}
       <Dialog open={showOverlapDialog} onOpenChange={setShowOverlapDialog}>
         <DialogContent className="max-w-4xl max-h-[85vh] overflow-y-auto">
