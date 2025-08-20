@@ -776,10 +776,24 @@ async def validate_and_save_file(file: UploadFile) -> Path:
     if len(file_content) > MAX_FILE_SIZE:
         raise HTTPException(status_code=413, detail="File too large (max 50MB)")
     
-    # Validate file type
+    # Validate file type - check both MIME type and file extension for HEIF
     file_type = magic.from_buffer(file_content[:1024], mime=True)
-    if file_type not in ALLOWED_EXTENSIONS:
-        raise HTTPException(status_code=400, detail=f"Unsupported file type: {file_type}")
+    file_extension = Path(file.filename).suffix.lower() if file.filename else ''
+    
+    # Special handling for HEIF files (MIME detection can be inconsistent)
+    is_heif_by_extension = file_extension in ['.heif', '.heic']
+    is_heif_by_mime = file_type in ['image/heif', 'image/heic', 'image/heif-sequence', 'image/heic-sequence']
+    
+    if not (file_type in ALLOWED_EXTENSIONS or is_heif_by_extension or is_heif_by_mime):
+        # For HEIF files, sometimes MIME detection returns generic types
+        if is_heif_by_extension:
+            # Accept HEIF by extension even if MIME type is not detected correctly
+            pass
+        else:
+            raise HTTPException(
+                status_code=400, 
+                detail=f"Unsupported file type: {file_type} (extension: {file_extension}). Supported formats: PDF, JPG, PNG, TIFF, BMP, HEIF/HEIC"
+            )
     
     # Save file with timestamp
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -788,6 +802,8 @@ async def validate_and_save_file(file: UploadFile) -> Path:
     
     with open(file_path, 'wb') as buffer:
         buffer.write(file_content)
+    
+    logging.info(f"Saved uploaded file: {safe_filename} (type: {file_type}, extension: {file_extension})")
     
     return file_path
 
