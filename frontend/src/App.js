@@ -1542,6 +1542,14 @@ function App() {
       'image/heif', 'image/heic', 'image/heif-sequence', 'image/heic-sequence'
     ];
     
+    // Additional iOS/mobile-specific MIME types that are sometimes used
+    const mobileCompatibleTypes = [
+      'application/octet-stream',  // iOS Safari often uses this for PDFs
+      'application/binary',
+      'application/download',
+      'text/plain'  // Sometimes used by mobile browsers
+    ];
+    
     const invalidFiles = files.filter(file => {
       return !allowedTypes.includes(file.type) || file.size > maxSize;
     });
