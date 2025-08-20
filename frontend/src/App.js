@@ -1440,6 +1440,22 @@ function App() {
     const files = Array.from(event.target.files);
     if (files.length === 0) return;
 
+    // Check for large batches and warn user
+    if (files.length > 20) {
+      const proceed = window.confirm(
+        `⚠️ Large Batch Detected: ${files.length} files selected.\n\n` +
+        `Processing many files may take several minutes and could timeout.\n` +
+        `For best results, consider processing in smaller batches of 10-20 files.\n\n` +
+        `Do you want to continue with all ${files.length} files?`
+      );
+      
+      if (!proceed) {
+        // Clear the file input
+        event.target.value = '';
+        return;
+      }
+    }
+
     // Validate all files first
     const maxSize = 50 * 1024 * 1024; // 50MB per file
     const allowedTypes = ['application/pdf', 'image/jpeg', 'image/jpg', 'image/png', 'image/tiff', 'image/bmp'];
@@ -1449,7 +1465,7 @@ function App() {
     });
 
     if (invalidFiles.length > 0) {
-      const messages = invalidFiles.map(file => {
+      const messages = invalidFiles.slice(0, 5).map(file => { // Show max 5 error examples
         if (!allowedTypes.includes(file.type)) {
           return `${file.name}: Invalid file type`;
         }
@@ -1459,10 +1475,18 @@ function App() {
         return `${file.name}: Invalid file`;
       });
       
-      alert(`❌ Invalid files detected:\n${messages.join('\n')}\n\nPlease select only PDF or image files (JPG, PNG, TIFF, BMP) under 50MB each.`);
+      if (invalidFiles.length > 5) {
+        messages.push(`... and ${invalidFiles.length - 5} more files`);
+      }
+      
+      alert(`❌ Invalid files detected (${invalidFiles.length}/${files.length}):\n${messages.join('\n')}\n\nPlease select only PDF or image files (JPG, PNG, TIFF, BMP) under 50MB each.`);
+      
+      // Clear the file input
+      event.target.value = '';
       return;
     }
 
+    console.log(`Starting OCR processing for ${files.length} files:`, files.map(f => f.name));
     setSelectedFile(files);
     processMultipleOCRDocuments(files);
   };
