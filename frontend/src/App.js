@@ -6348,6 +6348,75 @@ function App() {
 
               <Separator />
 
+              {/* Maximum NDIS Pricing Guidelines Reference - Admin Only */}
+              {isAdmin() && (
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold">Maximum NDIS Pricing Guidelines (Reference)</h3>
+                  <div className="bg-blue-50 p-3 rounded-lg border border-blue-200">
+                    <p className="text-sm text-blue-800">
+                      <strong>Reference Only:</strong> These are the maximum NDIS rates for comparison. Bountiful Care rates above are used for actual billing calculations.
+                    </p>
+                  </div>
+
+                  {/* SIL (Supported Independent Living) Rates */}
+                  <div className="space-y-3">
+                    <h4 className="text-md font-semibold text-slate-700">NDIS Rates for (SIL) - Supported Independent Living</h4>
+                    <div className="grid grid-cols-1 gap-3">
+                      {[
+                        { code: "01_801_0115_1_1", desc: "Assistance in Supported Independent Living - Standard - Weekday Daytime", rate: 70.23 },
+                        { code: "01_802_0115_1_1", desc: "Assistance in Supported Independent Living - Standard - Weekday Evening", rate: 77.38 },
+                        { code: "01_803_0115_1_1", desc: "Assistance in Supported Independent Living - Standard - Weekday Night", rate: 78.81 },
+                        { code: "01_804_0115_1_1", desc: "Assistance in Supported Independent Living - Standard - Saturday", rate: 98.83 },
+                        { code: "01_805_0115_1_1", desc: "Assistance in Supported Independent Living - Standard - Sunday", rate: 127.43 },
+                        { code: "01_806_0115_1_1", desc: "Assistance in Supported Independent Living - Standard - Public Holiday", rate: 156.03 },
+                        { code: "01_832_0115_1_1", desc: "Assistance in Supported Independent Living - Night-Time Sleepover", rate: 297.60, unit: "per shift" }
+                      ].map((item) => (
+                        <div key={item.code} className="grid grid-cols-1 md:grid-cols-3 gap-2 p-3 bg-white border rounded-lg text-sm">
+                          <div>
+                            <span className="font-medium text-slate-600">Code:</span> <span className="font-mono text-sm">{item.code}</span>
+                          </div>
+                          <div>
+                            <span className="font-medium text-slate-600">Description:</span> {item.desc}
+                          </div>
+                          <div>
+                            <span className="font-medium text-slate-600">Price:</span> <span className="font-semibold text-green-600">${item.rate.toFixed(2)}</span> {item.unit || 'per hour'}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Core Social Rates */}
+                  <div className="space-y-3">
+                    <h4 className="text-md font-semibold text-slate-700">NDIS Rates for (Core) Social</h4>
+                    <div className="grid grid-cols-1 gap-3">
+                      {[
+                        { code: "04_102_0125_6_1", desc: "Access Community Social and Rec Activ - Standard - Public Holiday", rate: 156.03 },
+                        { code: "04_103_0125_6_1", desc: "Access Community Social and Rec Activ - Standard - Weekday Evening", rate: 77.38 },
+                        { code: "04_104_0125_6_1", desc: "Access Community Social and Rec Activ - Standard - Weekday Daytime", rate: 70.23 },
+                        { code: "04_105_0125_6_1", desc: "Access Community Social and Rec Activ - Standard - Saturday", rate: 98.83 },
+                        { code: "04_106_0125_6_1", desc: "Access Community Social and Rec Activ - Standard - Sunday", rate: 127.43 },
+                        { code: "04_590_0125_6_1", desc: "Activity Based Transport", rate: 1.00, unit: "per km" }
+                      ].map((item) => (
+                        <div key={item.code} className="grid grid-cols-1 md:grid-cols-3 gap-2 p-3 bg-white border rounded-lg text-sm">
+                          <div>
+                            <span className="font-medium text-slate-600">Code:</span> <span className="font-mono text-sm">{item.code}</span>
+                          </div>
+                          <div>
+                            <span className="font-medium text-slate-600">Description:</span> {item.desc}
+                          </div>
+                          <div>
+                            <span className="font-medium text-slate-600">Price:</span> <span className="font-semibold text-green-600">${item.rate.toFixed(2)}</span> {item.unit || 'per hour'}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              <Separator />
+
               <div className="flex justify-end space-x-2">
                 <Button variant="outline" onClick={() => setShowSettingsDialog(false)}>
                   {isAdmin() ? 'Cancel' : 'Close'}
