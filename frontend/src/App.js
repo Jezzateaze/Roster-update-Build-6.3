@@ -521,7 +521,21 @@ function App() {
   // Create staff availability
   const createStaffAvailability = async (availability) => {
     try {
-      await axios.post(`${API_BASE_URL}/api/staff-availability`, availability, {
+      // For Admin users, validate that staff_id is selected
+      if (isAdmin() && !availability.staff_id) {
+        alert('❌ Please select a staff member');
+        return;
+      }
+      
+      // Prepare the availability data
+      const availabilityData = {
+        ...availability,
+        // For staff users, automatically use their own staff_id
+        // For admin users, use the selected staff_id
+        staff_id: isStaff() ? currentUser?.staff_id : availability.staff_id
+      };
+
+      await axios.post(`${API_BASE_URL}/api/staff-availability`, availabilityData, {
         headers: { 'Authorization': `Bearer ${authToken}` }
       });
       alert('✅ Availability updated successfully!');
