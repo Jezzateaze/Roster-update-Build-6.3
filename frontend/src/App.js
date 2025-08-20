@@ -396,6 +396,7 @@ function App() {
   const [staff, setStaff] = useState([]);
   const [clients, setClients] = useState([]); // New state for client profiles
   const [selectedClient, setSelectedClient] = useState(null); // Currently selected client
+  const [currentClient, setCurrentClient] = useState(null); // Client being processed with OCR
   const [shiftTemplates, setShiftTemplates] = useState([]);
   const [rosterEntries, setRosterEntries] = useState([]);
   const [settings, setSettings] = useState({
