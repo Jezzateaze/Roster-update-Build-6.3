@@ -314,7 +314,7 @@ code {
   color: #dc2626;
 }
 
-/* Calendar specific styles */
+/* Calendar specific styles - enhanced for mobile responsiveness */
 .calendar-day {
   min-height: 120px;
   border: 1px solid #e2e8f0;
@@ -326,11 +326,33 @@ code {
   border-color: #cbd5e1;
 }
 
+/* Shift badge improvements for mobile */
 .shift-badge {
   font-size: 0.75rem;
   padding: 0.25rem 0.5rem;
   border-radius: 0.375rem;
   font-weight: 500;
+  display: inline-block;
+  margin: 0.125rem 0;
+  line-height: 1.2;
+}
+
+/* Mobile-specific shift badge adjustments */
+@media (max-width: 768px) {
+  .shift-badge {
+    font-size: 0.6rem;
+    padding: 0.125rem 0.25rem;
+    border-radius: 0.25rem;
+    margin: 0.0625rem 0;
+  }
+}
+
+/* Extra small screens */
+@media (max-width: 375px) {
+  .shift-badge {
+    font-size: 0.55rem;
+    padding: 0.125rem 0.2rem;
+  }
 }
 
 .shift-badge.day {
