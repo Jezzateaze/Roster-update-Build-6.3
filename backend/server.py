@@ -455,6 +455,9 @@ create_admin_user()
 UPLOAD_DIR = Path("uploads")
 UPLOAD_DIR.mkdir(exist_ok=True)
 
+# Initialize HEIF plugin for Pillow
+pillow_heif.register_heif_opener()
+
 ALLOWED_EXTENSIONS = {
     'image/jpeg', 'image/jpg', 'image/png', 'image/tiff', 'image/bmp',
     'image/heif', 'image/heic', 'image/heif-sequence', 'image/heic-sequence',
