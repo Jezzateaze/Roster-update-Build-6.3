@@ -3313,6 +3313,298 @@ def initialize_sample_client():
     else:
         print("✅ Sample client already exists")
 
+# =====================================
+# OCR DOCUMENT PROCESSING ENDPOINTS
+# =====================================
+
+@app.post("/api/ocr/process")
+async def process_document(
+    file: UploadFile = File(...),
+    client_id: str = Form(None),
+    extract_client_data: bool = Form(True),
+    current_user: dict = Depends(get_current_user)
+):
+    """Process uploaded document and extract text using OCR"""
+    
+    # Check user permissions (Admin and Supervisor only)
+    if current_user.get("role") not in ["admin", "supervisor"]:
+        raise HTTPException(status_code=403, detail="Not authorized to process documents")
+    
+    # Generate unique task ID
+    task_id = str(uuid.uuid4())
+    
+    try:
+        # Validate and save file
+        file_path = await validate_and_save_file(file)
+        
+        # Initialize processing status
+        ocr_results[task_id] = {
+            'id': task_id,
+            'client_id': client_id,
+            'filename': file.filename,
+            'file_type': file.content_type,
+            'status': 'processing',
+            'progress': 0,
+            'created_at': datetime.now().isoformat(),
+            'created_by': current_user["username"]
+        }
+        
+        # Process document based on type
+        if file.content_type == 'application/pdf':
+            result = await process_pdf_async(file_path, task_id)
+        else:
+            result = await process_image_async(file_path, task_id)
+        
+        # Extract text for parsing
+        extracted_text = result.get('combined_text', result.get('text', ''))
+        
+        # Parse NDIS plan data if requested
+        extracted_data = None
+        if extract_client_data and extracted_text:
+            extracted_data = ocr_processor.parse_ndis_plan_text(extracted_text)
+        
+        # Update results
+        ocr_results[task_id].update({
+            'status': 'completed',
+            'result': result,
+            'extracted_text': extracted_text,
+            'extracted_data': extracted_data.dict() if extracted_data else None,
+            'completed_at': datetime.now().isoformat(),
+            'progress': 100
+        })
+        
+        # Clean up file
+        file_path.unlink(missing_ok=True)
+        
+        return JSONResponse({
+            'task_id': task_id,
+            'status': 'completed',
+            'message': 'Document processing completed successfully',
+            'extracted_data': extracted_data.dict() if extracted_data else None
+        })
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logging.error(f"Processing error for task {task_id}: {str(e)}")
+        ocr_results[task_id] = {
+            'id': task_id,
+            'filename': file.filename,
+            'status': 'failed',
+            'error': str(e),
+            'created_at': datetime.now().isoformat(),
+            'created_by': current_user["username"]
+        }
+        raise HTTPException(status_code=500, detail=f"Processing failed: {str(e)}")
+
+@app.get("/api/ocr/status/{task_id}")
+async def get_processing_status(task_id: str, current_user: dict = Depends(get_current_user)):
+    """Get the processing status of a document"""
+    
+    # Check user permissions
+    if current_user.get("role") not in ["admin", "supervisor"]:
+        raise HTTPException(status_code=403, detail="Not authorized to view OCR results")
+    
+    if task_id not in ocr_results:
+        raise HTTPException(status_code=404, detail="Task not found")
+    
+    return ocr_results[task_id]
+
+@app.get("/api/ocr/result/{task_id}")
+async def get_processing_result(task_id: str, current_user: dict = Depends(get_current_user)):
+    """Get the OCR result for a completed task"""
+    
+    # Check user permissions
+    if current_user.get("role") not in ["admin", "supervisor"]:
+        raise HTTPException(status_code=403, detail="Not authorized to view OCR results")
+    
+    if task_id not in ocr_results:
+        raise HTTPException(status_code=404, detail="Task not found")
+    
+    task_data = ocr_results[task_id]
+    
+    if task_data['status'] == 'processing':
+        raise HTTPException(status_code=202, detail="Processing still in progress")
+    
+    if task_data['status'] == 'failed':
+        raise HTTPException(status_code=500, detail=task_data.get('error', 'Processing failed'))
+    
+    return {
+        'task_id': task_id,
+        'status': task_data['status'],
+        'result': task_data.get('result', {}),
+        'extracted_text': task_data.get('extracted_text', ''),
+        'extracted_data': task_data.get('extracted_data', {}),
+        'processing_info': {
+            'filename': task_data['filename'],
+            'file_type': task_data['file_type'],
+            'created_at': task_data['created_at'],
+            'completed_at': task_data.get('completed_at'),
+            'created_by': task_data.get('created_by')
+        }
+    }
+
+@app.post("/api/ocr/apply-to-client/{task_id}")
+async def apply_ocr_to_client(
+    task_id: str, 
+    client_id: str = None,
+    current_user: dict = Depends(get_current_user)
+):
+    """Apply extracted OCR data to a client profile"""
+    
+    # Check user permissions (Admin only for now)
+    if current_user.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="Not authorized to modify client profiles")
+    
+    if task_id not in ocr_results:
+        raise HTTPException(status_code=404, detail="OCR task not found")
+    
+    task_data = ocr_results[task_id]
+    
+    if task_data['status'] != 'completed':
+        raise HTTPException(status_code=400, detail="OCR processing not completed")
+    
+    extracted_data = task_data.get('extracted_data')
+    if not extracted_data:
+        raise HTTPException(status_code=400, detail="No extracted data available")
+    
+    try:
+        if client_id:
+            # Update existing client
+            existing_client = db.clients.find_one({"id": client_id})
+            if not existing_client:
+                raise HTTPException(status_code=404, detail="Client not found")
+            
+            # Prepare update data (only update empty fields)
+            update_data = {}
+            if not existing_client.get('full_name') and extracted_data.get('full_name'):
+                update_data['full_name'] = extracted_data['full_name']
+            if not existing_client.get('date_of_birth') and extracted_data.get('date_of_birth'):
+                update_data['date_of_birth'] = extracted_data['date_of_birth']
+            if not existing_client.get('disability_condition') and extracted_data.get('disability_condition'):
+                update_data['disability_condition'] = extracted_data['disability_condition']
+            if not existing_client.get('address') and extracted_data.get('address'):
+                update_data['address'] = extracted_data['address']
+            if not existing_client.get('mobile') and extracted_data.get('mobile'):
+                update_data['mobile'] = extracted_data['mobile']
+            
+            # Update NDIS plan information
+            if not existing_client.get('current_ndis_plan'):
+                ndis_plan = {
+                    "ndis_number": extracted_data.get('ndis_number'),
+                    "plan_start_date": extracted_data.get('plan_start_date'),
+                    "plan_end_date": extracted_data.get('plan_end_date'),
+                    "plan_type": "PACE",  # Default
+                    "plan_management": "self_managed",  # Default
+                    "funding_categories": extracted_data.get('funding_categories', []),
+                    "plan_document_path": task_data.get('filename'),
+                    "created_at": datetime.now(),
+                    "updated_at": datetime.now()
+                }
+                update_data['current_ndis_plan'] = ndis_plan
+            
+            if update_data:
+                update_data['updated_at'] = datetime.now()
+                db.clients.update_one({"id": client_id}, {"$set": update_data})
+                
+                return {
+                    "message": "Client profile updated successfully with OCR data",
+                    "client_id": client_id,
+                    "updated_fields": list(update_data.keys())
+                }
+            else:
+                return {
+                    "message": "No updates needed - client profile already complete",
+                    "client_id": client_id
+                }
+        else:
+            # Create new client profile
+            new_client_id = str(uuid.uuid4())
+            
+            client_data = {
+                "id": new_client_id,
+                "full_name": extracted_data.get('full_name', ''),
+                "date_of_birth": extracted_data.get('date_of_birth', ''),
+                "sex": "Not Specified",  # Default
+                "disability_condition": extracted_data.get('disability_condition', ''),
+                "mobile": extracted_data.get('mobile', ''),
+                "address": extracted_data.get('address', ''),
+                "emergency_contacts": [],
+                "current_ndis_plan": {
+                    "ndis_number": extracted_data.get('ndis_number'),
+                    "plan_start_date": extracted_data.get('plan_start_date'),
+                    "plan_end_date": extracted_data.get('plan_end_date'),
+                    "plan_type": "PACE",  # Default
+                    "plan_management": "self_managed",  # Default
+                    "funding_categories": extracted_data.get('funding_categories', []),
+                    "plan_document_path": task_data.get('filename'),
+                    "created_at": datetime.now(),
+                    "updated_at": datetime.now()
+                },
+                "created_at": datetime.now(),
+                "updated_at": datetime.now(),
+                "created_by": current_user["username"]
+            }
+            
+            db.clients.insert_one(client_data)
+            
+            return {
+                "message": "New client profile created successfully from OCR data",
+                "client_id": new_client_id,
+                "confidence_score": extracted_data.get('confidence_score', 0)
+            }
+    
+    except Exception as e:
+        logging.error(f"Error applying OCR data to client: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to apply OCR data: {str(e)}")
+
+@app.get("/api/ocr/health")
+async def ocr_health_check():
+    """Health check for OCR service"""
+    try:
+        # Test Tesseract installation
+        version = pytesseract.get_tesseract_version()
+        return {
+            'status': 'healthy',
+            'tesseract_version': str(version),
+            'upload_dir_exists': UPLOAD_DIR.exists(),
+            'timestamp': datetime.now().isoformat()
+        }
+    except Exception as e:
+        raise HTTPException(status_code=503, detail=f"OCR service unhealthy: {str(e)}")
+
+@app.delete("/api/ocr/cleanup")
+async def cleanup_ocr_results(current_user: dict = Depends(get_current_user)):
+    """Clean up old OCR results (Admin only)"""
+    
+    if current_user.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="Not authorized to cleanup OCR data")
+    
+    # Remove results older than 24 hours
+    cutoff_time = datetime.now() - timedelta(hours=24)
+    
+    cleaned_count = 0
+    task_ids_to_remove = []
+    
+    for task_id, task_data in ocr_results.items():
+        try:
+            created_at = datetime.fromisoformat(task_data['created_at'])
+            if created_at < cutoff_time:
+                task_ids_to_remove.append(task_id)
+                cleaned_count += 1
+        except Exception:
+            # If we can't parse the date, remove it anyway
+            task_ids_to_remove.append(task_id)
+            cleaned_count += 1
+    
+    for task_id in task_ids_to_remove:
+        del ocr_results[task_id]
+    
+    return {
+        "message": f"Cleaned up {cleaned_count} old OCR results",
+        "cleaned_count": cleaned_count
+    }
+
 # Initialize database with default admin user if not exists
 def initialize_admin():
     """Initialize default admin user if not exists"""
