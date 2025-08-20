@@ -3281,7 +3281,7 @@ function App() {
                   {/* Day total */}
                   {dayTotal > 0 && (
                     <div className="mt-2 pt-1 border-t border-slate-200 text-xs font-bold text-emerald-700">
-                      ${dayTotal.toFixed(0)}
+                      ${dayTotal.toFixed(0)} ({getRateTypeLabel()})
                     </div>
                   )}
                 </div>
