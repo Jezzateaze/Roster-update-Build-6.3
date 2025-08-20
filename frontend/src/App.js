@@ -10979,20 +10979,45 @@ function App() {
                   <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500"></div>
                   <span className="text-sm font-medium">
                     {selectedFile && Array.isArray(selectedFile) 
-                      ? `Processing ${selectedFile.length} documents...` 
+                      ? `Processing ${selectedFile.length} documents... (${processedFileCount}/${totalFileCount} complete)` 
                       : 'Processing document...'}
                   </span>
                 </div>
                 
-                {/* File List */}
-                {selectedFile && Array.isArray(selectedFile) && selectedFile.length > 1 && (
+                {/* Detailed Progress for Large Batches */}
+                {selectedFile && Array.isArray(selectedFile) && selectedFile.length > 5 && (
+                  <div className="text-sm text-gray-700 bg-blue-50 p-3 rounded-lg">
+                    <div className="flex justify-between items-center mb-2">
+                      <span className="font-medium">Batch Progress:</span>
+                      <span className="text-blue-600">{processedFileCount}/{totalFileCount} files</span>
+                    </div>
+                    <div className="text-xs text-gray-600">
+                      <p>⏱️ Large batches may take several minutes to complete</p>
+                      <p>🔄 Processing files sequentially for best results</p>
+                      {selectedFile.length > 20 && (
+                        <p className="text-orange-600">⚠️ Very large batch - this may take 10+ minutes</p>
+                      )}
+                    </div>
+                  </div>
+                )}
+                
+                {/* File List for smaller batches */}
+                {selectedFile && Array.isArray(selectedFile) && selectedFile.length > 1 && selectedFile.length <= 5 && (
                   <div className="text-xs text-gray-600">
                     <p className="font-medium mb-1">Files to process:</p>
                     <ul className="space-y-1 max-h-20 overflow-y-auto">
                       {selectedFile.map((file, index) => (
                         <li key={index} className="flex items-center space-x-2">
-                          <span className="w-2 h-2 bg-blue-400 rounded-full"></span>
-                          <span className="truncate">{file.name}</span>
+                          <span className={`w-2 h-2 rounded-full ${
+                            index < processedFileCount ? 'bg-green-400' : 
+                            index === processedFileCount ? 'bg-blue-400 animate-pulse' : 'bg-gray-300'
+                          }`}></span>
+                          <span className={`truncate ${
+                            index < processedFileCount ? 'text-green-600 line-through' : 
+                            index === processedFileCount ? 'text-blue-600 font-medium' : ''
+                          }`}>
+                            {file.name}
+                          </span>
                         </li>
                       ))}
                     </ul>
@@ -11000,20 +11025,51 @@ function App() {
                 )}
                 
                 {/* Progress Bar */}
-                <div className="w-full bg-gray-200 rounded-full h-2">
+                <div className="w-full bg-gray-200 rounded-full h-3">
                   <div 
-                    className="bg-blue-500 h-2 rounded-full transition-all duration-500"
-                    style={{ width: `${ocrProgress}%` }}
-                  ></div>
+                    className="bg-blue-500 h-3 rounded-full transition-all duration-500 flex items-center justify-end pr-2"
+                    style={{ width: `${Math.max(ocrProgress, 5)}%` }}
+                  >
+                    {ocrProgress > 15 && (
+                      <span className="text-xs text-white font-medium">
+                        {ocrProgress.toFixed(0)}%
+                      </span>
+                    )}
+                  </div>
                 </div>
-                <p className="text-xs text-gray-500 text-center">
-                  {ocrProgress}% complete
+                
+                <div className="flex justify-between text-xs text-gray-500">
+                  <span>
+                    {ocrProgress.toFixed(1)}% complete
+                  </span>
                   {selectedFile && Array.isArray(selectedFile) && (
-                    <span className="ml-2">
-                      ({Math.ceil((ocrProgress / 100) * selectedFile.length)} of {selectedFile.length} files)
+                    <span>
+                      {processedFileCount}/{selectedFile.length} files processed
                     </span>
                   )}
-                </p>
+                </div>
+                
+                {/* Cancel button for long operations */}
+                {selectedFile && Array.isArray(selectedFile) && selectedFile.length > 10 && (
+                  <div className="pt-2 border-t">
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => {
+                        const confirmCancel = window.confirm(
+                          `⚠️ Cancel processing?\n\n${processedFileCount} of ${selectedFile.length} files have been processed.\n\nCanceling now will lose progress on remaining files.`
+                        );
+                        if (confirmCancel) {
+                          resetOCRStates();
+                          setShowOCRDialog(false);
+                        }
+                      }}
+                      className="w-full"
+                    >
+                      Cancel Processing
+                    </Button>
+                  </div>
+                )}
               </div>
             )}
 
