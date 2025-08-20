@@ -11025,6 +11025,8 @@ function App() {
                   Upload NDIS plan documents (PDF or images) to automatically extract client information. 
                   <br />
                   <span className="font-medium text-blue-600">✨ Multiple files supported for batch processing!</span>
+                  <br />
+                  <span className="text-xs text-purple-600">📱 iPhone/iPad users: PDF uploads fully supported</span>
                 </p>
                 
                 {/* File Upload Area */}
