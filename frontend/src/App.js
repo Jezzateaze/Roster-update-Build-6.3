@@ -1205,51 +1205,69 @@ function App() {
     setCurrentClient(null);
   };
 
-  // Handle file selection for OCR
+  // Handle file selection for OCR (multiple files)
   const handleOCRFileSelect = (event) => {
-    const file = event.target.files[0];
-    if (file) {
-      // Validate file type
-      const allowedTypes = ['application/pdf', 'image/jpeg', 'image/jpg', 'image/png', 'image/tiff', 'image/bmp'];
-      if (!allowedTypes.includes(file.type)) {
-        alert('❌ Please select a PDF or image file (JPG, PNG, TIFF, BMP)');
-        return;
-      }
+    const files = Array.from(event.target.files);
+    if (files.length === 0) return;
 
-      // Validate file size (50MB max)
-      const maxSize = 50 * 1024 * 1024; // 50MB
-      if (file.size > maxSize) {
-        alert('❌ File too large. Maximum size is 50MB.');
-        return;
-      }
+    // Validate all files first
+    const maxSize = 50 * 1024 * 1024; // 50MB per file
+    const allowedTypes = ['application/pdf', 'image/jpeg', 'image/jpg', 'image/png', 'image/tiff', 'image/bmp'];
+    
+    const invalidFiles = files.filter(file => {
+      return !allowedTypes.includes(file.type) || file.size > maxSize;
+    });
 
-      setSelectedFile(file);
-      processOCRDocument(file);
+    if (invalidFiles.length > 0) {
+      const messages = invalidFiles.map(file => {
+        if (!allowedTypes.includes(file.type)) {
+          return `${file.name}: Invalid file type`;
+        }
+        if (file.size > maxSize) {
+          return `${file.name}: File too large (max 50MB)`;
+        }
+        return `${file.name}: Invalid file`;
+      });
+      
+      alert(`❌ Invalid files detected:\n${messages.join('\n')}\n\nPlease select only PDF or image files (JPG, PNG, TIFF, BMP) under 50MB each.`);
+      return;
     }
+
+    setSelectedFile(files);
+    processMultipleOCRDocuments(files);
   };
 
-  // Handle drag and drop for OCR
+  // Handle drag and drop for OCR (multiple files)
   const handleOCRDrop = (event) => {
     event.preventDefault();
-    const file = event.dataTransfer.files[0];
-    if (file) {
-      // Validate file type
-      const allowedTypes = ['application/pdf', 'image/jpeg', 'image/jpg', 'image/png', 'image/tiff', 'image/bmp'];
-      if (!allowedTypes.includes(file.type)) {
-        alert('❌ Please select a PDF or image file (JPG, PNG, TIFF, BMP)');
-        return;
-      }
+    const files = Array.from(event.dataTransfer.files);
+    if (files.length === 0) return;
 
-      // Validate file size (50MB max)
-      const maxSize = 50 * 1024 * 1024; // 50MB
-      if (file.size > maxSize) {
-        alert('❌ File too large. Maximum size is 50MB.');
-        return;
-      }
+    // Validate all files
+    const maxSize = 50 * 1024 * 1024; // 50MB per file
+    const allowedTypes = ['application/pdf', 'image/jpeg', 'image/jpg', 'image/png', 'image/tiff', 'image/bmp'];
+    
+    const invalidFiles = files.filter(file => {
+      return !allowedTypes.includes(file.type) || file.size > maxSize;
+    });
 
-      setSelectedFile(file);
-      processOCRDocument(file);
+    if (invalidFiles.length > 0) {
+      const messages = invalidFiles.map(file => {
+        if (!allowedTypes.includes(file.type)) {
+          return `${file.name}: Invalid file type`;
+        }
+        if (file.size > maxSize) {
+          return `${file.name}: File too large (max 50MB)`;
+        }
+        return `${file.name}: Invalid file`;
+      });
+      
+      alert(`❌ Invalid files detected:\n${messages.join('\n')}\n\nPlease select only PDF or image files (JPG, PNG, TIFF, BMP) under 50MB each.`);
+      return;
     }
+
+    setSelectedFile(files);
+    processMultipleOCRDocuments(files);
   };
 
   const handleOCRDragOver = (event) => {
