@@ -1700,6 +1700,11 @@ function App() {
       setIsAuthenticated(true);
       setShowLoginDialog(false);
       
+      // Fetch roster data now that authentication is complete
+      if (currentDate) {
+        fetchRosterData();
+      }
+      
       // Store token in localStorage for persistence
       localStorage.setItem('authToken', token);
       localStorage.setItem('currentUser', JSON.stringify(user));
