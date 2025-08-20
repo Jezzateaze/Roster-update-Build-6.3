@@ -11016,10 +11016,11 @@ function App() {
                 <input
                   id="ocrFileInput"
                   type="file"
-                  accept=".pdf,.jpg,.jpeg,.png,.tiff,.bmp,.heif,.heic"
+                  accept=".pdf,.jpg,.jpeg,.png,.tiff,.bmp,.heif,.heic,application/pdf,image/*"
                   onChange={handleOCRFileSelect}
                   className="hidden"
                   multiple
+                  capture="environment"
                 />
               </div>
             )}
