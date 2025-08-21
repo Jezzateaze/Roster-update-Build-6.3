@@ -294,14 +294,22 @@ class WeekendShiftTester:
         all_sunday_correct = True
         
         for template in saturday_shifts:
-            if template.get('calculated_shift_type') != 'saturday':
-                print(f"      ❌ Saturday shift has wrong type: {template.get('calculated_shift_type')} (Template: {template.get('name')})")
+            expected_type = 'sleepover' if template.get('is_sleepover', False) else 'saturday'
+            actual_type = template.get('calculated_shift_type')
+            if actual_type != expected_type:
+                print(f"      ❌ Saturday shift has wrong type: {actual_type} (Template: {template.get('name')}, Expected: {expected_type})")
                 all_saturday_correct = False
+            else:
+                print(f"      ✅ Saturday shift correctly classified: {actual_type} (Template: {template.get('name')})")
         
         for template in sunday_shifts:
-            if template.get('calculated_shift_type') != 'sunday':
-                print(f"      ❌ Sunday shift has wrong type: {template.get('calculated_shift_type')} (Template: {template.get('name')})")
+            expected_type = 'sleepover' if template.get('is_sleepover', False) else 'sunday'
+            actual_type = template.get('calculated_shift_type')
+            if actual_type != expected_type:
+                print(f"      ❌ Sunday shift has wrong type: {actual_type} (Template: {template.get('name')}, Expected: {expected_type})")
                 all_sunday_correct = False
+            else:
+                print(f"      ✅ Sunday shift correctly classified: {actual_type} (Template: {template.get('name')})")
         
         if all_saturday_correct:
             print(f"      ✅ All {len(saturday_shifts)} Saturday shifts correctly classified as 'saturday'")
