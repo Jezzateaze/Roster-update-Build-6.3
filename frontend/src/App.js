@@ -970,6 +970,72 @@ function App() {
     return days[dayNumber] || 'Unknown';
   };
 
+  // Helper function to group and sort staff availability by type, then by date/time
+  const groupAndSortStaffAvailability = (availabilityRecords) => {
+    if (!availabilityRecords || availabilityRecords.length === 0) return {};
+    
+    // Define availability type order and labels
+    const typeOrder = [
+      { key: 'available', label: '✅ Available', color: 'bg-green-50 border-green-200' },
+      { key: 'preferred_shifts', label: '⭐ Preferred Shifts', color: 'bg-blue-50 border-blue-200' },
+      { key: 'unavailable', label: '❌ Unavailable', color: 'bg-red-50 border-red-200' },
+      { key: 'time_off_request', label: '🏖️ Time Off Requests', color: 'bg-orange-50 border-orange-200' }
+    ];
+    
+    // Group by availability type
+    const grouped = {};
+    typeOrder.forEach(type => {
+      grouped[type.key] = {
+        label: type.label,
+        color: type.color,
+        records: []
+      };
+    });
+    
+    // Categorize records
+    availabilityRecords.forEach(record => {
+      const type = record.availability_type;
+      if (grouped[type]) {
+        grouped[type].records.push(record);
+      }
+    });
+    
+    // Sort records within each group by date and time
+    Object.keys(grouped).forEach(typeKey => {
+      grouped[typeKey].records.sort((a, b) => {
+        // Sort by date first
+        const dateA = a.is_recurring ? a.day_of_week : a.date_from;
+        const dateB = b.is_recurring ? b.day_of_week : b.date_from;
+        
+        if (dateA !== dateB) {
+          if (a.is_recurring && b.is_recurring) {
+            return dateA - dateB; // Sort by day of week number
+          } else if (a.is_recurring && !b.is_recurring) {
+            return -1; // Recurring items first
+          } else if (!a.is_recurring && b.is_recurring) {
+            return 1; // Recurring items first
+          } else {
+            return new Date(dateA) - new Date(dateB); // Sort by actual date
+          }
+        }
+        
+        // If dates are same, sort by start time
+        const timeA = a.start_time || '00:00';
+        const timeB = b.start_time || '00:00';
+        return timeA.localeCompare(timeB);
+      });
+    });
+    
+    // Remove empty groups
+    Object.keys(grouped).forEach(typeKey => {
+      if (grouped[typeKey].records.length === 0) {
+        delete grouped[typeKey];
+      }
+    });
+    
+    return grouped;
+  };
+
   // Load availability data when authenticated
   useEffect(() => {
     if (isAuthenticated && authToken) {
