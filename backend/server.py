@@ -1585,8 +1585,76 @@ async def delete_staff(staff_id: str, current_user: dict = Depends(get_current_u
 # Shift template endpoints
 @app.get("/api/shift-templates")
 async def get_shift_templates():
+    """Get shift templates with calculated rates and shift types"""
     templates = list(db.shift_templates.find({}, {"_id": 0}))
-    return templates
+    
+    # Get current settings for rate calculations
+    settings = db.settings.find_one() or {}
+    rates = settings.get("rates", {})
+    
+    # Enhance each template with calculated information
+    enhanced_templates = []
+    for template in templates:
+        # Create a sample date for rate calculation (use today's date adjusted for day_of_week)
+        today = datetime.now()
+        # Calculate date for the template's day of week
+        days_ahead = template.get('day_of_week', 0) - today.weekday()
+        if days_ahead <= 0:  # Target day already happened this week
+            days_ahead += 7
+        target_date = today + timedelta(days=days_ahead)
+        date_str = target_date.strftime("%Y-%m-%d")
+        
+        # Calculate shift type using the proper backend logic
+        shift_type = determine_shift_type(
+            date_str,
+            template.get('start_time', '00:00'),
+            template.get('end_time', '00:00'),
+            False  # Not a public holiday for template calculation
+        )
+        
+        # Get the hourly rate for this shift type
+        rate_map = {
+            ShiftType.WEEKDAY_DAY: rates.get('weekday_day', 42.00),
+            ShiftType.WEEKDAY_EVENING: rates.get('weekday_evening', 44.50),
+            ShiftType.WEEKDAY_NIGHT: rates.get('weekday_night', 48.50),
+            ShiftType.SATURDAY: rates.get('saturday', 57.50),
+            ShiftType.SUNDAY: rates.get('sunday', 74.00),
+            ShiftType.PUBLIC_HOLIDAY: rates.get('public_holiday', 88.50),
+            ShiftType.SLEEPOVER: rates.get('sleepover_default', 175.00)
+        }
+        
+        hourly_rate = rate_map.get(shift_type, 42.00)
+        
+        # Calculate hours and total pay
+        hours_worked = calculate_hours_worked(
+            template.get('start_time', '00:00'),
+            template.get('end_time', '00:00')
+        )
+        
+        # Handle sleepover shifts differently
+        if template.get('is_sleepover', False):
+            shift_type = ShiftType.SLEEPOVER
+            hourly_rate = rates.get('sleepover_default', 175.00)
+            total_pay = hourly_rate  # Sleepover is flat rate
+            rate_display = "Sleepover"
+        else:
+            total_pay = hours_worked * hourly_rate
+            rate_display = f"${hourly_rate:.2f}/hr"
+        
+        # Add calculated fields to template
+        enhanced_template = dict(template)
+        enhanced_template.update({
+            'calculated_shift_type': shift_type.value if hasattr(shift_type, 'value') else str(shift_type),
+            'calculated_hourly_rate': hourly_rate,
+            'calculated_hours': hours_worked,
+            'calculated_total_pay': total_pay,
+            'rate_display': rate_display,
+            'shift_type_display': shift_type.value if hasattr(shift_type, 'value') else str(shift_type)
+        })
+        
+        enhanced_templates.append(enhanced_template)
+    
+    return enhanced_templates
 
 @app.post("/api/shift-templates")
 async def create_shift_template(template: ShiftTemplate):
