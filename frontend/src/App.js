@@ -3257,10 +3257,11 @@ function App() {
       setShowKeypad(true);
       setPinInput('');
       
-      // Check if this is a first-time login (using default PIN)
-      const isDefaultPin = (user.role === 'admin' && user.pin === '1234') || 
-                          (user.role === 'staff' && user.pin === '888888');
-      setIsFirstTimeLogin(isDefaultPin);
+      // Check if this is a first-time login
+      const isFirstTime = user.is_first_login || 
+                         (user.role === 'admin' && user.pin === '1234') || 
+                         (user.role === 'staff' && user.pin === '888888');
+      setIsFirstTimeLogin(isFirstTime);
     }
   };
 
