@@ -8337,18 +8337,22 @@ def test_date_filtering_unassigned_shifts(self):
             print("   ❌ Could not get admin authentication")
             return False
     
-    # Test 1: GET /api/shifts endpoint to retrieve unassigned shifts data
-    print(f"\n   🎯 TEST 1: GET /api/shifts endpoint - Retrieve unassigned shifts data")
+    # Test 1: GET /api/roster endpoint to retrieve shifts data (including unassigned)
+    print(f"\n   🎯 TEST 1: GET /api/roster endpoint - Retrieve shifts data including unassigned")
+    
+    # Get current month for roster data
+    current_month = datetime.now().strftime("%Y-%m")
     success, shifts_data = self.run_test(
-        "Get Unassigned Shifts Data",
+        "Get Roster Data (including unassigned shifts)",
         "GET",
-        "api/shifts",
+        "api/roster",
         200,
+        params={"month": current_month},
         use_auth=True
     )
     
     if not success:
-        print("   ❌ Could not retrieve shifts data")
+        print("   ❌ Could not retrieve roster data")
         return False
     
     print(f"   ✅ Found {len(shifts_data)} shifts in total")
