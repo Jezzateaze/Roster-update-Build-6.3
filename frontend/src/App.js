@@ -6197,6 +6197,25 @@ function App() {
                     </div>
                   )}
 
+                  {/* Admin/Supervisor Toggle for Past Shifts */}
+                  {isAdmin() && (
+                    <div className="flex items-center justify-between py-2 border-t border-gray-200">
+                      <div className="flex items-center space-x-3">
+                        <Label htmlFor="show-past-shifts" className="text-sm font-medium text-slate-700">
+                          Show Past Shifts
+                        </Label>
+                        <Switch
+                          id="show-past-shifts"
+                          checked={showPastUnassignedShifts}
+                          onCheckedChange={setShowPastUnassignedShifts}
+                        />
+                      </div>
+                      <div className="text-xs text-slate-500">
+                        {showPastUnassignedShifts ? 'Showing all shifts (including past)' : 'Hiding past shifts (current date forward only)'}
+                      </div>
+                    </div>
+                  )}
+
                   {/* Filtered Unassigned Shifts Display */}
                   {(() => {
                     const filteredShifts = filterUnassignedShiftsByViewMode(
