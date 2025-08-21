@@ -3105,6 +3105,80 @@ function App() {
     }
   };
 
+  // =====================================
+  // EXPORT FUNCTIONALITY
+  // =====================================
+
+  const exportRosterData = async (format) => {
+    try {
+      const currentMonth = formatDateString(currentDate).substring(0, 7); // Get YYYY-MM format
+      const monthName = currentDate.toLocaleString('default', { month: 'long', year: 'numeric' });
+      
+      console.log(`Exporting ${format.toUpperCase()} for ${monthName} (${currentMonth})`);
+      
+      // Make API call to export endpoint
+      const response = await axios.get(`${API_BASE_URL}/api/export/${format}/${currentMonth}`, {
+        headers: { 
+          'Authorization': `Bearer ${authToken}`,
+        },
+        responseType: 'blob' // Important for file downloads
+      });
+      
+      // Create blob from response data
+      const blob = new Blob([response.data], { 
+        type: response.headers['content-type'] 
+      });
+      
+      // Get filename from response headers or create default
+      const contentDisposition = response.headers['content-disposition'];
+      let filename = `roster_export_${monthName.replace(' ', '_')}.${format}`;
+      
+      if (contentDisposition) {
+        const filenameMatch = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
+        if (filenameMatch && filenameMatch[1]) {
+          filename = filenameMatch[1].replace(/['"]/g, '');
+        }
+      }
+      
+      // Create download link and trigger download
+      const downloadUrl = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = downloadUrl;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      
+      // Cleanup
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(downloadUrl);
+      
+      alert(`✅ ${format.toUpperCase()} export completed successfully!`);
+      
+    } catch (error) {
+      console.error(`Export ${format} error:`, error);
+      
+      let errorMessage = 'Export failed. Please try again.';
+      
+      if (error.response?.status === 404) {
+        errorMessage = 'No roster data found for the current month.';
+      } else if (error.response?.status === 403) {
+        errorMessage = 'You do not have permission to export data.';
+      } else if (error.response?.data) {
+        try {
+          // Try to parse error message from blob response
+          const errorText = await error.response.data.text();
+          const errorData = JSON.parse(errorText);
+          errorMessage = errorData.detail || errorMessage;
+        } catch (e) {
+          // Fallback if can't parse error
+          console.log('Could not parse error response');
+        }
+      }
+      
+      alert(`❌ Export failed: ${errorMessage}`);
+    }
+  };
+
   const getDayEntries = (date) => {
     // Ensure we're working with a proper date and format it consistently
     const targetDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
