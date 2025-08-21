@@ -376,6 +376,18 @@ test_plan:
           agent: "testing"
           comment: "🎉 STAFF PAY RATES VERIFICATION COMPLETED - 100% SUCCESS: All 7 pay rates verified correct in Settings API (Weekday Day $42.00, Evening $44.50, Night $48.50, Saturday $57.50, Sunday $74.00, Public Holiday $88.50, Sleepover $175.00). Rate calculation logic working correctly for all 6 test scenarios. Shift Times display will show accurate staff pay rates as specified by user."
 
+  - task: "Enhanced Shift Templates Weekend Classification"
+    implemented: true
+    working: true
+    file: "server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "testing"
+          comment: "🎉 ENHANCED SHIFT TEMPLATES WEEKEND CLASSIFICATION TEST PASSED! Comprehensive testing completed with 100% success rate (2/2 tests passed). ✅ WEEKEND SHIFT CLASSIFICATION WORKING PERFECTLY: All 6 specific weekend shifts from review request tested and verified correct - Saturday 7:30 AM - 3:30 PM: shift_type='saturday', rate=$57.50, total_pay=$460.00 ✅, Saturday 3:00 PM - 8:00 PM: shift_type='saturday', rate=$57.50, total_pay=$287.50 ✅, Saturday 3:30 PM - 11:30 PM: shift_type='saturday', rate=$57.50, total_pay=$460.00 ✅, Sunday 7:30 AM - 3:30 PM: shift_type='sunday', rate=$74.00, total_pay=$592.00 ✅, Sunday 3:00 PM - 8:00 PM: shift_type='sunday', rate=$74.00, total_pay=$370.00 ✅, Sunday 3:30 PM - 11:30 PM: shift_type='sunday', rate=$74.00, total_pay=$592.00 ✅. ✅ ENHANCED FIELDS CONFIRMED: All shift templates now include calculated_shift_type, calculated_hourly_rate, and calculated_total_pay fields as required. ✅ WEEKEND LOGIC VERIFIED: Saturday shifts (day_of_week = 5) correctly classified as 'saturday' shift type with $57.50 rate, Sunday shifts (day_of_week = 6) correctly classified as 'sunday' shift type with $74.00 rate, sleepover shifts maintain correct $175 rate regardless of day. ✅ AUTHENTICATION WORKING: Admin credentials (Admin/0000) provide proper access to GET /api/shift-templates endpoint. ✅ SHIFT TYPE CLASSIFICATION: All 4 Saturday shifts correctly classified (3 as 'saturday', 1 sleepover as 'sleepover'), all 4 Sunday shifts correctly classified (3 as 'sunday', 1 sleepover as 'sleepover'). The enhanced shift templates endpoint is now correctly returning weekend shift types and rates that will fix the staff user display issue as requested."
+
   - task: "Staff Weekend Shift Rates Display Verification"
     implemented: true
     working: true
