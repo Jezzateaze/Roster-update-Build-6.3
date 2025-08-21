@@ -10251,6 +10251,19 @@ function App() {
                   <p>👤 Staff: <span className="font-mono">888888</span></p>
                   <p className="text-xs mt-1">You'll be asked to change your PIN on first login</p>
                 </div>
+                
+                {/* Debug Info */}
+                <div className="text-xs text-gray-400 mt-2 text-center">
+                  Users loaded: {availableUsers.length} | API: {API_BASE_URL ? 'Connected' : 'Not Connected'}
+                  {availableUsers.length === 0 && (
+                    <button 
+                      onClick={fetchAvailableUsers}
+                      className="ml-2 text-blue-600 underline"
+                    >
+                      Retry Loading Users
+                    </button>
+                  )}
+                </div>
               </div>
             )}
             
