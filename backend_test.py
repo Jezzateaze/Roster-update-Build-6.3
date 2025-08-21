@@ -8584,8 +8584,6 @@ def test_date_filtering_unassigned_shifts(self):
     print(f"\n   🎯 TEST 5: Test role-based data filtering for date filtering support")
     
     # Test date range filtering (simulate frontend date filtering logic)
-    from datetime import datetime, timedelta
-    
     today = datetime.now().date()
     current_date_str = today.strftime("%Y-%m-%d")
     future_date = today + timedelta(days=7)
