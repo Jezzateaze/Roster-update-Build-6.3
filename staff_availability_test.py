@@ -381,7 +381,7 @@ class StaffAvailabilityTester:
             "Access Staff Availability With Invalid Token (Should Fail)",
             "GET",
             "api/staff-availability",
-            403,  # Expect forbidden (403 is also acceptable)
+            401,  # Expect unauthorized for invalid token
             use_auth=True
         )
         
