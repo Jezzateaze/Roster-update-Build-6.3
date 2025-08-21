@@ -57,8 +57,8 @@
 ##   test_priority: "high_first"  # or "sequential" or "stuck_first"
 ##
 ## agent_communication:
-##     -agent: "main"  # or "testing" or "user"
-##     -message: "Communication message between agents"
+##     - agent: "main"
+##       message: "Found two critical issues with Enhanced Login System: 1) Login dropdown not rendering users despite successful data loading (availableUsers state populated but dropdown shows no options), 2) PIN change dialog becomes unresponsive after choosing 4/6 digit PIN and entering keypad - popup appears but cannot be closed or completed. Fixing both rendering and modal state issues."
 
 # Protocol Guidelines for Main agent
 #
