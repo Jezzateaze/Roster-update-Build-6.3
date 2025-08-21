@@ -574,6 +574,98 @@ class ClientBiographyTester:
             print("   ❌ No admin authentication token available")
             return False
 
+        # First, restore Jeremy's comprehensive biography data (in case it was overwritten by tests)
+        comprehensive_biography = {
+            "strengths": "Jeremy has a passion for gardening and enjoys growing vegetables and flowers. He is skilled in various crafts including woodworking and painting. Jeremy loves cooking and often prepares meals for himself. He has an interest in photography and enjoys taking pictures of nature. Jeremy also enjoys playing video games and is quite skilled at strategy games.",
+            "living_arrangements": "Jeremy lives independently in a comfortable 1-bedroom apartment located at 20/384 Stanley Rd, Carina 4152. He shares his home with his beloved Maltese dog, Siana-Rose, who provides companionship and emotional support. The apartment is well-maintained and Jeremy takes pride in keeping it organized and clean.",
+            "daily_life": "Jeremy follows a structured daily routine that includes morning walks with Siana-Rose, tending to his small garden on the balcony, and engaging in various hobbies throughout the day. He enjoys cooking his own meals and maintains good personal hygiene and self-care routines. Jeremy participates in community activities and maintains social connections with neighbors and friends.",
+            "goals": [
+                {
+                    "title": "Improve Physical Fitness",
+                    "description": "Increase daily physical activity and improve overall health and stamina",
+                    "how_to_achieve": "Daily walks with Siana-Rose, join local gym, participate in swimming classes, track progress with fitness app"
+                },
+                {
+                    "title": "Expand Social Network",
+                    "description": "Build meaningful friendships and social connections in the community",
+                    "how_to_achieve": "Join hobby groups, attend community events, volunteer at local organizations, participate in group activities"
+                },
+                {
+                    "title": "Develop Cooking Skills",
+                    "description": "Learn new recipes and improve culinary abilities for better nutrition",
+                    "how_to_achieve": "Take cooking classes, practice new recipes weekly, create meal plans, learn about nutrition"
+                },
+                {
+                    "title": "Enhance Photography Skills",
+                    "description": "Improve photography techniques and potentially exhibit work",
+                    "how_to_achieve": "Take photography course, practice different techniques, join photography club, create portfolio"
+                },
+                {
+                    "title": "Maintain Independent Living",
+                    "description": "Continue living independently with minimal support",
+                    "how_to_achieve": "Develop daily living skills, maintain apartment, manage finances, build support network"
+                },
+                {
+                    "title": "Pursue Creative Interests",
+                    "description": "Explore and develop artistic talents in painting and crafts",
+                    "how_to_achieve": "Attend art classes, set up home studio space, participate in local art shows, practice regularly"
+                }
+            ],
+            "supports": [
+                {
+                    "description": "Personal care and daily living assistance",
+                    "provider": "Workcare Support Services - Sarah Johnson",
+                    "frequency": "3 times per week",
+                    "type": "In-home support"
+                },
+                {
+                    "description": "Community access and social participation",
+                    "provider": "Community Connect - Michael Chen",
+                    "frequency": "2 times per week",
+                    "type": "Community participation"
+                },
+                {
+                    "description": "Health and medical support coordination",
+                    "provider": "Brisbane Health Network - Dr. Amanda Wilson",
+                    "frequency": "Monthly",
+                    "type": "Health coordination"
+                },
+                {
+                    "description": "Behavioral support and counseling",
+                    "provider": "Positive Behavior Solutions - Lisa Thompson",
+                    "frequency": "Fortnightly",
+                    "type": "Behavioral support"
+                },
+                {
+                    "description": "Occupational therapy services",
+                    "provider": "Allied Health Partners - James Rodriguez",
+                    "frequency": "Monthly",
+                    "type": "Therapy services"
+                },
+                {
+                    "description": "Pet care support for Siana-Rose",
+                    "provider": "Pet Care Plus - Emma Davis",
+                    "frequency": "As needed",
+                    "type": "Pet support"
+                }
+            ],
+            "additional_info": "Jeremy is highly motivated to maintain his independence and actively participates in his support planning. He has strong communication skills and is able to express his needs and preferences clearly. Jeremy responds well to routine and structure but also enjoys flexibility for spontaneous activities. He has a good relationship with his support workers and values their assistance in achieving his goals."
+        }
+
+        # Restore comprehensive data
+        print(f"   🔄 Restoring Jeremy's comprehensive biography data...")
+        success, response = self.run_test(
+            f"Restore Jeremy's Comprehensive Biography",
+            "PUT",
+            f"api/clients/{self.jeremy_client_id}/biography",
+            200,
+            data=comprehensive_biography,
+            use_auth=True
+        )
+
+        if not success:
+            print(f"   ⚠️  Could not restore comprehensive biography data")
+
         # Get Jeremy's complete profile
         success, jeremy_profile = self.run_test(
             f"Get Jeremy's Complete Profile for Verification",
