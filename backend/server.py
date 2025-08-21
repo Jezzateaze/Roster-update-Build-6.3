@@ -25,6 +25,21 @@ import pillow_heif
 import magic
 import logging
 
+# Export-related imports
+from reportlab.pdfgen import canvas
+from reportlab.lib.pagesizes import letter, A4
+from reportlab.lib import colors
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
+from reportlab.lib.units import inch
+import pandas as pd
+import openpyxl
+from openpyxl.styles import Font, Alignment, Border, Side, PatternFill
+import xlsxwriter
+import csv
+import io
+from fastapi.responses import StreamingResponse
+
 # Database setup
 MONGO_URL = os.environ.get("MONGO_URL", "mongodb://localhost:27017")
 DB_NAME = os.environ.get("DB_NAME", "shift_roster_db")
