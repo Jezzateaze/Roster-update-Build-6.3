@@ -527,6 +527,7 @@ function App() {
   const [showNotifications, setShowNotifications] = useState(false);
   const [unassignedShiftsViewMode, setUnassignedShiftsViewMode] = useState('daily');
   const [unassignedShiftsSearchDate, setUnassignedShiftsSearchDate] = useState('');
+  const [showPastUnassignedShifts, setShowPastUnassignedShifts] = useState(false); // Default to hide past shifts
   
   // Shift Request CRUD states
   const [showEditShiftRequestDialog, setShowEditShiftRequestDialog] = useState(false);
