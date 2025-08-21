@@ -3921,8 +3921,14 @@ def get_roster_data_for_export(month: str, current_user: dict):
         
         # Calculate pay information
         hours_worked = entry.get("hours_worked", 0)
-        hourly_rate = entry.get("hourly_rate", 0)
+        base_pay = entry.get("base_pay", 0)
         total_pay = entry.get("total_pay", 0)
+        
+        # Calculate hourly rate from base pay and hours worked
+        if hours_worked > 0 and not entry.get("is_sleepover", False):
+            hourly_rate = base_pay / hours_worked
+        else:
+            hourly_rate = 0
         
         export_entry = {
             "Date": entry.get("date", ""),
