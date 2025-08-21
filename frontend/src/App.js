@@ -10332,7 +10332,7 @@ function App() {
               <div className="space-y-4">
                 <div className="text-center">
                   <div className="text-lg font-medium text-gray-800">
-                    Welcome, {selectedUser.username}
+                    Welcome, {selectedUser.name || selectedUser.username}
                   </div>
                   <div className="text-sm text-gray-500">
                     {selectedUser.role === 'admin' ? '👑 Administrator' : '👤 Staff Member'}
