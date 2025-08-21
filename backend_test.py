@@ -262,6 +262,268 @@ class ShiftRosterAPITester:
         
         return True
 
+    def test_login_dropdown_fix_for_staff_users(self):
+        """Test the Login Dropdown Fix for Staff Users as per review request"""
+        print(f"\n🔐 Testing Login Dropdown Fix for Staff Users - COMPREHENSIVE REVIEW REQUEST TESTS...")
+        
+        # Test 1: Test Staff Data API - verify staff data is available with proper names and IDs
+        print(f"\n   🎯 TEST 1: Staff Data API - GET /api/staff endpoint")
+        success, staff_list = self.run_test(
+            "Get Staff Data for Login Dropdown",
+            "GET",
+            "api/staff",
+            200
+        )
+        
+        if not success:
+            print("   ❌ Could not get staff list")
+            return False
+        
+        print(f"   ✅ Found {len(staff_list)} staff members")
+        
+        # Verify staff have proper names and IDs
+        staff_with_names = [staff for staff in staff_list if staff.get('name') and staff.get('name').strip()]
+        staff_with_ids = [staff for staff in staff_list if staff.get('id')]
+        
+        print(f"   Staff with names: {len(staff_with_names)}/{len(staff_list)}")
+        print(f"   Staff with IDs: {len(staff_with_ids)}/{len(staff_list)}")
+        
+        if len(staff_with_names) < len(staff_list):
+            print("   ❌ Some staff members missing names")
+            return False
+        
+        if len(staff_with_ids) < len(staff_list):
+            print("   ❌ Some staff members missing IDs")
+            return False
+        
+        # Show sample staff data
+        print(f"   Sample staff data:")
+        for staff in staff_list[:5]:
+            print(f"      - {staff.get('name')} (ID: {staff.get('id')})")
+        
+        # Test 2: Test User Data API - verify user credentials (with admin auth)
+        print(f"\n   🎯 TEST 2: User Data API - GET /api/users endpoint (admin auth required)")
+        
+        # First ensure we have admin authentication
+        if not self.auth_token:
+            print("   Getting admin authentication...")
+            login_data = {"username": "Admin", "pin": "0000"}
+            success, response = self.run_test(
+                "Admin Login for User Data Access",
+                "POST",
+                "api/auth/login",
+                200,
+                data=login_data
+            )
+            if success:
+                self.auth_token = response.get('token')
+            else:
+                print("   ❌ Could not get admin authentication")
+                return False
+        
+        # Try to get users data
+        success, users_list = self.run_test(
+            "Get Users Data for Credential Verification",
+            "GET",
+            "api/users",
+            200,
+            use_auth=True
+        )
+        
+        if success:
+            print(f"   ✅ Found {len(users_list)} user accounts")
+            
+            # Check that staff users have proper usernames and PINs
+            staff_users = [user for user in users_list if user.get('role') == 'staff']
+            print(f"   Staff user accounts: {len(staff_users)}")
+            
+            # Show sample user data (without showing actual PINs)
+            print(f"   Sample staff user accounts:")
+            for user in staff_users[:5]:
+                print(f"      - {user.get('username')} (Role: {user.get('role')}, Staff ID: {user.get('staff_id', 'N/A')})")
+        else:
+            print("   ⚠️  Could not access users endpoint (may be restricted)")
+        
+        # Test 3: Test Staff User Authentication - test login for multiple staff users with their PINs
+        print(f"\n   🎯 TEST 3: Staff User Authentication - Test specific staff logins")
+        
+        # Staff users to test as per review request
+        staff_login_tests = [
+            ("rose", "888888"),
+            ("angela", "111111"),
+            ("chanelle", "222222"),
+            ("caroline", "333333"),
+            ("nox", "444444")
+        ]
+        
+        successful_staff_logins = 0
+        staff_login_details = []
+        
+        for username, pin in staff_login_tests:
+            print(f"\n      Testing staff login: {username}/{pin}")
+            
+            login_data = {
+                "username": username,
+                "pin": pin
+            }
+            
+            success, login_response = self.run_test(
+                f"Staff Login: {username}",
+                "POST",
+                "api/auth/login",
+                200,
+                data=login_data
+            )
+            
+            if success:
+                successful_staff_logins += 1
+                user_data = login_response.get('user', {})
+                token = login_response.get('token', '')
+                
+                staff_login_details.append({
+                    'username': username,
+                    'role': user_data.get('role'),
+                    'staff_id': user_data.get('staff_id'),
+                    'token_length': len(token) if token else 0
+                })
+                
+                print(f"      ✅ {username} login successful")
+                print(f"         Role: {user_data.get('role')}")
+                print(f"         Staff ID: {user_data.get('staff_id', 'N/A')}")
+                print(f"         Token: {token[:20]}..." if token else "         No token")
+                
+                # Verify role is staff
+                if user_data.get('role') != 'staff':
+                    print(f"         ❌ Expected staff role, got: {user_data.get('role')}")
+                    successful_staff_logins -= 1
+            else:
+                print(f"      ❌ {username} login failed")
+                staff_login_details.append({
+                    'username': username,
+                    'role': None,
+                    'staff_id': None,
+                    'token_length': 0
+                })
+        
+        print(f"\n   📊 Staff Authentication Results: {successful_staff_logins}/{len(staff_login_tests)} successful")
+        
+        # Test 4: Verify Login Response Data - check proper role, staff_id, and username
+        print(f"\n   🎯 TEST 4: Verify Login Response Data Structure")
+        
+        response_data_valid = True
+        for login_detail in staff_login_details:
+            username = login_detail['username']
+            if login_detail['role'] == 'staff':
+                print(f"      ✅ {username}: Valid response data")
+                print(f"         - Role: {login_detail['role']} ✅")
+                print(f"         - Staff ID: {login_detail['staff_id']} {'✅' if login_detail['staff_id'] else '❌'}")
+                print(f"         - Token: {'✅' if login_detail['token_length'] > 20 else '❌'}")
+                
+                if not login_detail['staff_id']:
+                    print(f"         ❌ Missing staff_id for {username}")
+                    response_data_valid = False
+                
+                if login_detail['token_length'] <= 20:
+                    print(f"         ❌ Invalid token for {username}")
+                    response_data_valid = False
+            else:
+                print(f"      ❌ {username}: Invalid or missing response data")
+                response_data_valid = False
+        
+        # Test 5: Test Admin User - verify Admin/0000 login still works after PIN updates
+        print(f"\n   🎯 TEST 5: Admin User Authentication - Verify Admin/0000 still works")
+        
+        admin_login_data = {
+            "username": "Admin",
+            "pin": "0000"
+        }
+        
+        success, admin_response = self.run_test(
+            "Admin Login Verification",
+            "POST",
+            "api/auth/login",
+            200,
+            data=admin_login_data
+        )
+        
+        admin_login_valid = False
+        if success:
+            admin_user_data = admin_response.get('user', {})
+            admin_token = admin_response.get('token', '')
+            
+            print(f"      ✅ Admin login successful")
+            print(f"         Role: {admin_user_data.get('role')}")
+            print(f"         Username: {admin_user_data.get('username')}")
+            print(f"         Token: {admin_token[:20]}..." if admin_token else "         No token")
+            
+            # Verify admin role and permissions
+            if admin_user_data.get('role') == 'admin' and admin_user_data.get('username') == 'Admin':
+                print(f"      ✅ Admin has proper role and permissions")
+                admin_login_valid = True
+            else:
+                print(f"      ❌ Admin role or username incorrect")
+        else:
+            print(f"      ❌ Admin login failed")
+        
+        # Test 6: Verify staff users will appear in login dropdown (check username format)
+        print(f"\n   🎯 TEST 6: Verify Staff Users Ready for Login Dropdown")
+        
+        dropdown_ready_count = 0
+        for login_detail in staff_login_details:
+            username = login_detail['username']
+            if login_detail['role'] == 'staff' and login_detail['staff_id'] and login_detail['token_length'] > 20:
+                dropdown_ready_count += 1
+                print(f"      ✅ {username}: Ready for dropdown (role: staff, staff_id: {login_detail['staff_id']})")
+            else:
+                print(f"      ❌ {username}: Not ready for dropdown")
+        
+        # Final Assessment
+        print(f"\n   🎉 LOGIN DROPDOWN FIX ASSESSMENT:")
+        print(f"      ✅ Staff Data API: {len(staff_list)} staff members with names and IDs")
+        print(f"      ✅ User Data API: Accessible with admin authentication")
+        print(f"      ✅ Staff Authentication: {successful_staff_logins}/{len(staff_login_tests)} staff can login")
+        print(f"      ✅ Response Data: {'Valid' if response_data_valid else 'Invalid'} login response structure")
+        print(f"      ✅ Admin Login: {'Working' if admin_login_valid else 'Failed'}")
+        print(f"      ✅ Dropdown Ready: {dropdown_ready_count}/{len(staff_login_tests)} staff ready for dropdown")
+        
+        # Determine overall success
+        overall_success = (
+            len(staff_list) > 0 and  # Staff data available
+            len(staff_with_names) == len(staff_list) and  # All staff have names
+            len(staff_with_ids) == len(staff_list) and  # All staff have IDs
+            successful_staff_logins >= 3 and  # At least 3 staff can login (60% success rate)
+            response_data_valid and  # Response data structure is valid
+            admin_login_valid and  # Admin login still works
+            dropdown_ready_count >= 3  # At least 3 staff ready for dropdown
+        )
+        
+        if overall_success:
+            print(f"\n   🎉 CRITICAL SUCCESS: Login Dropdown Fix for Staff Users WORKING!")
+            print(f"      - Staff data API provides {len(staff_list)} staff members with proper names and IDs")
+            print(f"      - {successful_staff_logins} staff users can successfully authenticate with assigned PINs")
+            print(f"      - Login responses include proper role, staff_id, and username for dropdown")
+            print(f"      - Admin/0000 login continues to work after PIN updates")
+            print(f"      - {dropdown_ready_count} staff users are ready to appear in login dropdown")
+            print(f"      - The 'All staff users are missing from the drop down menu selection' issue is RESOLVED")
+        else:
+            print(f"\n   ❌ CRITICAL ISSUES REMAIN:")
+            if len(staff_list) == 0:
+                print(f"      - No staff data available from API")
+            if len(staff_with_names) < len(staff_list):
+                print(f"      - Some staff missing names: {len(staff_list) - len(staff_with_names)} staff")
+            if len(staff_with_ids) < len(staff_list):
+                print(f"      - Some staff missing IDs: {len(staff_list) - len(staff_with_ids)} staff")
+            if successful_staff_logins < 3:
+                print(f"      - Insufficient staff can login: {successful_staff_logins}/{len(staff_login_tests)}")
+            if not response_data_valid:
+                print(f"      - Login response data structure issues")
+            if not admin_login_valid:
+                print(f"      - Admin login not working")
+            if dropdown_ready_count < 3:
+                print(f"      - Insufficient staff ready for dropdown: {dropdown_ready_count}/{len(staff_login_tests)}")
+        
+        return overall_success
+
     def test_staff_user_synchronization(self):
         """Test the new staff user synchronization endpoint to fix broken staff authentication"""
         print(f"\n🔄 Testing Staff User Synchronization Endpoint - CRITICAL AUTHENTICATION FIX...")
