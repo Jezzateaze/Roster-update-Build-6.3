@@ -1805,12 +1805,14 @@ function App() {
   const fetchAvailableUsers = async () => {
     try {
       console.log('🔍 Fetching available users for login...');
+      console.log('API_BASE_URL:', API_BASE_URL);
       
       // Get all active users from the login endpoint (public, no auth required)
       const response = await axios.get(`${API_BASE_URL}/api/users/login`);
       const userList = response.data;
       
       console.log('Raw user list fetched:', userList);
+      console.log('Number of users returned:', userList?.length || 0);
       
       // Filter and format users for the dropdown
       const activeUsers = userList
