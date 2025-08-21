@@ -1841,8 +1841,24 @@ function App() {
     fetchInitialData();
     fetchAvailableUsers();
     
-    // Auto-login as Admin (bypass login screen)
-    autoLoginAsAdmin();
+    // Check for existing authentication
+    const storedToken = localStorage.getItem('authToken');
+    const storedUser = localStorage.getItem('currentUser');
+    
+    if (storedToken && storedUser) {
+      try {
+        const user = JSON.parse(storedUser);
+        setCurrentUser(user);
+        setAuthToken(storedToken);
+        setIsAuthenticated(true);
+        setShowLoginDialog(false);
+        axios.defaults.headers.common['Authorization'] = `Bearer ${storedToken}`;
+      } catch (error) {
+        // Clear invalid stored data
+        localStorage.removeItem('authToken');
+        localStorage.removeItem('currentUser');
+      }
+    }
   }, []);
 
   // Auto-login as Admin function
