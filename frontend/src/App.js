@@ -1806,8 +1806,8 @@ function App() {
     try {
       console.log('🔍 Fetching available users for login...');
       
-      // Get all active users from the users collection
-      const response = await axios.get(`${API_BASE_URL}/api/users`);
+      // Get all active users from the login endpoint (public, no auth required)
+      const response = await axios.get(`${API_BASE_URL}/api/users/login`);
       const userList = response.data;
       
       console.log('Raw user list fetched:', userList);
