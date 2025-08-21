@@ -6604,73 +6604,105 @@ function App() {
                       </Button>
                     </div>
                   ) : (
-                    <div className="space-y-3">
-                      {staffAvailability.map((availability) => (
-                        <div key={availability.id} className="border rounded-lg p-4">
-                          <div className="flex items-start justify-between">
-                            <div className="flex-1">
-                              <div className="flex items-center space-x-4 mb-2">
-                                <div className="font-medium text-slate-800">
-                                  {availability.staff_name}
-                                </div>
-                                {getAvailabilityTypeBadge(availability.availability_type)}
-                              </div>
-                              
-                              <div className="text-sm text-slate-600 space-y-1">
-                                {availability.is_recurring ? (
-                                  <p>🔄 Every {getDayOfWeekName(availability.day_of_week)}</p>
-                                ) : (
-                                  <p>📅 {availability.date_from === availability.date_to ? 
-                                    formatAvailabilityDate(availability.date_from) :
-                                    `${formatAvailabilityDate(availability.date_from)} - ${formatAvailabilityDate(availability.date_to)}`
-                                  }</p>
-                                )}
-                                
-                                {availability.start_time && availability.end_time && (
-                                  <p>🕐 {formatTime(availability.start_time)} - {formatTime(availability.end_time)}</p>
-                                )}
-                                
-                                {availability.notes && (
-                                  <p className="text-slate-700">💬 {availability.notes}</p>
-                                )}
-                              </div>
-                              
-                              <div className="text-xs text-slate-500 mt-2">
-                                Added: {new Date(availability.created_at).toLocaleDateString()}
-                              </div>
-                            </div>
-                            
-                            {/* Enhanced Action Buttons */}
-                            <div className="flex flex-col space-y-2 ml-4">
-                              {/* Admin or Own Record Actions */}
-                              {(isAdmin() || (isStaff() && availability.staff_id === currentUser?.staff_id)) && (
-                                <div className="flex space-x-2">
-                                  <Button 
-                                    variant="ghost" 
-                                    size="sm"
-                                    onClick={() => {
-                                      setEditingStaffAvailability(availability);
-                                      setShowEditStaffAvailabilityDialog(true);
-                                    }}
-                                  >
-                                    <Edit className="w-4 h-4 mr-1" />
-                                    Edit
-                                  </Button>
-                                  <Button 
-                                    variant="ghost" 
-                                    size="sm"
-                                    onClick={() => deleteStaffAvailability(availability.id)}
-                                  >
-                                    <Trash2 className="w-4 h-4 mr-1" />
-                                    Delete
-                                  </Button>
-                                </div>
-                              )}
-                            </div>
+                    (() => {
+                      const groupedAvailability = groupAndSortStaffAvailability(staffAvailability);
+                      
+                      if (Object.keys(groupedAvailability).length === 0) {
+                        return (
+                          <div className="text-center py-8 text-slate-500">
+                            <CalendarViewIcon className="w-12 h-12 mx-auto mb-3 opacity-50" />
+                            <p>No availability records found</p>
                           </div>
+                        );
+                      }
+                      
+                      return (
+                        <div className="space-y-6">
+                          {Object.entries(groupedAvailability).map(([typeKey, typeData]) => (
+                            <div key={typeKey} className={`border rounded-lg p-4 ${typeData.color}`}>
+                              {/* Availability Type Header */}
+                              <div className="flex items-center justify-between mb-4">
+                                <h3 className="text-lg font-semibold text-slate-800 flex items-center space-x-2">
+                                  <span>{typeData.label}</span>
+                                  <Badge variant="secondary" className="text-xs">
+                                    {typeData.records.length} record{typeData.records.length !== 1 ? 's' : ''}
+                                  </Badge>
+                                </h3>
+                              </div>
+                              
+                              {/* Records within this availability type */}
+                              <div className="space-y-3">
+                                {typeData.records.map((availability) => (
+                                  <div key={availability.id} className="bg-white border rounded-lg p-4 shadow-sm">
+                                    <div className="flex items-start justify-between">
+                                      <div className="flex-1">
+                                        <div className="flex items-center space-x-4 mb-2">
+                                          <div className="font-medium text-slate-800">
+                                            {availability.staff_name}
+                                          </div>
+                                          {getAvailabilityTypeBadge(availability.availability_type)}
+                                        </div>
+                                        
+                                        <div className="text-sm text-slate-600 space-y-1">
+                                          {availability.is_recurring ? (
+                                            <p>🔄 Every {getDayOfWeekName(availability.day_of_week)}</p>
+                                          ) : (
+                                            <p>📅 {availability.date_from === availability.date_to ? 
+                                              formatAvailabilityDate(availability.date_from) :
+                                              `${formatAvailabilityDate(availability.date_from)} - ${formatAvailabilityDate(availability.date_to)}`
+                                            }</p>
+                                          )}
+                                          
+                                          {availability.start_time && availability.end_time && (
+                                            <p>🕐 {formatTime(availability.start_time)} - {formatTime(availability.end_time)}</p>
+                                          )}
+                                          
+                                          {availability.notes && (
+                                            <p className="text-slate-700">💬 {availability.notes}</p>
+                                          )}
+                                        </div>
+                                        
+                                        <div className="text-xs text-slate-500 mt-2">
+                                          Added: {new Date(availability.created_at).toLocaleDateString()}
+                                        </div>
+                                      </div>
+                                      
+                                      {/* Enhanced Action Buttons */}
+                                      <div className="flex flex-col space-y-2 ml-4">
+                                        {/* Admin or Own Record Actions */}
+                                        {(isAdmin() || (isStaff() && availability.staff_id === currentUser?.staff_id)) && (
+                                          <div className="flex space-x-2">
+                                            <Button 
+                                              variant="ghost" 
+                                              size="sm"
+                                              onClick={() => {
+                                                setEditingStaffAvailability(availability);
+                                                setShowEditStaffAvailabilityDialog(true);
+                                              }}
+                                            >
+                                              <Edit className="w-4 h-4 mr-1" />
+                                              Edit
+                                            </Button>
+                                            <Button 
+                                              variant="ghost" 
+                                              size="sm"
+                                              onClick={() => deleteStaffAvailability(availability.id)}
+                                            >
+                                              <Trash2 className="w-4 h-4 mr-1" />
+                                              Delete
+                                            </Button>
+                                          </div>
+                                        )}
+                                      </div>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          ))}
                         </div>
-                      ))}
-                    </div>
+                      );
+                    })()
                   )}
                 </CardContent>
               </Card>
