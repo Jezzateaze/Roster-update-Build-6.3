@@ -366,8 +366,8 @@ class StaffAvailabilityTester:
         
         self.auth_token = original_token  # Restore token
         
-        if success:  # Success means we got expected 401 status
-            print(f"      ✅ Unauthenticated access correctly blocked (401)")
+        if success:  # Success means we got expected 403 status
+            print(f"      ✅ Unauthenticated access correctly blocked (403)")
         else:
             print(f"      ❌ Unauthenticated access was not properly blocked")
             return False
