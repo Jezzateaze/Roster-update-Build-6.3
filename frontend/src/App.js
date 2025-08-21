@@ -1842,20 +1842,32 @@ function App() {
       
     } catch (error) {
       console.error('❌ Error fetching users:', error);
+      console.error('Error details:', error.response?.data, error.message);
       
-      // Fallback: Create basic admin user if API fails
+      // Fallback: Create test users including admin and staff
       const fallbackUsers = [
         {
           id: 'admin-fallback',
           username: 'Admin', 
           role: 'admin',
-          pin: '1234',
           displayName: '👑 Admin (Administrator)'
+        },
+        {
+          id: 'rose-fallback',
+          username: 'rose', 
+          role: 'staff',
+          displayName: '👤 rose (Staff)'
+        },
+        {
+          id: 'angela-fallback',
+          username: 'angela', 
+          role: 'staff',
+          displayName: '👤 angela (Staff)'
         }
       ];
       
       setAvailableUsers(fallbackUsers);
-      console.log('🔄 Using fallback admin user');
+      console.log('🔄 Using fallback users:', fallbackUsers);
     }
   };
 
