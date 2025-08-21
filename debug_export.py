@@ -3,9 +3,9 @@ from pymongo import MongoClient
 from datetime import datetime
 
 # Connect to MongoDB
-mongo_url = os.environ.get('MONGO_URL', 'mongodb://localhost:27017/workcare_manage')
+mongo_url = "mongodb://localhost:27017"
 client = MongoClient(mongo_url)
-db = client.workcare_manage
+db = client.test_database  # Use the correct database name
 
 print('🔍 Debugging Export Function Step by Step...')
 
