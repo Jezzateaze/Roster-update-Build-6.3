@@ -13,7 +13,7 @@ class ShiftRosterAPITester:
         self.roster_entries = []
         self.auth_token = None
 
-    def run_test(self, name, method, endpoint, expected_status, data=None, params=None, use_auth=False):
+    def run_test(self, name, method, endpoint, expected_status, data=None, params=None, use_auth=False, expect_json=True):
         """Run a single API test"""
         url = f"{self.base_url}/{endpoint}"
         headers = {'Content-Type': 'application/json'}
@@ -40,19 +40,25 @@ class ShiftRosterAPITester:
             if success:
                 self.tests_passed += 1
                 print(f"✅ Passed - Status: {response.status_code}")
-                try:
-                    response_data = response.json()
-                    if isinstance(response_data, list) and len(response_data) > 0:
-                        print(f"   Response: {len(response_data)} items returned")
-                    elif isinstance(response_data, dict):
-                        print(f"   Response keys: {list(response_data.keys())}")
-                except:
+                if expect_json:
+                    try:
+                        response_data = response.json()
+                        if isinstance(response_data, list) and len(response_data) > 0:
+                            print(f"   Response: {len(response_data)} items returned")
+                        elif isinstance(response_data, dict):
+                            print(f"   Response keys: {list(response_data.keys())}")
+                    except:
+                        print(f"   Response: {response.text[:100]}...")
+                else:
                     print(f"   Response: {response.text[:100]}...")
             else:
                 print(f"❌ Failed - Expected {expected_status}, got {response.status_code}")
                 print(f"   Response: {response.text[:200]}...")
 
-            return success, response.json() if response.status_code < 400 else {}
+            if expect_json:
+                return success, response.json() if response.status_code < 400 else {}
+            else:
+                return success, response.text if success else response.text
 
         except Exception as e:
             print(f"❌ Failed - Error: {str(e)}")
