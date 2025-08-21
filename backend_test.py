@@ -7134,4 +7134,20 @@ def test_enhanced_add_availability_functionality(self):
 ShiftRosterAPITester.test_enhanced_add_availability_functionality = test_enhanced_add_availability_functionality
 
 if __name__ == "__main__":
-    sys.exit(main())
+    tester = ShiftRosterAPITester()
+    # Run only the specific export functionality test for Rose
+    print("🚀 Starting Export Functionality Test for Rose - August 2025...")
+    print(f"   Base URL: {tester.base_url}")
+    
+    # First authenticate as admin to set up
+    if tester.test_authentication_system():
+        # Then run the specific export test
+        if tester.test_export_functionality_rose_august_2025():
+            print("\n🎉 EXPORT FUNCTIONALITY TEST COMPLETED SUCCESSFULLY!")
+            sys.exit(0)
+        else:
+            print("\n❌ EXPORT FUNCTIONALITY TEST FAILED!")
+            sys.exit(1)
+    else:
+        print("\n❌ AUTHENTICATION SETUP FAILED!")
+        sys.exit(1)
