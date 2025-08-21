@@ -3896,7 +3896,7 @@ def get_roster_data_for_export(month: str, current_user: dict):
         "date": {"$gte": start_date, "$lt": end_date}
     }
     
-    roster_entries = list(db.roster_entries.find(query, {"_id": 0}).sort("date", 1))
+    roster_entries = list(db.roster.find(query, {"_id": 0}).sort("date", 1))
     
     # Get staff information
     staff_dict = {}
