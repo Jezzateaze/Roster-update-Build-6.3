@@ -8432,10 +8432,11 @@ def test_date_filtering_unassigned_shifts(self):
     admin_access_success = True
     print(f"   Testing admin access...")
     success, admin_shifts = self.run_test(
-        "Admin Access to Shifts",
+        "Admin Access to Roster",
         "GET",
-        "api/shifts",
+        "api/roster",
         200,
+        params={"month": current_month},
         use_auth=True
     )
     
