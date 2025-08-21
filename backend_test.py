@@ -8472,10 +8472,11 @@ def test_date_filtering_unassigned_shifts(self):
             
             # Test staff access to shifts
             success, staff_shifts = self.run_test(
-                f"Staff Access to Shifts ({username})",
+                f"Staff Access to Roster ({username})",
                 "GET",
-                "api/shifts",
+                "api/roster",
                 200,
+                params={"month": current_month},
                 use_auth=True
             )
             
