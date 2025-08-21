@@ -7270,33 +7270,24 @@ class ShiftRosterAPITester:
         return critical_tests_passed
 
 def main():
-    print("🚀 Starting Staff User Synchronization API Tests")
-    print("🎯 URGENT: Test staff user synchronization endpoint to fix broken staff authentication")
+    print("🚀 Starting Enhanced Login System Backend Tests")
+    print("🎯 FOCUS: Test Enhanced Login System backend functionality as per review request")
     print("=" * 80)
     
     tester = ShiftRosterAPITester()
     
-    # Run authentication first to get admin token
-    print("\n🔐 Running Admin Authentication...")
-    auth_success = tester.test_authentication_system()
-    
-    if not auth_success:
-        print("❌ Admin authentication failed - cannot proceed with sync tests")
-        return 1
-    
-    # Run basic health checks
-    print("\n📋 Running Basic Health Checks...")
+    # Run basic health check first
+    print("\n📋 Running Basic Health Check...")
     tester.test_health_check()
-    tester.test_get_staff()
     
-    # Run the critical staff synchronization test
+    # Run the Enhanced Login System test
     print("\n" + "="*80)
-    print("🎯 CRITICAL STAFF USER SYNCHRONIZATION TEST")
+    print("🎯 ENHANCED LOGIN SYSTEM BACKEND TESTS")
     print("="*80)
-    success = tester.test_staff_user_synchronization()
+    success = tester.test_enhanced_login_system()
     
-    print(f"\n🏁 Staff User Synchronization Test Complete!")
-    print(f"Result: {'✅ PASSED - Staff authentication restored!' if success else '❌ FAILED - Staff authentication still broken'}")
+    print(f"\n🏁 Enhanced Login System Test Complete!")
+    print(f"Result: {'✅ PASSED - Enhanced Login System working!' if success else '❌ FAILED - Enhanced Login System has issues'}")
     
     # Print final summary
     print(f"\n📊 TEST SUMMARY:")
