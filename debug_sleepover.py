@@ -2,7 +2,7 @@ import requests
 import json
 
 # Test the sleepover calculation specifically
-base_url = "https://shift-master-8.preview.emergentagent.com"
+base_url = "https://workcare-manage.preview.emergentagent.com"
 
 # First authenticate
 login_data = {

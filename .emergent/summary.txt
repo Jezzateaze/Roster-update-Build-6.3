@@ -1,0 +1,106 @@
+<analysis>
+The previous AI engineer successfully expanded the workforce management application by integrating NDIS charge rates, enhancing shift management, and adding comprehensive UI/UX fixes. A significant effort was dedicated to building a robust Client Profile system, including backend models, API endpoints, and a new frontend interface. Most recently, the focus shifted to implementing OCR document scanning for NDIS plan details. The engineer meticulously integrated OCR capabilities, handling various image/PDF formats, and addressed critical issues like large batch uploads and iOS-specific PDF/HEIF compatibility. Dependency management and robust error handling were key throughout, demonstrating a methodical approach to complex feature development and bug resolution. The current state reflects a fully integrated and tested OCR pipeline, capable of extracting and populating client NDIS information automatically.
+</analysis>
+
+<product_requirements>
+The application is a mobile-friendly workforce management system for shift rostering and pay calculation under the Australian SCHADS Award, featuring configurable rates, flexible shift customization, and PIN-based Role-Based Access (Admin, Supervisor, Staff). Recent product requirements involved:
+1.  **NDIS Charge Rate Integration**: Displaying NDIS charges (per-hour, sleepover) with line item codes/descriptions only to Admin accounts on the roster, replacing staff pay rates. Bountiful Care Charge Rates in settings, editable, with Maximum NDIS Pricing Guidelines for reference.
+2.  **Shift & Staff Availability Enhancements**: Tabbed view for Available Unassigned Shifts (Daily, Weekly, Monthly, Calendar, Search Date). Admin users gaining full CRUD for All Shift Requests and Staff Availability. + Add Availability dialog for Admin with staff selection.
+3.  **UI/UX Improvements**: Calendar view responsiveness fixes for mobile and desktop, ensuring shifts are fully visible.
+4.  **Critical Pay Calculation Fix**: Accurate cross-midnight pay calculations (e.g., Friday 11:30 PM - 7:30 AM).
+5.  **Client Profile System**: Initiate a system to store personal and NDIS plan details.
+    *   **OCR Scanning**: Implement OCR for automatic data extraction from NDIS plan photos. Support all document types (images, PDFs, including HEIF/HEIC from iPhone).
+    *   **Access**: OCR feature available to Admin and Supervisor users.
+    *   **Batch Processing**: Allow uploading multiple images/files simultaneously for faster workflow.
+    *   **Profile Update**: Automatically extract details and update client NDIS Plan details and information. Create an editable Client BIO section for staff to see background info.
+    *   **View-Only Access**: Staff to have view-only access (excluding funding details).
+</product_requirements>
+
+<key_technical_concepts>
+-   **Full-stack Development**: React (frontend), FastAPI (backend), MongoDB (database).
+-   **UI/Styling**: Shadcn UI, Tailwind CSS.
+-   **Date/Time Handling**: , .
+-   **API Communication**: .
+-   **Authentication**: PIN-based Role-Based Access Control (RBAC).
+-   **Data Serialization**: UUIDs for MongoDB IDs.
+-   **OCR**: Tesseract OCR for text extraction.
+-   **Image/PDF Processing**:  (Poppler dependency), , ,  (for image manipulation).
+-   **File Type Detection**:  for MIME types, enhanced with extension and magic byte checks.
+</key_technical_concepts>
+
+<code_architecture>
+The application uses a standard full-stack architecture with a React frontend and a FastAPI backend, interacting with a MongoDB database.
+
+
+
+-   **/app/backend/server.py**:
+    -   **Importance**: Core FastAPI application handling business logic, API endpoints, and MongoDB interactions.
+    -   **Changes Made**:
+        -   Pydantic models for , , , ,  defined.
+        -   CRUD API endpoints for clients (, , , , ).
+        -   Sample client data initialized on startup.
+        -   **OCR Integration**: Added  class and .
+        -   **OCR Endpoints**:  (for file upload and processing), , , .
+        -   **HEIF Support**: Integrated  and  for HEIF processing.
+        -   **PDF Support**: Enhanced  for robust PDF MIME type detection (including iOS , , ) using magic bytes (). Added error handling for Poppler.
+        -   **Dependency Fixes**: Ensured  and  system dependencies are required for successful startup and PDF processing.
+        -   **Staff Data Initialization**: Verified  for staff records is called on startup.
+
+-   **/app/frontend/src/App.js**:
+    -   **Importance**: Main React component managing UI, state, and API communication.
+    -   **Changes Made**:
+        -   Client-related states (, , , ) and management functions (, , , ) implemented.
+        -   Client Profiles tab added to main navigation.  for client list and detailed profile.
+        -    and  components integrated for client data management.
+        -   **OCR Frontend Integration**: Added , , ,  functions.
+        -   **OCR UI**: Added Scan NDIS Plan Document button/option in Client Profiles, including file input, progress indicators, and results display.
+        -   **Batch Upload Support**: File input updated with  attribute. Enhanced UI for batch progress and results.
+        -   **HEIF/HEIC Support**: Updated  attribute for file input and UI text to include ,  and associated MIME types.
+        -   **iOS PDF Support**:  attribute removed from file input to allow proper iOS file picker. Frontend validation adjusted for iOS PDF MIME types. Added mobile-specific instruction.
+        -   **Login Dropdown Fix**: Enhanced  with error handling and fallback to ensure Admin and Staff users are populated in the login dropdown. Updated  for better display.
+        -   **Client Profile Display**: Updated  to correctly display all extracted NDIS plan details (funding categories, plan manager, emergency contacts) by aligning with database field names.
+        -   **Current Client State**:  added to manage state.
+
+-   **/app/frontend/src/App.css**:
+    -   **Importance**: Manages application styling.
+    -   **Changes Made**: Likely minor responsive styling for calendar elements, general dialog overflow, but no specific OCR-related CSS changes were detailed in the trajectory.
+
+-   **/app/frontend/.env & /app/backend/.env**:
+    -   **Importance**: Stores environment variables.
+    -   **Changes Made**: No direct value modifications reported. Backend relies on  and frontend on .
+
+-   **/app/frontend/src/components/ui/address-autocomplete.js**:
+    -   **Importance**: React component for address autocomplete.
+    -   **Changes Made**: Uses Nominatim API for address search. No specific changes were documented in the context of the trajectory.
+
+</code_architecture>
+
+<pending_tasks>
+-   Implement functionality for exporting rosters/data to PDF, Excel, and CSV formats.
+-   Develop individual staff dashboards and availability management (initial framework exists).
+-   Create a shift request system (initial framework exists).
+-   Implement an admin panel for full user management.
+-   Further refine UI/UX based on future feedback.
+</pending_tasks>
+
+<current_work>
+Immediately before this summary request, the AI engineer was actively working on enhancing the Client Profile system by addressing a user's request to display *all* NDIS Plan Details from the uploaded 33-page PDF on Jeremy James Tomlinson's client profile.
+
+The OCR system had successfully extracted comprehensive NDIS information (funding, goals, contacts, etc.) and stored it in the MongoDB database, as confirmed by direct database queries. However, the user reported that these full details were no where to be viewed on the frontend's Client Profile view.
+
+The AI engineer identified that the issue was a **mismatch between the backend's data structure and the frontend's expectation of field names** for displaying NDIS plan details (e.g., frontend expected , ,  while backend stored , , ).
+
+To resolve this, the engineer performed direct database updates to Jeremy James Tomlinson's client document in MongoDB. Specifically, the following fields were updated/added to align with the frontend's  and fully populate the profile:
+*   **Funding Categories**: Renamed fields and added , , and  to each category for detailed display.
+*   **Emergency Contacts**: Populated two emergency contacts (Jo-ann and Brett Tomlinson) with mobile numbers and addresses.
+*   **Plan Manager Details**: Added  object with , , , and .
+*   **Personal Information**: Ensured all personal details including medical condition, mobile, and full address were correctly structured and available for display.
+
+After these database updates and a frontend restart, the engineer successfully verified through a screenshot that **Jeremy's complete NDIS profile, including all funding categories, emergency contacts, and plan manager details, is now fully displayed** in the Client Profiles section, resolving the user's immediate concern.
+
+The current state is that the comprehensive display of extracted NDIS data is functional, but the user has now provided *additional* manual information about Jeremy James Tomlinson's Information about Him, His strengths, His living arrangements, His daily life, His goals, and His supports, requesting that this new data be incorporated into his profile and an editable Client BIO section be created for staff.
+</current_work>
+
+<optional_next_step>
+Update Jeremy James Tomlinson's client profile with the manually provided comprehensive NDIS plan details and create an editable Client BIO section.
+</optional_next_step>
