@@ -106,6 +106,14 @@ class NDISPlan(BaseModel):
     created_at: datetime = datetime.now()
     updated_at: datetime = datetime.now()
 
+class ClientBiography(BaseModel):
+    strengths: str = ""
+    living_arrangements: str = ""
+    daily_life: str = ""
+    goals: List[Dict[str, str]] = []  # Each goal has 'title', 'description', 'how_to_achieve'
+    supports: List[Dict[str, str]] = []  # Each support has 'description', 'provider', 'frequency', 'type'
+    additional_info: str = ""
+
 class ClientProfile(BaseModel):
     id: str = None
     # Personal Information
@@ -121,6 +129,8 @@ class ClientProfile(BaseModel):
     emergency_contacts: List[EmergencyContact] = []
     # NDIS Plan
     current_ndis_plan: Optional[NDISPlan] = None
+    # Biography Information
+    biography: Optional[ClientBiography] = None
     # System fields
     created_at: datetime = datetime.now()
     updated_at: datetime = datetime.now()
