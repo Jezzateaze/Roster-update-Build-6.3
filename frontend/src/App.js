@@ -10339,20 +10339,18 @@ function App() {
                   
                   {/* Show first few users for debugging */}
                   {availableUsers.length > 0 && (
-                    <div className="mt-2 text-xs">
-                      <details className="cursor-pointer">
-                        <summary>👥 Show loaded users</summary>
-                        <div className="mt-1 max-h-20 overflow-y-auto">
-                          {availableUsers.slice(0, 8).map((user, i) => (
-                            <div key={i} className="text-left">
-                              {user.role === 'admin' ? '👑' : '👤'} {user.name || user.username} ({user.role})
-                            </div>
-                          ))}
-                          {availableUsers.length > 8 && (
-                            <div>... and {availableUsers.length - 8} more</div>
-                          )}
-                        </div>
-                      </details>
+                    <div className="mt-2 text-xs bg-gray-100 p-2 rounded">
+                      <div className="font-bold mb-1">Loaded Users:</div>
+                      <div className="max-h-24 overflow-y-auto space-y-1">
+                        {availableUsers.slice(0, 10).map((user, i) => (
+                          <div key={i} className="text-left text-xs">
+                            {user.role === 'admin' ? '👑' : '👤'} {user.name || user.username} ({user.role})
+                          </div>
+                        ))}
+                        {availableUsers.length > 10 && (
+                          <div className="text-gray-600">... and {availableUsers.length - 10} more</div>
+                        )}
+                      </div>
                     </div>
                   )}
                   
