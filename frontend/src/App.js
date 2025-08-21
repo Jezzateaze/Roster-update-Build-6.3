@@ -6210,6 +6210,24 @@ function App() {
               </CardHeader>
               <CardContent className="space-y-4">
                 <p className="text-slate-600">Export roster and pay data in various formats:</p>
+                
+                {/* Month Selection for Export */}
+                <div className="flex items-center space-x-4 p-3 bg-blue-50 rounded-lg border">
+                  <label className="text-sm font-medium text-blue-800">Select Month:</label>
+                  <input
+                    type="month"
+                    value={formatDateString(currentDate).substring(0, 7)} // YYYY-MM format
+                    onChange={(e) => {
+                      const [year, month] = e.target.value.split('-');
+                      setCurrentDate(new Date(parseInt(year), parseInt(month) - 1, 1));
+                    }}
+                    className="px-3 py-1 border rounded text-sm"
+                  />
+                  <span className="text-xs text-blue-600">
+                    {currentUser?.role === 'staff' ? 'Your shifts only' : 'All roster data'}
+                  </span>
+                </div>
+                
                 <div className="flex space-x-4">
                   <Button variant="outline" onClick={() => exportRosterData('pdf')}>
                     <Download className="w-4 h-4 mr-2" />
@@ -6223,6 +6241,13 @@ function App() {
                     <Download className="w-4 h-4 mr-2" />
                     Export CSV
                   </Button>
+                </div>
+                
+                <div className="text-xs text-slate-500 mt-2">
+                  <p><strong>Export includes:</strong> Date, Staff Name, Hours, Pay Rates, Total Pay, Client Info</p>
+                  {currentUser?.role === 'admin' && (
+                    <p><strong>Admin only:</strong> NDIS billing charges and line item details</p>
+                  )}
                 </div>
               </CardContent>
             </Card>
