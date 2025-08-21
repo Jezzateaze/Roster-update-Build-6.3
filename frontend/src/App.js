@@ -1801,55 +1801,59 @@ function App() {
     event.preventDefault();
   };
 
-  // Fetch available users for login dropdown
+  // Fetch available users for enhanced login dropdown
   const fetchAvailableUsers = async () => {
     try {
-      console.log('Fetching available users...');
-      // First, get all staff members
-      const staffResponse = await axios.get(`${API_BASE_URL}/api/staff`);
-      const staffList = staffResponse.data;
-      console.log('Staff list fetched:', staffList);
+      console.log('🔍 Fetching available users for login...');
       
-      // Create user list with Admin + Staff members
-      const users = [
+      // Get all active users from the users collection
+      const response = await axios.get(`${API_BASE_URL}/api/users`);
+      const userList = response.data;
+      
+      console.log('Raw user list fetched:', userList);
+      
+      // Filter and format users for the dropdown
+      const activeUsers = userList
+        .filter(user => user.is_active && user.username)
+        .map(user => ({
+          id: user.id,
+          username: user.username,
+          role: user.role || 'staff',
+          pin: user.pin,
+          displayName: user.role === 'admin' 
+            ? `👑 ${user.username} (Administrator)`
+            : `👤 ${user.username} (Staff)`
+        }))
+        .sort((a, b) => {
+          // Sort admin users first, then alphabetically
+          if (a.role === 'admin' && b.role !== 'admin') return -1;
+          if (a.role !== 'admin' && b.role === 'admin') return 1;
+          return a.username.localeCompare(b.username);
+        });
+      
+      console.log('✅ Processed users for dropdown:', activeUsers);
+      setAvailableUsers(activeUsers);
+      
+      if (activeUsers.length === 0) {
+        console.warn('⚠️ No active users found');
+      }
+      
+    } catch (error) {
+      console.error('❌ Error fetching users:', error);
+      
+      // Fallback: Create basic admin user if API fails
+      const fallbackUsers = [
         {
-          username: 'Admin',
-          displayName: '👤 Admin (Administrator)',
-          type: 'admin'
+          id: 'admin-fallback',
+          username: 'Admin', 
+          role: 'admin',
+          pin: '1234',
+          displayName: '👑 Admin (Administrator)'
         }
       ];
       
-      // Add staff members (convert staff names to likely usernames)
-      staffList.forEach(staff => {
-        if (staff.active && 
-            staff.name && 
-            staff.name.trim() !== '' // Filter out staff with empty names
-        ) {
-          const username = staff.name.toLowerCase().replace(/\s+/g, '');
-          users.push({
-            username: username,
-            displayName: `👥 ${staff.name} (Staff)`,
-            type: 'staff',
-            staffId: staff.id
-          });
-        }
-      });
-      
-      console.log('Available users to set:', users);
-      setAvailableUsers(users);
-    } catch (error) {
-      console.error('Error fetching users for dropdown:', error);
-      console.log('Falling back to manual input mode');
-      // If we can't fetch users, provide at least the Admin user and fall back to manual input
-      setAvailableUsers([
-        {
-          username: 'Admin',
-          displayName: '👤 Admin (Administrator)', 
-          type: 'admin'
-        }
-      ]);
-      // Don't disable dropdown if we have at least Admin
-      // setUseDropdown(false);
+      setAvailableUsers(fallbackUsers);
+      console.log('🔄 Using fallback admin user');
     }
   };
 
