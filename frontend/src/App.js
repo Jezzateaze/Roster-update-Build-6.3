@@ -10348,7 +10348,7 @@ function App() {
                     <option value="">👤 Select a user...</option>
                     {availableUsers.map(user => (
                       <option key={user.id} value={user.id}>
-                        {user.role === 'admin' ? '👑' : '👤'} {user.username} 
+                        {user.role === 'admin' ? '👑' : '👤'} {user.name || user.username} 
                         {user.role === 'admin' ? ' (Administrator)' : ' (Staff)'}
                       </option>
                     ))}
