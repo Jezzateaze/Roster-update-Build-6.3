@@ -72,10 +72,24 @@ class StaffAvailabilityTester:
         """Authenticate as admin user"""
         print(f"\n🔐 Authenticating as Admin...")
         
-        login_data = {
-            "username": "Admin",
-            "pin": "0000"
-        }
+        # Try both possible admin PINs
+        login_attempts = [
+            {"username": "Admin", "pin": "1234"},
+            {"username": "Admin", "pin": "0000"}
+        ]
+        
+        success = False
+        for login_data in login_attempts:
+            print(f"   Trying Admin/{login_data['pin']}...")
+            success, response = self.run_test(
+                f"Admin Login with PIN {login_data['pin']}",
+                "POST",
+                "api/auth/login",
+                200,
+                data=login_data
+            )
+            if success:
+                break
         
         success, response = self.run_test(
             "Admin Login",
