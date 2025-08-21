@@ -3125,6 +3125,276 @@ function App() {
   };
 
   // =====================================
+  // ENHANCED LOGIN SYSTEM FUNCTIONS
+  // =====================================
+
+  // iPhone-style numerical keypad component
+  const NumericKeypad = ({ onNumberPress, onBackspace, onClear, maxLength = 6, currentInput = '' }) => {
+    const numbers = [
+      ['1', '2', '3'],
+      ['4', '5', '6'],
+      ['7', '8', '9'],
+      ['Clear', '0', '⌫']
+    ];
+
+    return (
+      <div className="bg-gray-100 rounded-lg p-4 w-80 mx-auto">
+        <div className="grid grid-cols-3 gap-3">
+          {numbers.map((row, rowIndex) => 
+            row.map((item, colIndex) => (
+              <button
+                key={`${rowIndex}-${colIndex}`}
+                className={`
+                  h-16 rounded-lg text-xl font-semibold transition-colors
+                  ${item === 'Clear' || item === '⌫' 
+                    ? 'bg-gray-300 hover:bg-gray-400 text-gray-800' 
+                    : 'bg-white hover:bg-gray-50 text-gray-900 border border-gray-300'
+                  }
+                  ${currentInput.length >= maxLength && item !== 'Clear' && item !== '⌫' 
+                    ? 'opacity-50 cursor-not-allowed' 
+                    : 'active:scale-95'
+                  }
+                `}
+                onClick={() => {
+                  if (item === 'Clear') {
+                    onClear();
+                  } else if (item === '⌫') {
+                    onBackspace();
+                  } else if (currentInput.length < maxLength) {
+                    onNumberPress(item);
+                  }
+                }}
+                disabled={currentInput.length >= maxLength && item !== 'Clear' && item !== '⌫'}
+              >
+                {item}
+              </button>
+            ))
+          )}
+        </div>
+        <div className="mt-4 text-center text-sm text-gray-500">
+          {currentInput.length}/{maxLength} digits
+        </div>
+      </div>
+    );
+  };
+
+  // Handle user selection from dropdown
+  const handleUserSelection = (userId) => {
+    const user = availableUsers.find(u => u.id === userId);
+    if (user) {
+      setSelectedUser(user);
+      setSelectedUserId(userId);
+      setLoginStep('pin-entry');
+      setShowKeypad(true);
+      setPinInput('');
+      
+      // Check if this is a first-time login (using default PIN)
+      const isDefaultPin = (user.role === 'admin' && user.pin === '1234') || 
+                          (user.role === 'staff' && user.pin === '888888');
+      setIsFirstTimeLogin(isDefaultPin);
+    }
+  };
+
+  // Handle keypad number press
+  const handleKeypadNumber = (number) => {
+    if (pinInput.length < 6) { // Max 6 digits
+      setPinInput(prev => prev + number);
+    }
+  };
+
+  // Handle keypad backspace
+  const handleKeypadBackspace = () => {
+    setPinInput(prev => prev.slice(0, -1));
+  };
+
+  // Handle keypad clear
+  const handleKeypadClear = () => {
+    setPinInput('');
+  };
+
+  // Handle PIN submission
+  const handlePinSubmission = async () => {
+    if (!selectedUser || !pinInput) {
+      alert('Please enter your PIN');
+      return;
+    }
+
+    try {
+      const loginData = {
+        username: selectedUser.username,
+        pin: pinInput
+      };
+
+      const response = await axios.post(`${API_BASE_URL}/api/auth/login`, loginData);
+      
+      if (response.data.token) {
+        const user = response.data.user;
+        const token = response.data.token;
+        
+        if (isFirstTimeLogin) {
+          // Show PIN change dialog for first-time users
+          setLoginStep('first-time-setup');
+          setCurrentUser(user);
+          setAuthToken(token);
+        } else {
+          // Complete login
+          completeLogin(user, token);
+        }
+      }
+    } catch (error) {
+      console.error('Login error:', error);
+      if (error.response?.status === 401) {
+        alert('❌ Invalid PIN. Please try again.');
+        setPinInput('');
+      } else {
+        alert('❌ Login failed. Please try again.');
+      }
+    }
+  };
+
+  // Complete the login process
+  const completeLogin = (user, token) => {
+    setCurrentUser(user);
+    setAuthToken(token);
+    setIsAuthenticated(true);
+    setShowLoginDialog(false);
+    
+    // Store in localStorage
+    localStorage.setItem('authToken', token);
+    localStorage.setItem('currentUser', JSON.stringify(user));
+    
+    // Set authorization header
+    axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+    
+    // Reset login states
+    resetLoginStates();
+    
+    console.log('✅ Login successful for:', user.username);
+  };
+
+  // Reset all login-related states
+  const resetLoginStates = () => {
+    setLoginStep('user-selection');
+    setSelectedUser(null);
+    setShowKeypad(false);
+    setPinInput('');
+    setIsFirstTimeLogin(false);
+    setPinDigits(4);
+    setShowPinChangeDialog(false);
+    setNewPin('');
+    setConfirmPin('');
+    setSelectedUserId('');
+  };
+
+  // Handle first-time PIN setup
+  const handleFirstTimeSetup = () => {
+    setLoginStep('pin-change');
+    setShowPinChangeDialog(true);
+  };
+
+  // Handle PIN digit selection (4 or 6)
+  const handlePinDigitSelection = (digits) => {
+    setPinDigits(digits);
+    setNewPin('');
+    setConfirmPin('');
+  };
+
+  // Handle new PIN entry
+  const handleNewPinEntry = (pin, isConfirm = false) => {
+    if (isConfirm) {
+      setConfirmPin(pin);
+    } else {
+      setNewPin(pin);
+    }
+  };
+
+  // Submit PIN change
+  const submitPinChange = async () => {
+    if (newPin.length !== pinDigits) {
+      alert(`PIN must be exactly ${pinDigits} digits`);
+      return;
+    }
+
+    if (newPin !== confirmPin) {
+      alert('PINs do not match. Please try again.');
+      setConfirmPin('');
+      return;
+    }
+
+    try {
+      // Call API to update PIN
+      const response = await axios.put(`${API_BASE_URL}/api/auth/change-pin`, {
+        new_pin: newPin
+      }, {
+        headers: { 'Authorization': `Bearer ${authToken}` }
+      });
+
+      if (response.data.success) {
+        alert('✅ PIN changed successfully!');
+        
+        // Update user in localStorage
+        const updatedUser = { ...currentUser, pin: newPin };
+        localStorage.setItem('currentUser', JSON.stringify(updatedUser));
+        setCurrentUser(updatedUser);
+        
+        // Complete login
+        setIsAuthenticated(true);
+        setShowLoginDialog(false);
+        setShowPinChangeDialog(false);
+        resetLoginStates();
+      }
+    } catch (error) {
+      console.error('PIN change error:', error);
+      alert('❌ Failed to change PIN. Please try again.');
+    }
+  };
+
+  // Handle PIN reset (Admin only)
+  const handlePinReset = async (targetUserId) => {
+    if (currentUser?.role !== 'admin') {
+      alert('Only administrators can reset PINs');
+      return;
+    }
+
+    try {
+      const response = await axios.put(`${API_BASE_URL}/api/auth/reset-pin`, {
+        user_id: targetUserId
+      }, {
+        headers: { 'Authorization': `Bearer ${authToken}` }
+      });
+
+      if (response.data.success) {
+        alert('✅ PIN reset to default (888888) successfully!');
+        setShowPinResetDialog(false);
+        setResetTargetUser(null);
+      }
+    } catch (error) {
+      console.error('PIN reset error:', error);
+      alert('❌ Failed to reset PIN. Please try again.');
+    }
+  };
+
+  // Handle logout
+  const handleLogout = () => {
+    setIsAuthenticated(false);
+    setCurrentUser(null);
+    setAuthToken('');
+    
+    // Clear localStorage
+    localStorage.removeItem('authToken');
+    localStorage.removeItem('currentUser');
+    
+    // Remove authorization header
+    delete axios.defaults.headers.common['Authorization'];
+    
+    // Reset login states and show login dialog
+    resetLoginStates();
+    setShowLoginDialog(true);
+    
+    console.log('✅ Logged out successfully');
+  };
+
+  // =====================================
   // EXPORT FUNCTIONALITY
   // =====================================
 
