@@ -1879,7 +1879,9 @@ function App() {
         pin: "0000"
       };
 
+      console.log('Making login request to:', `${API_BASE_URL}/api/auth/login`);
       const response = await axios.post(`${API_BASE_URL}/api/auth/login`, loginData);
+      console.log('Login response:', response.data);
       
       if (response.data.token) {
         const user = response.data.user;
