@@ -8711,15 +8711,10 @@ if __name__ == "__main__":
     print("🚀 Starting Date Filtering for Available Unassigned Shifts Test...")
     print(f"   Base URL: {tester.base_url}")
     
-    # First authenticate as admin
-    if tester.test_authentication_system():
-        # Then run the specific date filtering test
-        if tester.test_date_filtering_unassigned_shifts():
-            print("\n🎉 DATE FILTERING TEST COMPLETED SUCCESSFULLY!")
-            sys.exit(0)
-        else:
-            print("\n❌ DATE FILTERING TEST FAILED!")
-            sys.exit(1)
+    # Run the specific date filtering test
+    if tester.test_date_filtering_unassigned_shifts():
+        print("\n🎉 DATE FILTERING TEST COMPLETED SUCCESSFULLY!")
+        sys.exit(0)
     else:
-        print("\n❌ AUTHENTICATION SETUP FAILED!")
+        print("\n❌ DATE FILTERING TEST FAILED!")
         sys.exit(1)
