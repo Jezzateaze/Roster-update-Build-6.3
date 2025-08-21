@@ -10336,6 +10336,26 @@ function App() {
                 {/* Debug Info */}
                 <div className="text-xs text-gray-400 mt-2 text-center">
                   Users loaded: {availableUsers.length} | API: {API_BASE_URL ? 'Connected' : 'Not Connected'}
+                  
+                  {/* Show first few users for debugging */}
+                  {availableUsers.length > 0 && (
+                    <div className="mt-2 text-xs">
+                      <details className="cursor-pointer">
+                        <summary>👥 Show loaded users</summary>
+                        <div className="mt-1 max-h-20 overflow-y-auto">
+                          {availableUsers.slice(0, 8).map((user, i) => (
+                            <div key={i} className="text-left">
+                              {user.role === 'admin' ? '👑' : '👤'} {user.name || user.username} ({user.role})
+                            </div>
+                          ))}
+                          {availableUsers.length > 8 && (
+                            <div>... and {availableUsers.length - 8} more</div>
+                          )}
+                        </div>
+                      </details>
+                    </div>
+                  )}
+                  
                   {availableUsers.length === 0 && (
                     <button 
                       onClick={fetchAvailableUsers}
