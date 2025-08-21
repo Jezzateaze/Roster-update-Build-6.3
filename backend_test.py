@@ -8605,11 +8605,11 @@ def test_date_filtering_unassigned_shifts(self):
     
     # Test with date parameters (if endpoint supports them)
     success, filtered_shifts = self.run_test(
-        "Get Shifts with Date Filter",
+        "Get Roster with Date Filter",
         "GET",
-        "api/shifts",
+        "api/roster",
         200,
-        params={"from_date": current_date_str},
+        params={"month": current_month, "from_date": current_date_str},
         use_auth=True
     )
     
