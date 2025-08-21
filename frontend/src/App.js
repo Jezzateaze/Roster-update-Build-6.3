@@ -1871,10 +1871,9 @@ function App() {
           id: user.id,
           username: user.username,
           role: user.role || 'staff',
-          pin: user.pin,
-          displayName: user.role === 'admin' 
-            ? `👑 ${user.username} (Administrator)`
-            : `👤 ${user.username} (Staff)`
+          first_name: user.first_name || '',
+          last_name: user.last_name || '',
+          is_first_login: user.is_first_login || false
         }))
         .sort((a, b) => {
           // Sort admin users first, then alphabetically
