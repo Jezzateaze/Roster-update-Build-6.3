@@ -3106,6 +3106,9 @@ async def get_clients(current_user: dict = Depends(get_current_user)):
             "mobile": 1,
             "address": 1,
             "emergency_contacts": 1,
+            "biography.strengths": 1,
+            "biography.daily_life": 1,
+            "biography.additional_info": 1,
             "created_at": 1
         }))
     else:
