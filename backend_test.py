@@ -8380,10 +8380,11 @@ def test_date_filtering_unassigned_shifts(self):
         if success:
             # Retry getting shifts
             success, shifts_data = self.run_test(
-                "Get Shifts Data After Generation",
+                "Get Roster Data After Generation",
                 "GET",
-                "api/shifts",
+                "api/roster",
                 200,
+                params={"month": current_month},
                 use_auth=True
             )
             
