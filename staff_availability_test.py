@@ -387,8 +387,8 @@ class StaffAvailabilityTester:
         
         self.auth_token = original_token  # Restore token
         
-        if success:  # Success means we got expected 401 status
-            print(f"      ✅ Invalid token correctly rejected (401)")
+        if success:  # Success means we got expected 403 status
+            print(f"      ✅ Invalid token correctly rejected (403)")
         else:
             print(f"      ❌ Invalid token was not properly rejected")
             return False
