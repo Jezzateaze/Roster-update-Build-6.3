@@ -2172,9 +2172,24 @@ async def generate_roster_from_template(template_id: str, month: str, force_over
 
 # Roster endpoints
 @app.get("/api/roster")
-async def get_roster(month: str):
-    """Get roster for a specific month (YYYY-MM format)"""
-    roster_entries = list(db.roster.find({"date": {"$regex": f"^{month}"}}, {"_id": 0}))
+async def get_roster(month: str, current_user: dict = Depends(get_current_user)):
+    """Get roster for a specific month (YYYY-MM format) with role-based filtering"""
+    
+    # Base query for the specified month
+    query = {"date": {"$regex": f"^{month}"}}
+    
+    # Apply role-based filtering
+    if current_user["role"] == "staff":
+        # Staff users can only see their own shifts
+        staff_id = current_user.get("staff_id") or current_user.get("id")
+        if staff_id:
+            query["staff_id"] = staff_id
+        else:
+            # If no staff_id found, return empty list (security fallback)
+            return []
+    
+    # Admin and Supervisor users can see all roster entries
+    roster_entries = list(db.roster.find(query, {"_id": 0}))
     return roster_entries
 
 @app.post("/api/roster")
