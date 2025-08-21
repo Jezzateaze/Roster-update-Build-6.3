@@ -2653,13 +2653,50 @@ async def update_current_user_profile(profile_data: dict, current_user: dict = D
     updated_user = db.users.find_one({"id": current_user["id"]}, {"_id": 0, "pin_hash": 0})
     return updated_user
 
+@app.get("/api/users/login")
+async def get_login_users():
+    """Get available users for login dropdown (public endpoint)"""
+    try:
+        # Get only active users with basic info needed for login
+        users = list(db.users.find(
+            {"is_active": True},
+            {
+                "_id": 0,
+                "id": 1,
+                "username": 1, 
+                "role": 1,
+                "first_name": 1,
+                "last_name": 1,
+                "is_first_login": 1
+                # Exclude pin and pin_hash for security
+            }
+        ))
+        
+        # Sort admin users first
+        users.sort(key=lambda x: (x.get("role") != "admin", x.get("username", "")))
+        
+        return users
+    except Exception as e:
+        print(f"Error fetching login users: {e}")
+        # Return fallback admin user
+        return [
+            {
+                "id": "admin-fallback",
+                "username": "Admin",
+                "role": "admin",
+                "first_name": "System",
+                "last_name": "Administrator",
+                "is_first_login": True
+            }
+        ]
+
 @app.get("/api/users")
 async def get_users(current_user: dict = Depends(get_current_user)):
     """Get all users (Admin only)"""
     if current_user["role"] != "admin":
         raise HTTPException(status_code=403, detail="Admin access required")
     
-    users = list(db.users.find({"is_active": True}, {"_id": 0, "pin_hash": 0}))
+    users = list(db.users.find({}, {"_id": 0, "pin_hash": 0}))
     return users
 
 @app.post("/api/users")
