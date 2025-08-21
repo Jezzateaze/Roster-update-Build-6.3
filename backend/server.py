@@ -4179,6 +4179,9 @@ async def export_pdf(month: str, current_user: dict = Depends(get_current_user))
             headers={"Content-Disposition": f"attachment; filename={filename}"}
         )
         
+    except HTTPException as he:
+        # Re-raise HTTP exceptions (like 404) without wrapping them
+        raise he
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error generating PDF: {str(e)}")
 
