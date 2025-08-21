@@ -1841,25 +1841,52 @@ function App() {
     fetchInitialData();
     fetchAvailableUsers();
     
-    // Check for existing authentication
-    const storedToken = localStorage.getItem('authToken');
-    const storedUser = localStorage.getItem('currentUser');
-    
-    if (storedToken && storedUser) {
-      try {
-        const user = JSON.parse(storedUser);
-        setCurrentUser(user);
-        setAuthToken(storedToken);
-        setIsAuthenticated(true);
-        setShowLoginDialog(false);
-        axios.defaults.headers.common['Authorization'] = `Bearer ${storedToken}`;
-      } catch (error) {
-        // Clear invalid stored data
-        localStorage.removeItem('authToken');
-        localStorage.removeItem('currentUser');
-      }
-    }
+    // Auto-login as Admin (bypass login screen)
+    autoLoginAsAdmin();
   }, []);
+
+  // Auto-login as Admin function
+  const autoLoginAsAdmin = async () => {
+    try {
+      console.log('🔐 Auto-logging in as Admin...');
+      
+      const loginData = {
+        username: "Admin",
+        pin: "0000"
+      };
+
+      const response = await axios.post(`${API_BASE_URL}/api/auth/login`, loginData);
+      
+      if (response.data.token) {
+        const user = response.data.user;
+        const token = response.data.token;
+        
+        // Set authentication state
+        setCurrentUser(user);
+        setAuthToken(token);
+        setIsAuthenticated(true);
+        setShowLoginDialog(false); // Hide login dialog
+        
+        // Store in localStorage for persistence
+        localStorage.setItem('authToken', token);
+        localStorage.setItem('currentUser', JSON.stringify(user));
+        
+        // Set default authorization header
+        axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+        
+        console.log('✅ Auto-login as Admin successful');
+        console.log('User:', user);
+      } else {
+        console.error('❌ Auto-login failed: No token received');
+        // Fall back to showing login dialog
+        setShowLoginDialog(true);
+      }
+    } catch (error) {
+      console.error('❌ Auto-login as Admin failed:', error);
+      // Fall back to showing login dialog
+      setShowLoginDialog(true);
+    }
+  };
 
   useEffect(() => {
     if (currentDate && isAuthenticated) {
