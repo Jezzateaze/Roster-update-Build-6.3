@@ -1808,31 +1808,52 @@ function App() {
       console.log('API_BASE_URL:', API_BASE_URL);
       
       // Get admin users and all active staff members
-      const [adminResponse, staffResponse] = await Promise.all([
-        axios.get(`${API_BASE_URL}/api/users/login`),
-        axios.get(`${API_BASE_URL}/api/staff`)
-      ]);
+      console.log('🔍 Fetching admin and staff data...');
       
-      const adminUsers = adminResponse.data;
-      const staffMembers = staffResponse.data;
+      let adminUsers = [];
+      let staffMembers = [];
       
-      console.log('Admin users fetched:', adminUsers?.length || 0);
-      console.log('Staff members fetched:', staffMembers?.length || 0);
+      try {
+        const adminResponse = await axios.get(`${API_BASE_URL}/api/users/login`);
+        adminUsers = adminResponse.data || [];
+        console.log('✅ Admin API response:', adminUsers.length, 'users');
+      } catch (error) {
+        console.error('❌ Admin API failed:', error);
+      }
+      
+      try {
+        const staffResponse = await axios.get(`${API_BASE_URL}/api/staff`);
+        staffMembers = staffResponse.data || [];
+        console.log('✅ Staff API response:', staffMembers.length, 'staff members');
+      } catch (error) {
+        console.error('❌ Staff API failed:', error);
+      }
       
       // Process admin users
       const processedAdmins = adminUsers
-        .filter(user => user.is_active && user.username && user.role === 'admin')
-        .map(user => ({
-          id: user.id,
-          username: user.username,
-          role: 'admin',
-          name: user.first_name || user.username,
-          is_first_login: user.is_first_login || true
-        }));
+        .filter(user => {
+          const isValidAdmin = user.username && user.role === 'admin';
+          console.log(`Admin user ${user.username}: valid=${isValidAdmin}, role=${user.role}`);
+          return isValidAdmin;
+        })
+        .map(user => {
+          const adminUser = {
+            id: user.id,
+            username: user.username,
+            role: 'admin',
+            name: user.first_name || user.username || 'Administrator',
+            is_first_login: user.is_first_login !== false // Default to true unless explicitly false
+          };
+          console.log('✅ Processed admin user:', adminUser);
+          return adminUser;
+        });
       
       // Process staff members - create usernames from names
       const processedStaff = staffMembers
-        .filter(staff => staff.active && staff.name && staff.name.trim() !== '')
+        .filter(staff => {
+          const isValidStaff = staff.active !== false && staff.name && staff.name.trim() !== '';
+          return isValidStaff;
+        })
         .map(staff => {
           // Create username from name (lowercase, no spaces)
           const username = staff.name.toLowerCase()
@@ -1851,7 +1872,7 @@ function App() {
         .filter(staff => staff.username) // Only include staff with valid usernames
         .sort((a, b) => a.name.localeCompare(b.name)); // Sort alphabetically by name
       
-      // Combine admin and staff users
+      // Combine admin and staff users (admin first)
       const allUsers = [...processedAdmins, ...processedStaff];
       
       console.log('✅ Processed users for dropdown:');
