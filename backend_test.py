@@ -8631,7 +8631,7 @@ def test_date_filtering_unassigned_shifts(self):
     
     # Final Assessment
     print(f"\n   🎉 DATE FILTERING FOR UNASSIGNED SHIFTS TEST RESULTS:")
-    print(f"      ✅ GET /api/shifts endpoint: {'Working' if len(shifts_data) > 0 else 'No data'}")
+    print(f"      ✅ GET /api/roster endpoint: {'Working' if len(shifts_data) > 0 else 'No data'}")
     print(f"      ✅ Unassigned shifts found: {len(unassigned_shifts)}")
     print(f"      ✅ Date format (YYYY-MM-DD): {'Valid' if date_format_valid else 'Invalid'}")
     print(f"      ✅ Admin authentication: {'Working' if admin_access_success else 'Failed'}")
