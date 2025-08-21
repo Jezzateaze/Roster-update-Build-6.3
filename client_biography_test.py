@@ -528,15 +528,15 @@ class ClientBiographyTester:
             f"Update with Invalid Goals Structure",
             "PUT",
             f"api/clients/{self.jeremy_client_id}/biography",
-            400,  # Expect validation error
+            422,  # Expect Pydantic validation error
             data=invalid_goals_data,
             use_auth=True
         )
 
-        if success:  # Success means we got expected 400
-            print(f"   ✅ Invalid goals structure properly rejected")
+        if success:  # Success means we got expected 422
+            print(f"   ✅ Invalid goals structure properly rejected with validation error")
         else:
-            print(f"   ⚠️  Invalid goals structure was accepted - validation may be lenient")
+            print(f"   ⚠️  Invalid goals structure validation response unexpected")
 
         # Test 5: Invalid supports structure (should fail gracefully)
         print(f"\n   🎯 TEST 5: Invalid Supports Structure (Should Handle Gracefully)")
@@ -554,15 +554,15 @@ class ClientBiographyTester:
             f"Update with Invalid Supports Structure",
             "PUT",
             f"api/clients/{self.jeremy_client_id}/biography",
-            400,  # Expect validation error
+            422,  # Expect Pydantic validation error
             data=invalid_supports_data,
             use_auth=True
         )
 
-        if success:  # Success means we got expected 400
-            print(f"   ✅ Invalid supports structure properly rejected")
+        if success:  # Success means we got expected 422
+            print(f"   ✅ Invalid supports structure properly rejected with validation error")
         else:
-            print(f"   ⚠️  Invalid supports structure was accepted - validation may be lenient")
+            print(f"   ⚠️  Invalid supports structure validation response unexpected")
 
         return True
 
