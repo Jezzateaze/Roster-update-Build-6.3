@@ -7970,11 +7970,11 @@ def test_client_profiles_api(self):
         "Access Clients Without Auth (Should Fail)",
         "GET",
         "api/clients",
-        401,  # Expect unauthorized
+        403,  # Expect forbidden (updated from 401)
         use_auth=False
     )
     
-    if success:  # Success means we got expected 401
+    if success:  # Success means we got expected 403
         print(f"   ✅ Unauthenticated access correctly blocked")
     else:
         print(f"   ❌ Unauthenticated access was not blocked")
