@@ -3868,6 +3868,292 @@ async def cleanup_ocr_results(current_user: dict = Depends(get_current_user)):
         "cleaned_count": cleaned_count
     }
 
+# =====================================
+# EXPORT FUNCTIONALITY ENDPOINTS
+# =====================================
+
+def get_roster_data_for_export(month: str, current_user: dict):
+    """Get roster data for export with role-based filtering"""
+    
+    # Parse month (YYYY-MM format)
+    try:
+        year, month_num = map(int, month.split("-"))
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid month format. Use YYYY-MM")
+    
+    # Get all roster entries for the specified month
+    start_date = f"{year}-{month_num:02d}-01"
+    if month_num == 12:
+        end_year = year + 1
+        end_month = 1
+    else:
+        end_year = year
+        end_month = month_num + 1
+    end_date = f"{end_year}-{end_month:02d}-01"
+    
+    # Query roster entries for the month
+    query = {
+        "date": {"$gte": start_date, "$lt": end_date}
+    }
+    
+    roster_entries = list(db.roster_entries.find(query, {"_id": 0}).sort("date", 1))
+    
+    # Get staff information
+    staff_dict = {}
+    for staff in db.staff.find({}, {"_id": 0}):
+        staff_dict[staff["id"]] = staff
+    
+    # Get settings for rates
+    settings = db.settings.find_one() or {}
+    rates = settings.get("rates", {})
+    
+    # Process entries and add calculated information
+    export_data = []
+    for entry in roster_entries:
+        staff_info = staff_dict.get(entry.get("staff_id", ""), {})
+        staff_name = staff_info.get("name", "Unknown Staff")
+        
+        # Role-based data filtering
+        if current_user["role"] == "staff":
+            # Staff can only see their own shifts
+            if entry.get("staff_id") != current_user.get("id"):
+                continue
+        
+        # Calculate pay information
+        hours_worked = entry.get("hours_worked", 0)
+        hourly_rate = entry.get("hourly_rate", 0)
+        total_pay = entry.get("total_pay", 0)
+        
+        export_entry = {
+            "Date": entry.get("date", ""),
+            "Day of Week": datetime.strptime(entry.get("date", ""), "%Y-%m-%d").strftime("%A") if entry.get("date") else "",
+            "Staff Name": staff_name,
+            "Start Time": entry.get("start_time", ""),
+            "End Time": entry.get("end_time", ""),
+            "Hours Worked": f"{hours_worked:.1f}h",
+            "Shift Type": entry.get("shift_type", "").replace("_", " ").title(),
+            "Is Sleepover": "Yes" if entry.get("is_sleepover", False) else "No",
+            "Hourly Rate": f"${hourly_rate:.2f}" if not entry.get("is_sleepover") else "Sleepover",
+            "Total Pay": f"${total_pay:.2f}",
+            "Client": entry.get("client_name", "Unassigned"),
+            "Location": entry.get("location", ""),
+            "Notes": entry.get("notes", "")
+        }
+        
+        # Add NDIS information for admin users only
+        if current_user["role"] in ["admin", "supervisor"]:
+            export_entry.update({
+                "NDIS Hourly Charge": f"${entry.get('ndis_hourly_charge', 0):.2f}",
+                "NDIS Total Charge": f"${entry.get('ndis_total_charge', 0):.2f}",
+                "NDIS Line Item": entry.get('ndis_line_item_code', ''),
+                "NDIS Description": entry.get('ndis_description', '')
+            })
+        
+        export_data.append(export_entry)
+    
+    return export_data
+
+@app.get("/api/export/csv/{month}")
+async def export_csv(month: str, current_user: dict = Depends(get_current_user)):
+    """Export roster data as CSV file"""
+    
+    try:
+        # Get roster data
+        export_data = get_roster_data_for_export(month, current_user)
+        
+        if not export_data:
+            raise HTTPException(status_code=404, detail="No roster data found for the specified month")
+        
+        # Create CSV in memory
+        output = io.StringIO()
+        if export_data:
+            fieldnames = export_data[0].keys()
+            writer = csv.DictWriter(output, fieldnames=fieldnames)
+            writer.writeheader()
+            writer.writerows(export_data)
+        
+        # Create response
+        csv_content = output.getvalue()
+        output.close()
+        
+        # Convert to bytes for streaming response
+        csv_bytes = io.BytesIO(csv_content.encode('utf-8'))
+        
+        month_name = datetime.strptime(f"{month}-01", "%Y-%m-%d").strftime("%B_%Y")
+        filename = f"roster_export_{month_name}.csv"
+        
+        return StreamingResponse(
+            io.BytesIO(csv_content.encode('utf-8')),
+            media_type="text/csv",
+            headers={"Content-Disposition": f"attachment; filename={filename}"}
+        )
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error generating CSV: {str(e)}")
+
+@app.get("/api/export/excel/{month}")
+async def export_excel(month: str, current_user: dict = Depends(get_current_user)):
+    """Export roster data as Excel file"""
+    
+    try:
+        # Get roster data
+        export_data = get_roster_data_for_export(month, current_user)
+        
+        if not export_data:
+            raise HTTPException(status_code=404, detail="No roster data found for the specified month")
+        
+        # Create Excel file in memory
+        output = io.BytesIO()
+        
+        # Create workbook and worksheet
+        with pd.ExcelWriter(output, engine='openpyxl') as writer:
+            # Convert data to DataFrame
+            df = pd.DataFrame(export_data)
+            
+            # Write to Excel
+            sheet_name = f"Roster {month}"
+            df.to_excel(writer, sheet_name=sheet_name, index=False)
+            
+            # Get the workbook and worksheet for styling
+            workbook = writer.book
+            worksheet = writer.sheets[sheet_name]
+            
+            # Style the header row
+            header_fill = PatternFill(start_color="366092", end_color="366092", fill_type="solid")
+            header_font = Font(color="FFFFFF", bold=True)
+            
+            for col_num, column_title in enumerate(df.columns, 1):
+                cell = worksheet.cell(row=1, column=col_num)
+                cell.fill = header_fill
+                cell.font = header_font
+                cell.alignment = Alignment(horizontal="center")
+                
+                # Auto-adjust column width
+                column_letter = openpyxl.utils.get_column_letter(col_num)
+                worksheet.column_dimensions[column_letter].width = max(len(str(column_title)) + 2, 12)
+            
+            # Add borders to all cells
+            thin_border = Border(
+                left=Side(style='thin'),
+                right=Side(style='thin'),
+                top=Side(style='thin'),
+                bottom=Side(style='thin')
+            )
+            
+            for row in worksheet.iter_rows(min_row=1, max_row=len(df) + 1, min_col=1, max_col=len(df.columns)):
+                for cell in row:
+                    cell.border = thin_border
+                    if cell.row > 1:  # Data rows
+                        cell.alignment = Alignment(horizontal="center")
+        
+        output.seek(0)
+        
+        month_name = datetime.strptime(f"{month}-01", "%Y-%m-%d").strftime("%B_%Y")
+        filename = f"roster_export_{month_name}.xlsx"
+        
+        return StreamingResponse(
+            output,
+            media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            headers={"Content-Disposition": f"attachment; filename={filename}"}
+        )
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error generating Excel: {str(e)}")
+
+@app.get("/api/export/pdf/{month}")
+async def export_pdf(month: str, current_user: dict = Depends(get_current_user)):
+    """Export roster data as PDF file"""
+    
+    try:
+        # Get roster data
+        export_data = get_roster_data_for_export(month, current_user)
+        
+        if not export_data:
+            raise HTTPException(status_code=404, detail="No roster data found for the specified month")
+        
+        # Create PDF in memory
+        output = io.BytesIO()
+        
+        # Create PDF document
+        doc = SimpleDocTemplate(output, pagesize=A4, rightMargin=30, leftMargin=30, topMargin=30, bottomMargin=30)
+        
+        # Container for the 'Flowable' objects
+        story = []
+        
+        # Styles
+        styles = getSampleStyleSheet()
+        title_style = ParagraphStyle(
+            'CustomTitle',
+            parent=styles['Heading1'],
+            fontSize=16,
+            spaceAfter=30,
+            alignment=1  # Center alignment
+        )
+        
+        # Add title
+        month_name = datetime.strptime(f"{month}-01", "%Y-%m-%d").strftime("%B %Y")
+        title = Paragraph(f"Roster Export - {month_name}", title_style)
+        story.append(title)
+        
+        if export_data:
+            # Prepare table data
+            # Select key columns for PDF (to fit on page)
+            pdf_columns = ["Date", "Day of Week", "Staff Name", "Start Time", "End Time", "Hours Worked", "Shift Type", "Total Pay"]
+            
+            # Filter data for PDF columns
+            pdf_data = []
+            header_row = pdf_columns
+            pdf_data.append(header_row)
+            
+            for row in export_data:
+                pdf_row = [str(row.get(col, "")) for col in pdf_columns]
+                pdf_data.append(pdf_row)
+            
+            # Create table
+            table = Table(pdf_data)
+            
+            # Style the table
+            table.setStyle(TableStyle([
+                # Header row styling
+                ('BACKGROUND', (0, 0), (-1, 0), colors.darkblue),
+                ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+                ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+                ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                ('FONTSIZE', (0, 0), (-1, 0), 10),
+                ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+                
+                # Data rows styling
+                ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
+                ('TEXTCOLOR', (0, 1), (-1, -1), colors.black),
+                ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
+                ('FONTSIZE', (0, 1), (-1, -1), 8),
+                ('GRID', (0, 0), (-1, -1), 1, colors.black),
+                
+                # Alternating row colors
+                ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.lightgrey]),
+            ]))
+            
+            story.append(table)
+        else:
+            no_data_text = Paragraph("No roster data available for the selected month.", styles['Normal'])
+            story.append(no_data_text)
+        
+        # Build PDF
+        doc.build(story)
+        output.seek(0)
+        
+        month_name = datetime.strptime(f"{month}-01", "%Y-%m-%d").strftime("%B_%Y")
+        filename = f"roster_export_{month_name}.pdf"
+        
+        return StreamingResponse(
+            output,
+            media_type="application/pdf",
+            headers={"Content-Disposition": f"attachment; filename={filename}"}
+        )
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error generating PDF: {str(e)}")
+
 # Initialize database with default admin user if not exists
 def initialize_admin():
     """Initialize default admin user if not exists"""
