@@ -15,7 +15,7 @@ import json
 from datetime import datetime
 
 class FinalVerificationTester:
-    def __init__(self, base_url="https://workcare-manage.preview.emergentagent.com"):
+    def __init__(self, base_url="https://workforce-wizard-1.preview.emergentagent.com"):
         self.base_url = base_url
         self.auth_token = None
         self.test_results = []

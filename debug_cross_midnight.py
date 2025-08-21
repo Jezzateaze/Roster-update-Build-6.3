@@ -3,7 +3,7 @@ import json
 
 def test_calculate_pay_endpoint():
     """Test the calculate_pay endpoint directly to debug cross-midnight issues"""
-    base_url = "https://workcare-manage.preview.emergentagent.com"
+    base_url = "https://workforce-wizard-1.preview.emergentagent.com"
     
     # Authenticate first
     login_data = {"username": "Admin", "pin": "0000"}

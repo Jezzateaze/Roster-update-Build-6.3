@@ -4,7 +4,7 @@ from datetime import datetime
 
 def debug_specific_issues():
     """Debug the specific cross-midnight calculation issues found"""
-    base_url = "https://workcare-manage.preview.emergentagent.com"
+    base_url = "https://workforce-wizard-1.preview.emergentagent.com"
     
     # Authenticate
     login_data = {"username": "Admin", "pin": "0000"}
