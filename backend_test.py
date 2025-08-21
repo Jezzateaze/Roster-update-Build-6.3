@@ -8318,6 +8318,8 @@ def test_client_profiles_api(self):
 
 def test_date_filtering_unassigned_shifts(self):
     """Test date filtering functionality for Available Unassigned Shifts as per review request"""
+    from datetime import datetime, timedelta
+    
     print(f"\n📅 Testing Date Filtering for Available Unassigned Shifts - COMPREHENSIVE REVIEW REQUEST TESTS...")
     
     # Test 1: GET /api/roster endpoint to retrieve shifts data (including unassigned)
