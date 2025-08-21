@@ -6137,15 +6137,15 @@ function App() {
               <CardContent className="space-y-4">
                 <p className="text-slate-600">Export roster and pay data in various formats:</p>
                 <div className="flex space-x-4">
-                  <Button variant="outline">
+                  <Button variant="outline" onClick={() => exportRosterData('pdf')}>
                     <Download className="w-4 h-4 mr-2" />
                     Export PDF
                   </Button>
-                  <Button variant="outline">
+                  <Button variant="outline" onClick={() => exportRosterData('excel')}>
                     <Download className="w-4 h-4 mr-2" />
                     Export Excel
                   </Button>
-                  <Button variant="outline">
+                  <Button variant="outline" onClick={() => exportRosterData('csv')}>
                     <Download className="w-4 h-4 mr-2" />
                     Export CSV
                   </Button>
