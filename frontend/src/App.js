@@ -127,16 +127,27 @@ const convertTo24Hour = (timeString) => {
 };
 
 // Helper functions for unassigned shifts filtering
-const filterUnassignedShiftsByViewMode = (shifts, viewMode, currentDate, searchDate) => {
+const filterUnassignedShiftsByViewMode = (shifts, viewMode, currentDate, searchDate, userRole, showPastShifts) => {
   if (!shifts || shifts.length === 0) return [];
   
   const today = getBrisbaneDate();
+  const todayStr = formatDateString(today);
   const targetDate = viewMode === 'search' && searchDate ? new Date(searchDate) : currentDate;
   
+  // First apply date-based filtering based on user role
+  let filteredByDate = shifts;
+  
+  // Staff users: Always filter out past shifts (no toggle)
+  // Admin/Supervisor users: Filter out past shifts only if toggle is off
+  if (userRole === 'staff' || (userRole !== 'staff' && !showPastShifts)) {
+    filteredByDate = shifts.filter(shift => shift.date >= todayStr);
+  }
+  
+  // Then apply view mode filtering
   switch (viewMode) {
     case 'daily':
-      const todayStr = formatDateString(targetDate);
-      return shifts.filter(shift => shift.date === todayStr);
+      const dailyTargetStr = formatDateString(targetDate);
+      return filteredByDate.filter(shift => shift.date === dailyTargetStr);
       
     case 'weekly':
       const startOfWeek = new Date(targetDate);
@@ -147,7 +158,7 @@ const filterUnassignedShiftsByViewMode = (shifts, viewMode, currentDate, searchD
       const endOfWeek = new Date(startOfWeek);
       endOfWeek.setDate(startOfWeek.getDate() + 6);
       
-      return shifts.filter(shift => {
+      return filteredByDate.filter(shift => {
         const shiftDate = new Date(shift.date);
         return shiftDate >= startOfWeek && shiftDate <= endOfWeek;
       });
@@ -156,18 +167,18 @@ const filterUnassignedShiftsByViewMode = (shifts, viewMode, currentDate, searchD
       const startOfMonth = new Date(targetDate.getFullYear(), targetDate.getMonth(), 1);
       const endOfMonth = new Date(targetDate.getFullYear(), targetDate.getMonth() + 1, 0);
       
-      return shifts.filter(shift => {
+      return filteredByDate.filter(shift => {
         const shiftDate = new Date(shift.date);
         return shiftDate >= startOfMonth && shiftDate <= endOfMonth;
       });
       
     case 'search':
-      if (!searchDate) return shifts;
-      return shifts.filter(shift => shift.date === searchDate);
+      if (!searchDate) return filteredByDate;
+      return filteredByDate.filter(shift => shift.date === searchDate);
       
     case 'calendar':
     default:
-      return shifts;
+      return filteredByDate;
   }
 };
 
