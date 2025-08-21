@@ -3931,7 +3931,8 @@ def get_roster_data_for_export(month: str, current_user: dict):
         # Role-based data filtering
         if current_user["role"] == "staff":
             # Staff can only see their own shifts
-            if entry.get("staff_id") != current_user.get("id"):
+            staff_id = current_user.get("staff_id") or current_user.get("id")
+            if entry.get("staff_id") != staff_id:
                 continue
         
         # Calculate pay information
