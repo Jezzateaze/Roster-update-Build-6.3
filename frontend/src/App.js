@@ -5076,12 +5076,20 @@ function App() {
                                             badgeColor = typeMapping[shiftType].color;
                                           }
                                         } else {
-                                          // Auto-determine based on time
-                                          if (endMinutes > 20 * 60) { // After 8 PM
+                                          // Auto-determine based on day of week first, then time
+                                          if (template.day_of_week === 5) { // Saturday
+                                            shiftType = 'saturday';
+                                            shiftTypeBadge = 'Saturday';
+                                            badgeColor = 'bg-orange-100 text-orange-800';
+                                          } else if (template.day_of_week === 6) { // Sunday
+                                            shiftType = 'sunday';
+                                            shiftTypeBadge = 'Sunday';
+                                            badgeColor = 'bg-red-100 text-red-800';
+                                          } else if (endMinutes > 20 * 60) { // After 8 PM (weekdays only)
                                             shiftType = 'weekday_evening';
                                             shiftTypeBadge = 'Evening';
                                             badgeColor = 'bg-purple-100 text-purple-800';
-                                          } else if (startMinutes < 6 * 60 || endMinutes <= 6 * 60) { // Before 6 AM or ends at/before 6 AM
+                                          } else if (startMinutes < 6 * 60 || endMinutes <= 6 * 60) { // Before 6 AM or ends at/before 6 AM (weekdays only)
                                             shiftType = 'weekday_night'; 
                                             shiftTypeBadge = 'Night';
                                             badgeColor = 'bg-slate-100 text-slate-800';
