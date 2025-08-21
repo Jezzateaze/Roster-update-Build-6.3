@@ -196,7 +196,7 @@ function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
   const [authToken, setAuthToken] = useState(null);
-  const [showLoginDialog, setShowLoginDialog] = useState(false); // Hidden by default - auto-login as admin
+  const [showLoginDialog, setShowLoginDialog] = useState(true); // Show login screen
   const [showChangePinDialog, setShowChangePinDialog] = useState(false);
   const [showProfileDialog, setShowProfileDialog] = useState(false);
   const [showStaffProfileDialog, setShowStaffProfileDialog] = useState(false);
