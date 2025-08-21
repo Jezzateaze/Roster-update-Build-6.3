@@ -6203,7 +6203,9 @@ function App() {
                       unassignedShifts, 
                       unassignedShiftsViewMode, 
                       currentDate, 
-                      unassignedShiftsSearchDate
+                      unassignedShiftsSearchDate,
+                      currentUser?.role,
+                      showPastUnassignedShifts
                     );
                     
                     if (filteredShifts.length === 0) {
