@@ -2434,6 +2434,83 @@ async def change_pin(request: ChangePinRequest, user: dict = Depends(get_current
     
     return {"message": "PIN changed successfully"}
 
+@app.put("/api/auth/change-pin")
+async def change_user_pin(new_pin_data: dict, current_user: dict = Depends(get_current_user)):
+    """Change user PIN (enhanced version for new login system)"""
+    new_pin = new_pin_data.get("new_pin")
+    
+    if not new_pin:
+        raise HTTPException(status_code=400, detail="New PIN is required")
+    
+    # Validate new PIN (4 or 6 digits)
+    if not new_pin.isdigit() or len(new_pin) not in [4, 6]:
+        raise HTTPException(status_code=400, detail="PIN must be 4 or 6 digits")
+    
+    # Hash the new PIN
+    new_pin_hash = hash_pin(new_pin)
+    
+    # Update user PIN and mark as not first-time login
+    result = db.users.update_one(
+        {"id": current_user["id"]},
+        {"$set": {
+            "pin": new_pin,  # Store plain PIN for display (in production, consider removing)
+            "pin_hash": new_pin_hash,
+            "is_first_login": False,
+            "updated_at": datetime.utcnow()
+        }}
+    )
+    
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    return {"success": True, "message": "PIN changed successfully"}
+
+@app.put("/api/auth/reset-pin")
+async def admin_reset_user_pin(reset_data: dict, current_user: dict = Depends(get_current_user)):
+    """Admin reset user PIN to default (Admin only)"""
+    
+    # Check if current user is admin
+    if current_user.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="Only administrators can reset PINs")
+    
+    target_user_id = reset_data.get("user_id")
+    if not target_user_id:
+        raise HTTPException(status_code=400, detail="User ID is required")
+    
+    # Find the target user
+    target_user = db.users.find_one({"id": target_user_id})
+    if not target_user:
+        raise HTTPException(status_code=404, detail="Target user not found")
+    
+    # Determine default PIN based on role
+    if target_user.get("role") == "admin":
+        default_pin = "1234"
+    else:  # staff or other roles
+        default_pin = "888888"
+    
+    # Hash the default PIN
+    default_pin_hash = hash_pin(default_pin)
+    
+    # Reset user PIN to default
+    result = db.users.update_one(
+        {"id": target_user_id},
+        {"$set": {
+            "pin": default_pin,
+            "pin_hash": default_pin_hash,
+            "is_first_login": True,  # Mark as first-time login to force PIN change
+            "updated_at": datetime.utcnow()
+        }}
+    )
+    
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Failed to reset PIN")
+    
+    return {
+        "success": True, 
+        "message": f"PIN reset to default ({default_pin}) successfully",
+        "default_pin": default_pin
+    }
+
 @app.post("/api/auth/reset-pin")
 async def reset_pin(request: ResetPinRequest):
     """Request PIN reset via email"""
