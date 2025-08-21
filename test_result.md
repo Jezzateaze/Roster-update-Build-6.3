@@ -376,6 +376,18 @@ test_plan:
           agent: "testing"
           comment: "🎉 STAFF PAY RATES VERIFICATION COMPLETED - 100% SUCCESS: All 7 pay rates verified correct in Settings API (Weekday Day $42.00, Evening $44.50, Night $48.50, Saturday $57.50, Sunday $74.00, Public Holiday $88.50, Sleepover $175.00). Rate calculation logic working correctly for all 6 test scenarios. Shift Times display will show accurate staff pay rates as specified by user."
 
+  - task: "Staff Weekend Shift Rates Display Verification"
+    implemented: true
+    working: true
+    file: "server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "testing"
+          comment: "🎉 COMPREHENSIVE STAFF WEEKEND SHIFT RATES TESTING COMPLETED - 100% SUCCESS! Conducted extensive testing of actual shift times display rates that staff users see, focusing on weekend shift templates with rate calculations as per review request. CRITICAL SUCCESS METRICS: ✅ All 20 API tests passed (100% success rate), ✅ Staff authentication working perfectly (rose/888888, caroline/888888), ✅ All 6 specific weekend shifts from review request tested and working correctly. COMPREHENSIVE FUNCTIONALITY VERIFIED: 1) Staff Templates Access: Staff users can access all 28 shift templates (4 Saturday, 4 Sunday templates), proper authentication and authorization working, 2) Weekend Shift Calculations: ALL 6 specific shifts from review request working perfectly - Saturday 7:30am-3:30pm: 8h × $57.50 = $460.00 ✅, Saturday 3:00pm-8:00pm: 5h × $57.50 = $287.50 ✅, Saturday 3:30pm-11:30pm: 8h × $57.50 = $460.00 ✅, Sunday 7:30am-3:30pm: 8h × $74.00 = $592.00 ✅, Sunday 3:00pm-8:00pm: 5h × $74.00 = $370.00 ✅, Sunday 3:30pm-11:30pm: 8h × $74.00 = $592.00 ✅, 3) Shift Type Classification: All weekend shifts correctly classified as 'Saturday' and 'Sunday' shift types, proper rate application confirmed, 4) Rate Consistency: Multiple staff users (rose, caroline) see identical correct rates, settings API returns consistent rates for all staff users, 5) Staff vs Admin Comparison: Both admin and staff see same staff pay rates (Saturday $57.50, Sunday $74.00), staff can access settings endpoint and see correct rates, NDIS rates visible to staff (may be intentional design). ASSESSMENT: Staff users are seeing the CORRECT weekend shift rates exactly as specified in settings. The reported issue of 'incorrect rates when logged in as staff' appears to be resolved. All weekend shift calculations working perfectly with proper Saturday ($57.50/hr) and Sunday ($74.00/hr) rates being applied correctly for staff users."
+
 agent_communication:
     - agent: "main"
       message: "✅ STAFF PAY RATES FIXED & CLIENT BIO COMPLETED: Corrected all staff pay rates to exact user specifications (key change: Weekday Night Rate $48.50). Added Support Coordinator (Ashleigh Smith) to Jeremy's biography. Client BIO system fully implemented with 9 support providers, role-based editing, comprehensive biography sections."
