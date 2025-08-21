@@ -11641,6 +11641,272 @@ function App() {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Client Biography Edit Dialog */}
+      <Dialog open={showClientBiographyDialog} onOpenChange={setShowClientBiographyDialog}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-bold text-slate-800">
+              📖 Edit Biography - {editingClientBiography?.full_name}
+            </DialogTitle>
+          </DialogHeader>
+          {editingClientBiography && (
+            <div className="space-y-6 pt-4">
+              
+              {/* Role-based access notice */}
+              {currentUser?.role === 'staff' && (
+                <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                  <p className="text-sm text-yellow-800">
+                    <strong>Note:</strong> Staff users can edit strengths, daily life, and additional info. 
+                    Goals and supports are managed by Admin/Supervisor users.
+                  </p>
+                </div>
+              )}
+
+              {/* Strengths */}
+              <div className="space-y-2">
+                <label className="text-sm font-semibold text-slate-700">💪 His Strengths</label>
+                <textarea
+                  className="w-full p-3 border rounded-lg resize-none"
+                  rows="3"
+                  placeholder="Describe the client's strengths, interests, and abilities..."
+                  value={clientBiographyData.strengths}
+                  onChange={(e) => setClientBiographyData(prev => ({
+                    ...prev,
+                    strengths: e.target.value
+                  }))}
+                />
+              </div>
+
+              {/* Living Arrangements - Admin/Supervisor only */}
+              {(isAdmin() || (currentUser && currentUser.role === 'supervisor')) && (
+                <div className="space-y-2">
+                  <label className="text-sm font-semibold text-slate-700">🏠 Living Arrangements, Relationships & Supports</label>
+                  <textarea
+                    className="w-full p-3 border rounded-lg resize-none"
+                    rows="6"
+                    placeholder="Describe living situation, relationships, support network..."
+                    value={clientBiographyData.living_arrangements}
+                    onChange={(e) => setClientBiographyData(prev => ({
+                      ...prev,
+                      living_arrangements: e.target.value
+                    }))}
+                  />
+                </div>
+              )}
+
+              {/* Daily Life */}
+              <div className="space-y-2">
+                <label className="text-sm font-semibold text-slate-700">🌅 Daily Life</label>
+                <textarea
+                  className="w-full p-3 border rounded-lg resize-none"
+                  rows="6"
+                  placeholder="Describe typical daily activities, routines, interests..."
+                  value={clientBiographyData.daily_life}
+                  onChange={(e) => setClientBiographyData(prev => ({
+                    ...prev,
+                    daily_life: e.target.value
+                  }))}
+                />
+              </div>
+
+              {/* Goals - Admin/Supervisor only */}
+              {(isAdmin() || (currentUser && currentUser.role === 'supervisor')) && (
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <label className="text-sm font-semibold text-slate-700">🎯 His Goals</label>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      onClick={addGoalToBiography}
+                    >
+                      <Plus className="w-4 h-4 mr-2" />
+                      Add Goal
+                    </Button>
+                  </div>
+                  <div className="space-y-4">
+                    {clientBiographyData.goals.map((goal, index) => (
+                      <div key={index} className="p-4 border rounded-lg bg-purple-50">
+                        <div className="flex items-center justify-between mb-3">
+                          <span className="font-medium text-purple-800">Goal {index + 1}</span>
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="outline"
+                            onClick={() => removeGoalFromBiography(index)}
+                            className="text-red-600 hover:text-red-700"
+                          >
+                            <X className="w-4 h-4" />
+                          </Button>
+                        </div>
+                        <div className="space-y-3">
+                          <div>
+                            <label className="text-xs font-medium text-slate-600">Goal Title</label>
+                            <input
+                              type="text"
+                              className="w-full mt-1 p-2 border rounded text-sm"
+                              placeholder="Brief title for this goal..."
+                              value={goal.title}
+                              onChange={(e) => updateGoalInBiography(index, 'title', e.target.value)}
+                            />
+                          </div>
+                          <div>
+                            <label className="text-xs font-medium text-slate-600">Goal Description</label>
+                            <textarea
+                              className="w-full mt-1 p-2 border rounded text-sm resize-none"
+                              rows="2"
+                              placeholder="What does the client want to achieve..."
+                              value={goal.description}
+                              onChange={(e) => updateGoalInBiography(index, 'description', e.target.value)}
+                            />
+                          </div>
+                          <div>
+                            <label className="text-xs font-medium text-slate-600">How to Achieve</label>
+                            <textarea
+                              className="w-full mt-1 p-2 border rounded text-sm resize-none"
+                              rows="2"
+                              placeholder="Steps and strategies to work towards this goal..."
+                              value={goal.how_to_achieve}
+                              onChange={(e) => updateGoalInBiography(index, 'how_to_achieve', e.target.value)}
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                    {clientBiographyData.goals.length === 0 && (
+                      <div className="text-center py-8 text-gray-500">
+                        <p>No goals added yet</p>
+                        <p className="text-sm">Click "Add Goal" to create the client's first goal</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Support Providers - Admin/Supervisor only */}
+              {(isAdmin() || (currentUser && currentUser.role === 'supervisor')) && (
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <label className="text-sm font-semibold text-slate-700">🤝 Current Support Providers</label>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      onClick={addSupportToBiography}
+                    >
+                      <Plus className="w-4 h-4 mr-2" />
+                      Add Support
+                    </Button>
+                  </div>
+                  <div className="space-y-4">
+                    {clientBiographyData.supports.map((support, index) => (
+                      <div key={index} className="p-4 border rounded-lg bg-orange-50">
+                        <div className="flex items-center justify-between mb-3">
+                          <span className="font-medium text-orange-800">Support Provider {index + 1}</span>
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="outline"
+                            onClick={() => removeSupportFromBiography(index)}
+                            className="text-red-600 hover:text-red-700"
+                          >
+                            <X className="w-4 h-4" />
+                          </Button>
+                        </div>
+                        <div className="space-y-3">
+                          <div>
+                            <label className="text-xs font-medium text-slate-600">Description</label>
+                            <textarea
+                              className="w-full mt-1 p-2 border rounded text-sm resize-none"
+                              rows="2"
+                              placeholder="What support does this provider offer..."
+                              value={support.description}
+                              onChange={(e) => updateSupportInBiography(index, 'description', e.target.value)}
+                            />
+                          </div>
+                          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                            <div>
+                              <label className="text-xs font-medium text-slate-600">Provider</label>
+                              <input
+                                type="text"
+                                className="w-full mt-1 p-2 border rounded text-sm"
+                                placeholder="Provider name & contact..."
+                                value={support.provider}
+                                onChange={(e) => updateSupportInBiography(index, 'provider', e.target.value)}
+                              />
+                            </div>
+                            <div>
+                              <label className="text-xs font-medium text-slate-600">Frequency</label>
+                              <input
+                                type="text"
+                                className="w-full mt-1 p-2 border rounded text-sm"
+                                placeholder="How often..."
+                                value={support.frequency}
+                                onChange={(e) => updateSupportInBiography(index, 'frequency', e.target.value)}
+                              />
+                            </div>
+                            <div>
+                              <label className="text-xs font-medium text-slate-600">Type</label>
+                              <select
+                                className="w-full mt-1 p-2 border rounded text-sm"
+                                value={support.type}
+                                onChange={(e) => updateSupportInBiography(index, 'type', e.target.value)}
+                              >
+                                <option value="">Select type...</option>
+                                <option value="Mainstream">Mainstream</option>
+                                <option value="NDIS">NDIS</option>
+                                <option value="Informal">Informal</option>
+                                <option value="Community">Community</option>
+                              </select>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                    {clientBiographyData.supports.length === 0 && (
+                      <div className="text-center py-8 text-gray-500">
+                        <p>No support providers added yet</p>
+                        <p className="text-sm">Click "Add Support" to record support providers</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Additional Information */}
+              <div className="space-y-2">
+                <label className="text-sm font-semibold text-slate-700">ℹ️ Additional Information</label>
+                <textarea
+                  className="w-full p-3 border rounded-lg resize-none"
+                  rows="3"
+                  placeholder="Any other relevant information about the client..."
+                  value={clientBiographyData.additional_info}
+                  onChange={(e) => setClientBiographyData(prev => ({
+                    ...prev,
+                    additional_info: e.target.value
+                  }))}
+                />
+              </div>
+
+              {/* Dialog Actions */}
+              <div className="flex justify-end space-x-2 pt-4 border-t">
+                <Button 
+                  variant="outline" 
+                  onClick={() => setShowClientBiographyDialog(false)}
+                >
+                  Cancel
+                </Button>
+                <Button 
+                  onClick={() => updateClientBiography(editingClientBiography.id, clientBiographyData)}
+                >
+                  Save Biography
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
       
     </div>
   );
