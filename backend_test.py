@@ -8674,18 +8674,17 @@ ShiftRosterAPITester.test_date_filtering_unassigned_shifts = test_date_filtering
 
 if __name__ == "__main__":
     tester = ShiftRosterAPITester()
-    # Run only the specific export functionality test for Rose
-    print("🚀 Starting Export Functionality Test for Rose - August 2025...")
+    print("🚀 Starting Date Filtering for Available Unassigned Shifts Test...")
     print(f"   Base URL: {tester.base_url}")
     
-    # First authenticate as admin to set up
+    # First authenticate as admin
     if tester.test_authentication_system():
-        # Then run the specific export test
-        if tester.test_export_functionality_rose_august_2025():
-            print("\n🎉 EXPORT FUNCTIONALITY TEST COMPLETED SUCCESSFULLY!")
+        # Then run the specific date filtering test
+        if tester.test_date_filtering_unassigned_shifts():
+            print("\n🎉 DATE FILTERING TEST COMPLETED SUCCESSFULLY!")
             sys.exit(0)
         else:
-            print("\n❌ EXPORT FUNCTIONALITY TEST FAILED!")
+            print("\n❌ DATE FILTERING TEST FAILED!")
             sys.exit(1)
     else:
         print("\n❌ AUTHENTICATION SETUP FAILED!")
