@@ -1860,6 +1860,8 @@ function App() {
   // Initial data fetch
   useEffect(() => {
     fetchInitialData();
+    
+    // Fetch users for login dropdown
     fetchAvailableUsers();
     
     // Check for existing authentication
