@@ -10457,7 +10457,15 @@ function App() {
       </Dialog>
 
       {/* PIN Change Dialog */}
-      <Dialog open={showPinChangeDialog} onOpenChange={() => {}}>
+      <Dialog open={showPinChangeDialog} onOpenChange={(open) => {
+        if (!open) {
+          // Allow closing dialog and reset states
+          setShowPinChangeDialog(false);
+          setNewPin('');
+          setConfirmPin('');
+          setPinDigits(4);
+        }
+      }}>
         <DialogContent className="sm:max-w-lg">
           <DialogHeader>
             <DialogTitle className="text-center text-xl font-bold">
