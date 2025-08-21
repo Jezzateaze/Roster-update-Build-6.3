@@ -11089,6 +11089,136 @@ function App() {
                 </div>
               )}
 
+              {/* Client Biography Section */}
+              {selectedClient.biography && (
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-lg font-semibold text-slate-700">📖 Client Biography</h3>
+                    {(isAdmin() || (currentUser && currentUser.role === 'supervisor')) && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => openClientBiographyDialog(selectedClient)}
+                        className="text-xs"
+                      >
+                        ✏️ Edit BIO
+                      </Button>
+                    )}
+                  </div>
+                  
+                  {/* Strengths */}
+                  {selectedClient.biography.strengths && (
+                    <div className="space-y-2">
+                      <h4 className="font-semibold text-slate-600">💪 His Strengths</h4>
+                      <p className="text-sm text-slate-700 bg-green-50 p-3 rounded-lg border">
+                        {selectedClient.biography.strengths}
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Living Arrangements */}
+                  {selectedClient.biography.living_arrangements && (
+                    <div className="space-y-2">
+                      <h4 className="font-semibold text-slate-600">🏠 Living Arrangements, Relationships & Supports</h4>
+                      <p className="text-sm text-slate-700 bg-blue-50 p-3 rounded-lg border whitespace-pre-wrap">
+                        {selectedClient.biography.living_arrangements}
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Daily Life */}
+                  {selectedClient.biography.daily_life && (
+                    <div className="space-y-2">
+                      <h4 className="font-semibold text-slate-600">🌅 Daily Life</h4>
+                      <p className="text-sm text-slate-700 bg-yellow-50 p-3 rounded-lg border whitespace-pre-wrap">
+                        {selectedClient.biography.daily_life}
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Goals */}
+                  {selectedClient.biography.goals && selectedClient.biography.goals.length > 0 && (
+                    <div className="space-y-3">
+                      <h4 className="font-semibold text-slate-600">🎯 His Goals</h4>
+                      <div className="space-y-3">
+                        {selectedClient.biography.goals.map((goal, index) => (
+                          <div key={index} className="p-4 bg-purple-50 rounded-lg border">
+                            <h5 className="font-semibold text-purple-800 mb-2">{goal.title}</h5>
+                            <div className="space-y-2 text-sm">
+                              <div>
+                                <strong className="text-purple-700">Goal:</strong>
+                                <p className="text-slate-700 mt-1">{goal.description}</p>
+                              </div>
+                              <div>
+                                <strong className="text-purple-700">How to achieve:</strong>
+                                <p className="text-slate-700 mt-1">{goal.how_to_achieve}</p>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Support Providers - Admin/Supervisor Only */}
+                  {(isAdmin() || (currentUser && currentUser.role === 'supervisor')) && selectedClient.biography.supports && selectedClient.biography.supports.length > 0 && (
+                    <div className="space-y-3">
+                      <h4 className="font-semibold text-slate-600">🤝 Current Support Providers</h4>
+                      <div className="grid gap-3">
+                        {selectedClient.biography.supports.map((support, index) => (
+                          <div key={index} className="p-3 bg-orange-50 rounded-lg border text-sm">
+                            <div className="space-y-2">
+                              <div>
+                                <strong className="text-orange-700">Description:</strong>
+                                <p className="text-slate-700">{support.description}</p>
+                              </div>
+                              <div className="grid grid-cols-1 md:grid-cols-3 gap-2 text-xs">
+                                <div>
+                                  <strong>Provider:</strong> {support.provider}
+                                </div>
+                                <div>
+                                  <strong>Frequency:</strong> {support.frequency}
+                                </div>
+                                <div>
+                                  <strong>Type:</strong> {support.type}
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Additional Information */}
+                  {selectedClient.biography.additional_info && (
+                    <div className="space-y-2">
+                      <h4 className="font-semibold text-slate-600">ℹ️ Additional Information</h4>
+                      <p className="text-sm text-slate-700 bg-gray-50 p-3 rounded-lg border whitespace-pre-wrap">
+                        {selectedClient.biography.additional_info}
+                      </p>
+                    </div>
+                  )}
+
+                  {/* No Biography Message */}
+                  {!selectedClient.biography.strengths && !selectedClient.biography.living_arrangements && 
+                   !selectedClient.biography.daily_life && (!selectedClient.biography.goals || selectedClient.biography.goals.length === 0) && (
+                    <div className="text-center py-8">
+                      <p className="text-gray-500 mb-4">No biography information available</p>
+                      {(isAdmin() || (currentUser && currentUser.role === 'supervisor')) && (
+                        <Button
+                          onClick={() => openClientBiographyDialog(selectedClient)}
+                          variant="outline"
+                          size="sm"
+                        >
+                          📝 Add Biography Information
+                        </Button>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
+
               {/* Dialog Actions */}
               <div className="flex justify-end space-x-2 pt-4 border-t">
                 <Button variant="outline" onClick={() => setShowClientProfileDialog(false)}>
