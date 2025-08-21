@@ -192,18 +192,35 @@ const groupUnassignedShiftsByDate = (shifts) => {
 };
 
 function App() {
-  // Authentication State
+  // Authentication states
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
-  const [authToken, setAuthToken] = useState(null);
-  const [showLoginDialog, setShowLoginDialog] = useState(true); // Show login screen
+  const [availableUsers, setAvailableUsers] = useState([]);
+  const [selectedUserId, setSelectedUserId] = useState('');
+  const [enteredPin, setEnteredPin] = useState('');
+  const [authToken, setAuthToken] = useState('');
+  const [showLoginDialog, setShowLoginDialog] = useState(true);
+  
+  // Enhanced login system states
+  const [loginStep, setLoginStep] = useState('user-selection'); // 'user-selection', 'pin-entry', 'first-time-setup', 'pin-change'
+  const [selectedUser, setSelectedUser] = useState(null);
+  const [showKeypad, setShowKeypad] = useState(false);
+  const [pinInput, setPinInput] = useState('');
+  const [isFirstTimeLogin, setIsFirstTimeLogin] = useState(false);
+  const [pinDigits, setPinDigits] = useState(4); // 4 or 6 digits
+  const [showPinChangeDialog, setShowPinChangeDialog] = useState(false);
+  const [newPin, setNewPin] = useState('');
+  const [confirmPin, setConfirmPin] = useState('');
+  const [showPinResetDialog, setShowPinResetDialog] = useState(false);
+  const [resetTargetUser, setResetTargetUser] = useState(null);
+  
+  // Legacy authentication states (keeping for compatibility)
   const [showChangePinDialog, setShowChangePinDialog] = useState(false);
   const [showProfileDialog, setShowProfileDialog] = useState(false);
   const [showStaffProfileDialog, setShowStaffProfileDialog] = useState(false);
   const [showStaffSelfProfileDialog, setShowStaffSelfProfileDialog] = useState(false);
   const [selectedStaffForProfile, setSelectedStaffForProfile] = useState(null);
   const [loginData, setLoginData] = useState({ username: '', pin: '' });
-  const [availableUsers, setAvailableUsers] = useState([]);
   const [useDropdown, setUseDropdown] = useState(true);
   const [changePinData, setChangePinData] = useState({ current_pin: '', new_pin: '', confirm_pin: '' });
   const [profileData, setProfileData] = useState({});
