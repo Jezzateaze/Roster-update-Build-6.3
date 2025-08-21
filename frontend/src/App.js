@@ -201,25 +201,49 @@ function App() {
       id: 'cd5190e6-009d-4c07-9f1a-1dc7ae92cf83',
       username: 'Admin', 
       role: 'admin',
-      displayName: '👑 Admin (Administrator)'
+      first_name: 'System',
+      last_name: 'Administrator',
+      is_first_login: true
     },
     {
       id: 'rose-initial',
       username: 'rose', 
       role: 'staff',
-      displayName: '👤 rose (Staff)'
+      first_name: 'Rose',
+      last_name: '',
+      is_first_login: true
     },
     {
       id: 'angela-initial',
       username: 'angela', 
       role: 'staff',
-      displayName: '👤 angela (Staff)'
+      first_name: 'Angela',
+      last_name: '',
+      is_first_login: true
     },
     {
       id: 'chanelle-initial',
       username: 'chanelle', 
       role: 'staff',
-      displayName: '👤 chanelle (Staff)'
+      first_name: 'Chanelle',
+      last_name: '',
+      is_first_login: true
+    },
+    {
+      id: 'caroline-initial',
+      username: 'caroline', 
+      role: 'staff',
+      first_name: 'Caroline',
+      last_name: '',
+      is_first_login: true
+    },
+    {
+      id: 'nox-initial',
+      username: 'nox', 
+      role: 'staff',
+      first_name: 'Nox',
+      last_name: '',
+      is_first_login: true
     }
   ]);
   const [selectedUserId, setSelectedUserId] = useState('');
