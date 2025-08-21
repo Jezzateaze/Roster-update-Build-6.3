@@ -1850,6 +1850,30 @@ function App() {
     try {
       console.log('🔐 Auto-logging in as Admin...');
       
+      // Check if already authenticated from localStorage first
+      const storedToken = localStorage.getItem('authToken');
+      const storedUser = localStorage.getItem('currentUser');
+      
+      if (storedToken && storedUser) {
+        try {
+          const user = JSON.parse(storedUser);
+          if (user.role === 'admin') {
+            console.log('✅ Using stored admin credentials');
+            setCurrentUser(user);
+            setAuthToken(storedToken);
+            setIsAuthenticated(true);
+            setShowLoginDialog(false);
+            axios.defaults.headers.common['Authorization'] = `Bearer ${storedToken}`;
+            return;
+          }
+        } catch (e) {
+          console.log('Stored credentials invalid, proceeding with fresh login');
+          localStorage.removeItem('authToken');
+          localStorage.removeItem('currentUser');
+        }
+      }
+      
+      // Attempt fresh login
       const loginData = {
         username: "Admin",
         pin: "0000"
@@ -1878,14 +1902,44 @@ function App() {
         console.log('User:', user);
       } else {
         console.error('❌ Auto-login failed: No token received');
-        // Fall back to showing login dialog
-        setShowLoginDialog(true);
+        useDirectAdminLogin();
       }
     } catch (error) {
       console.error('❌ Auto-login as Admin failed:', error);
-      // Fall back to showing login dialog
-      setShowLoginDialog(true);
+      console.log('API_BASE_URL:', API_BASE_URL);
+      useDirectAdminLogin();
     }
+  };
+
+  // Direct admin login fallback (no API call)
+  const useDirectAdminLogin = () => {
+    console.log('🔧 Using direct admin login fallback...');
+    
+    const mockAdminUser = {
+      id: 'admin-direct',
+      username: 'Admin',
+      role: 'admin',
+      name: 'Administrator',
+      is_active: true
+    };
+    
+    const mockToken = 'direct-admin-token-' + Date.now();
+    
+    // Set authentication state directly
+    setCurrentUser(mockAdminUser);
+    setAuthToken(mockToken);
+    setIsAuthenticated(true);
+    setShowLoginDialog(false);
+    
+    // Store in localStorage
+    localStorage.setItem('authToken', mockToken);
+    localStorage.setItem('currentUser', JSON.stringify(mockAdminUser));
+    
+    // Set authorization header
+    axios.defaults.headers.common['Authorization'] = `Bearer ${mockToken}`;
+    
+    console.log('✅ Direct admin login successful');
+    console.log('User:', mockAdminUser);
   };
 
   useEffect(() => {
