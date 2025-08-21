@@ -3911,7 +3911,7 @@ def get_roster_data_for_export(month: str, current_user: dict):
     export_data = []
     for entry in roster_entries:
         staff_info = staff_dict.get(entry.get("staff_id", ""), {})
-        staff_name = staff_info.get("name", "Unknown Staff")
+        staff_name = staff_info.get("name", "Unassigned") if entry.get("staff_id") else "Unassigned"
         
         # Role-based data filtering
         if current_user["role"] == "staff":
