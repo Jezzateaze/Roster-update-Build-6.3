@@ -1902,11 +1902,7 @@ function App() {
         
         console.log('✅ Auto-login as Admin successful');
         console.log('User:', user);
-        
-        // Immediately fetch clients after successful auth
-        setTimeout(() => {
-          fetchClients();
-        }, 100);
+        console.log('Auth token:', token);
       } else {
         console.error('❌ Auto-login failed: No token received');
         useDirectAdminLogin();
