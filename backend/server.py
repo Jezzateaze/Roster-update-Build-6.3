@@ -3309,6 +3309,48 @@ async def get_client_budget_summary(client_id: str, current_user: dict = Depends
     
     return budget_summary
 
+@app.put("/api/clients/{client_id}/biography")
+async def update_client_biography(client_id: str, biography_update: ClientBiography, current_user: dict = Depends(get_current_user)):
+    """Update client biography information with role-based access"""
+    
+    # Check if client exists
+    existing_client = db.clients.find_one({"id": client_id})
+    if not existing_client:
+        raise HTTPException(status_code=404, detail="Client not found")
+    
+    # Role-based access control
+    if current_user["role"] == "staff":
+        # Staff can only update certain fields (not supports or funding-related info)
+        allowed_fields = ["strengths", "daily_life", "additional_info"]
+        biography_data = biography_update.dict()
+        filtered_data = {k: v for k, v in biography_data.items() if k in allowed_fields}
+        
+        if not filtered_data:
+            raise HTTPException(status_code=403, detail="Staff users have limited biography editing permissions")
+        
+        update_data = {"biography": filtered_data, "updated_at": datetime.utcnow()}
+        
+        # Merge with existing biography data to preserve admin-only fields
+        existing_bio = existing_client.get("biography", {})
+        merged_bio = {**existing_bio, **filtered_data}
+        update_data["biography"] = merged_bio
+    else:
+        # Admin and Supervisor get full access
+        update_data = {
+            "biography": biography_update.dict(),
+            "updated_at": datetime.utcnow()
+        }
+    
+    result = db.clients.update_one(
+        {"id": client_id},
+        {"$set": update_data}
+    )
+    
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Client not found")
+    
+    return {"message": "Client biography updated successfully"}
+
 # Initialize database with sample client if not exists (for demonstration)
 def initialize_sample_client():
     """Initialize sample client data if not exists"""
