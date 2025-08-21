@@ -3122,7 +3122,7 @@ async def get_client_profile(client_id: str, current_user: dict = Depends(get_cu
     """Get specific client profile with role-based filtering"""
     
     if current_user["role"] == "staff":
-        # Staff get limited view (no NDIS plan financial details)
+        # Staff get limited view (no NDIS plan financial details, limited biography)
         client = db.clients.find_one({"id": client_id}, {
             "_id": 0,
             "id": 1,
@@ -3134,6 +3134,9 @@ async def get_client_profile(client_id: str, current_user: dict = Depends(get_cu
             "mobile": 1,
             "address": 1,
             "emergency_contacts": 1,
+            "biography.strengths": 1,
+            "biography.daily_life": 1,
+            "biography.additional_info": 1,
             "created_at": 1,
             "current_ndis_plan.plan_type": 1,
             "current_ndis_plan.ndis_number": 1,
