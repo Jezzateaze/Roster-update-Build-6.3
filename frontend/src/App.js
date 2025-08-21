@@ -1854,69 +1854,117 @@ function App() {
   // Fetch available users for enhanced login dropdown
   const fetchAvailableUsers = async () => {
     try {
-      console.log('🔍 Fetching available users for login...');
+      console.log('🔍 Fetching ALL staff and admin users for login...');
       console.log('API_BASE_URL:', API_BASE_URL);
       
-      // Get all active users from the login endpoint (public, no auth required)
-      const response = await axios.get(`${API_BASE_URL}/api/users/login`);
-      const userList = response.data;
+      // Get admin users and all active staff members
+      const [adminResponse, staffResponse] = await Promise.all([
+        axios.get(`${API_BASE_URL}/api/users/login`),
+        axios.get(`${API_BASE_URL}/api/staff`)
+      ]);
       
-      console.log('Raw user list fetched:', userList);
-      console.log('Number of users returned:', userList?.length || 0);
+      const adminUsers = adminResponse.data;
+      const staffMembers = staffResponse.data;
       
-      // Filter and format users for the dropdown
-      const activeUsers = userList
-        .filter(user => user.is_active && user.username)
+      console.log('Admin users fetched:', adminUsers?.length || 0);
+      console.log('Staff members fetched:', staffMembers?.length || 0);
+      
+      // Process admin users
+      const processedAdmins = adminUsers
+        .filter(user => user.is_active && user.username && user.role === 'admin')
         .map(user => ({
           id: user.id,
           username: user.username,
-          role: user.role || 'staff',
-          first_name: user.first_name || '',
-          last_name: user.last_name || '',
-          is_first_login: user.is_first_login || false
-        }))
-        .sort((a, b) => {
-          // Sort admin users first, then alphabetically
-          if (a.role === 'admin' && b.role !== 'admin') return -1;
-          if (a.role !== 'admin' && b.role === 'admin') return 1;
-          return a.username.localeCompare(b.username);
-        });
+          role: 'admin',
+          name: user.first_name || user.username,
+          is_first_login: user.is_first_login || true
+        }));
       
-      console.log('✅ Processed users for dropdown:', activeUsers);
-      setAvailableUsers(activeUsers);
+      // Process staff members - create usernames from names
+      const processedStaff = staffMembers
+        .filter(staff => staff.active && staff.name && staff.name.trim() !== '')
+        .map(staff => {
+          // Create username from name (lowercase, no spaces)
+          const username = staff.name.toLowerCase()
+            .replace(/\s+/g, '')           // Remove spaces
+            .replace(/[^a-zA-Z0-9]/g, '')  // Remove special characters
+            .substring(0, 20);             // Limit length
+          
+          return {
+            id: staff.id,
+            username: username,
+            role: 'staff',
+            name: staff.name,
+            is_first_login: true // All staff start with first-time login
+          };
+        })
+        .filter(staff => staff.username) // Only include staff with valid usernames
+        .sort((a, b) => a.name.localeCompare(b.name)); // Sort alphabetically by name
       
-      if (activeUsers.length === 0) {
-        console.warn('⚠️ No active users found');
+      // Combine admin and staff users
+      const allUsers = [...processedAdmins, ...processedStaff];
+      
+      console.log('✅ Processed users for dropdown:');
+      console.log(`   Admin users: ${processedAdmins.length}`);
+      console.log(`   Staff users: ${processedStaff.length}`);
+      console.log(`   Total users: ${allUsers.length}`);
+      
+      // Log first few users for verification
+      allUsers.slice(0, 5).forEach(user => {
+        console.log(`   - ${user.role === 'admin' ? '👑' : '👤'} ${user.name || user.username} (${user.username})`);
+      });
+      
+      setAvailableUsers(allUsers);
+      
+      if (allUsers.length === 0) {
+        console.warn('⚠️ No users found after processing');
       }
       
     } catch (error) {
       console.error('❌ Error fetching users:', error);
       console.error('Error details:', error.response?.data, error.message);
       
-      // Fallback: Create test users including admin and staff
+      // Enhanced fallback with more staff users
       const fallbackUsers = [
         {
           id: 'admin-fallback',
           username: 'Admin', 
           role: 'admin',
-          displayName: '👑 Admin (Administrator)'
+          name: 'Administrator',
+          is_first_login: true
         },
         {
           id: 'rose-fallback',
           username: 'rose', 
           role: 'staff',
-          displayName: '👤 rose (Staff)'
+          name: 'Rose',
+          is_first_login: true
         },
         {
           id: 'angela-fallback',
           username: 'angela', 
           role: 'staff',
-          displayName: '👤 angela (Staff)'
+          name: 'Angela',
+          is_first_login: true
+        },
+        {
+          id: 'chanelle-fallback',
+          username: 'chanelle', 
+          role: 'staff',
+          name: 'Chanelle',
+          is_first_login: true
+        },
+        {
+          id: 'caroline-fallback',
+          username: 'caroline', 
+          role: 'staff',
+          name: 'Caroline',
+          is_first_login: true
         }
       ];
       
       setAvailableUsers(fallbackUsers);
-      console.log('🔄 Using fallback users:', fallbackUsers);
+      console.log('🔄 Using enhanced fallback users:', fallbackUsers);
     }
   };
 
