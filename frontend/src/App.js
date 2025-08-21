@@ -10555,6 +10555,24 @@ function App() {
                   maxLength={pinDigits}
                   currentInput={newPin}
                 />
+                
+                {/* Cancel Button */}
+                <div className="flex justify-center mt-4">
+                  <Button 
+                    variant="outline"
+                    onClick={() => {
+                      setShowPinChangeDialog(false);
+                      setNewPin('');
+                      setConfirmPin('');
+                      setPinDigits(4);
+                      setLoginStep('user-selection');
+                      resetLoginStates();
+                    }}
+                    className="w-full"
+                  >
+                    ← Cancel & Return to Login
+                  </Button>
+                </div>
               </div>
             )}
             
