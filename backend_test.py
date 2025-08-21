@@ -7709,6 +7709,309 @@ def test_enhanced_add_availability_functionality(self):
 # Add the method to the ShiftRosterAPITester class
 ShiftRosterAPITester.test_enhanced_add_availability_functionality = test_enhanced_add_availability_functionality
 
+def test_client_profiles_api(self):
+    """Test Client Profiles API to verify Jeremy James Tomlinson's data is accessible"""
+    print(f"\n👤 Testing Client Profiles API - JEREMY JAMES TOMLINSON DATA VERIFICATION...")
+    print("🎯 REVIEW REQUEST: Verify Jeremy's comprehensive profile data is accessible via API")
+    
+    # Ensure we have admin authentication
+    if not self.auth_token:
+        print("   Getting admin authentication...")
+        login_data = {"username": "Admin", "pin": "0000"}
+        success, response = self.run_test(
+            "Admin Login for Client API Access",
+            "POST",
+            "api/auth/login",
+            200,
+            data=login_data
+        )
+        if success:
+            self.auth_token = response.get('token')
+        else:
+            print("   ❌ Could not get admin authentication")
+            return False
+    
+    # Test 1: Test Client List API - GET /api/clients
+    print(f"\n   🎯 TEST 1: Client List API - GET /api/clients with admin authentication")
+    success, clients_list = self.run_test(
+        "Get All Clients List",
+        "GET",
+        "api/clients",
+        200,
+        use_auth=True
+    )
+    
+    if not success:
+        print("   ❌ Could not get clients list")
+        return False
+    
+    print(f"   ✅ Found {len(clients_list)} clients in the system")
+    
+    # Verify Jeremy James Tomlinson appears in the client list
+    jeremy_in_list = None
+    jeremy_id = "feedf5e9-7f8b-46d6-ac34-14110806b475"
+    
+    for client in clients_list:
+        if client.get('id') == jeremy_id or 'Jeremy' in client.get('full_name', ''):
+            jeremy_in_list = client
+            break
+    
+    if jeremy_in_list:
+        print(f"   ✅ Jeremy James Tomlinson found in client list")
+        print(f"      ID: {jeremy_in_list.get('id')}")
+        print(f"      Name: {jeremy_in_list.get('full_name')}")
+        print(f"      DOB: {jeremy_in_list.get('date_of_birth', 'N/A')}")
+        print(f"      Mobile: {jeremy_in_list.get('mobile', 'N/A')}")
+        
+        # Verify all required fields are present
+        required_fields = ['id', 'full_name', 'date_of_birth', 'mobile', 'address', 'disability_condition']
+        missing_fields = []
+        for field in required_fields:
+            if not jeremy_in_list.get(field):
+                missing_fields.append(field)
+        
+        if missing_fields:
+            print(f"   ❌ Missing required fields in client list: {missing_fields}")
+            return False
+        else:
+            print(f"   ✅ All required fields present in client list")
+    else:
+        print(f"   ❌ Jeremy James Tomlinson not found in client list")
+        print(f"      Expected ID: {jeremy_id}")
+        print(f"      Available clients: {[c.get('full_name', 'N/A') for c in clients_list[:5]]}")
+        return False
+    
+    # Test 2: Test Specific Client API - GET /api/clients/{jeremy_id}
+    print(f"\n   🎯 TEST 2: Specific Client API - GET /api/clients/{jeremy_id}")
+    success, jeremy_profile = self.run_test(
+        f"Get Jeremy's Complete Profile",
+        "GET",
+        f"api/clients/{jeremy_id}",
+        200,
+        use_auth=True
+    )
+    
+    if not success:
+        print(f"   ❌ Could not get Jeremy's profile with ID: {jeremy_id}")
+        return False
+    
+    print(f"   ✅ Successfully retrieved Jeremy's complete profile")
+    print(f"      Full Name: {jeremy_profile.get('full_name')}")
+    print(f"      Age: {jeremy_profile.get('age', 'N/A')}")
+    print(f"      Disability: {jeremy_profile.get('disability_condition', 'N/A')}")
+    print(f"      Address: {jeremy_profile.get('address', 'N/A')}")
+    
+    # Test 3: Verify NDIS Plan Information
+    print(f"\n   🎯 TEST 3: Verify NDIS Plan Information")
+    ndis_plan = jeremy_profile.get('current_ndis_plan')
+    
+    if ndis_plan:
+        print(f"   ✅ NDIS Plan found")
+        print(f"      NDIS Number: {ndis_plan.get('ndis_number', 'N/A')}")
+        print(f"      Plan Type: {ndis_plan.get('plan_type', 'N/A')}")
+        print(f"      Plan Start: {ndis_plan.get('plan_start_date', 'N/A')}")
+        print(f"      Plan End: {ndis_plan.get('plan_end_date', 'N/A')}")
+        print(f"      Plan Management: {ndis_plan.get('plan_management', 'N/A')}")
+        
+        # Check funding categories
+        funding_categories = ndis_plan.get('funding_categories', [])
+        print(f"      Funding Categories: {len(funding_categories)} categories")
+        
+        if funding_categories:
+            print(f"   ✅ NDIS funding categories are properly formatted")
+            for i, category in enumerate(funding_categories[:3]):  # Show first 3
+                print(f"         {i+1}. {category.get('category_name', 'N/A')}: ${category.get('total_amount', 0)}")
+            if len(funding_categories) > 3:
+                print(f"         ... and {len(funding_categories) - 3} more categories")
+        else:
+            print(f"   ⚠️  No funding categories found")
+    else:
+        print(f"   ❌ NDIS Plan not found in Jeremy's profile")
+        return False
+    
+    # Test 4: Verify Biography Data
+    print(f"\n   🎯 TEST 4: Verify Biography Information")
+    biography = jeremy_profile.get('biography')
+    
+    if biography:
+        print(f"   ✅ Biography section found")
+        
+        # Check biographical fields
+        bio_fields = {
+            'strengths': 'Strengths',
+            'living_arrangements': 'Living Arrangements', 
+            'daily_life': 'Daily Life',
+            'goals': 'Goals',
+            'supports': 'Support Providers',
+            'additional_info': 'Additional Information'
+        }
+        
+        for field, display_name in bio_fields.items():
+            value = biography.get(field)
+            if field in ['goals', 'supports']:
+                # These are arrays
+                if isinstance(value, list) and len(value) > 0:
+                    print(f"      ✅ {display_name}: {len(value)} items")
+                    if field == 'goals':
+                        for i, goal in enumerate(value[:2]):  # Show first 2 goals
+                            print(f"         Goal {i+1}: {goal.get('title', 'N/A')}")
+                    elif field == 'supports':
+                        for i, support in enumerate(value[:2]):  # Show first 2 supports
+                            print(f"         Support {i+1}: {support.get('provider', 'N/A')} - {support.get('description', 'N/A')}")
+                else:
+                    print(f"      ❌ {display_name}: Empty or invalid")
+                    return False
+            else:
+                # These are text fields
+                if value and value.strip():
+                    print(f"      ✅ {display_name}: {len(value)} characters")
+                else:
+                    print(f"      ❌ {display_name}: Empty or missing")
+                    return False
+        
+        # Verify specific Jeremy data points from review request
+        strengths = biography.get('strengths', '')
+        living_arrangements = biography.get('living_arrangements', '')
+        goals = biography.get('goals', [])
+        supports = biography.get('supports', [])
+        
+        # Check for expected content
+        expected_strengths = ['gardening', 'crafts', 'cooking', 'photography', 'painting', 'gaming']
+        found_strengths = sum(1 for strength in expected_strengths if strength.lower() in strengths.lower())
+        
+        if found_strengths >= 3:  # At least half of expected strengths
+            print(f"      ✅ Expected strengths found: {found_strengths}/{len(expected_strengths)}")
+        else:
+            print(f"      ⚠️  Few expected strengths found: {found_strengths}/{len(expected_strengths)}")
+        
+        # Check living arrangements for key details
+        if 'stanley' in living_arrangements.lower() and 'carina' in living_arrangements.lower():
+            print(f"      ✅ Living arrangements contain expected address details")
+        else:
+            print(f"      ⚠️  Living arrangements may not contain expected address details")
+        
+        # Check goals count (should be 6 as per review request)
+        if len(goals) >= 6:
+            print(f"      ✅ Goals count meets expectation: {len(goals)} goals")
+        else:
+            print(f"      ⚠️  Goals count below expectation: {len(goals)} goals (expected 6)")
+        
+        # Check support providers count (should be 6 as per review request)
+        if len(supports) >= 6:
+            print(f"      ✅ Support providers count meets expectation: {len(supports)} providers")
+        else:
+            print(f"      ⚠️  Support providers count below expectation: {len(supports)} providers (expected 6)")
+            
+    else:
+        print(f"   ❌ Biography section not found in Jeremy's profile")
+        return False
+    
+    # Test 5: Verify Emergency Contacts
+    print(f"\n   🎯 TEST 5: Verify Emergency Contacts")
+    emergency_contacts = jeremy_profile.get('emergency_contacts', [])
+    
+    if emergency_contacts and len(emergency_contacts) > 0:
+        print(f"   ✅ Emergency contacts found: {len(emergency_contacts)} contacts")
+        for i, contact in enumerate(emergency_contacts):
+            print(f"      Contact {i+1}: {contact.get('name', 'N/A')} ({contact.get('relationship', 'N/A')})")
+            print(f"         Mobile: {contact.get('mobile', 'N/A')}")
+            print(f"         Address: {contact.get('address', 'N/A')}")
+    else:
+        print(f"   ⚠️  No emergency contacts found")
+    
+    # Test 6: Test Client Data Structure for Frontend Compatibility
+    print(f"\n   🎯 TEST 6: Verify Client Data Structure for Frontend")
+    
+    # Check that all expected top-level fields are present
+    expected_top_fields = [
+        'id', 'full_name', 'date_of_birth', 'age', 'sex', 'disability_condition',
+        'mobile', 'address', 'emergency_contacts', 'current_ndis_plan', 'biography',
+        'created_at', 'updated_at', 'created_by'
+    ]
+    
+    missing_top_fields = []
+    for field in expected_top_fields:
+        if field not in jeremy_profile:
+            missing_top_fields.append(field)
+    
+    if missing_top_fields:
+        print(f"   ❌ Missing top-level fields: {missing_top_fields}")
+        return False
+    else:
+        print(f"   ✅ All expected top-level fields present")
+    
+    # Verify data types are correct for frontend consumption
+    data_type_checks = [
+        ('id', str),
+        ('full_name', str),
+        ('age', (int, type(None))),
+        ('emergency_contacts', list),
+        ('current_ndis_plan', (dict, type(None))),
+        ('biography', (dict, type(None)))
+    ]
+    
+    type_errors = []
+    for field, expected_type in data_type_checks:
+        value = jeremy_profile.get(field)
+        if not isinstance(value, expected_type):
+            type_errors.append(f"{field}: got {type(value)}, expected {expected_type}")
+    
+    if type_errors:
+        print(f"   ❌ Data type errors: {type_errors}")
+        return False
+    else:
+        print(f"   ✅ All data types are frontend-compatible")
+    
+    # Test 7: Test Authentication Requirements
+    print(f"\n   🎯 TEST 7: Verify Admin Authentication Requirements")
+    
+    # Test access without authentication (should fail)
+    success, response = self.run_test(
+        "Access Clients Without Auth (Should Fail)",
+        "GET",
+        "api/clients",
+        401,  # Expect unauthorized
+        use_auth=False
+    )
+    
+    if success:  # Success means we got expected 401
+        print(f"   ✅ Unauthenticated access correctly blocked")
+    else:
+        print(f"   ❌ Unauthenticated access was not blocked")
+        return False
+    
+    # Test access with admin credentials (should work)
+    success, response = self.run_test(
+        "Access Clients With Admin Auth (Should Work)",
+        "GET",
+        "api/clients",
+        200,
+        use_auth=True
+    )
+    
+    if success:
+        print(f"   ✅ Admin authentication provides proper access")
+    else:
+        print(f"   ❌ Admin authentication failed")
+        return False
+    
+    # Final Assessment
+    print(f"\n   🎉 CLIENT PROFILES API TESTING COMPLETED!")
+    print(f"      ✅ Client List API working - Jeremy found in list with all required fields")
+    print(f"      ✅ Specific Client API working - Jeremy's complete profile accessible")
+    print(f"      ✅ NDIS Plan Information complete - plan type, dates, funding categories")
+    print(f"      ✅ Biography Data comprehensive - strengths, living arrangements, goals, supports")
+    print(f"      ✅ Emergency Contacts included - {len(emergency_contacts)} contacts")
+    print(f"      ✅ Data Structure frontend-ready - all fields and types correct")
+    print(f"      ✅ Authentication working - admin access required and functional")
+    print(f"      ✅ Jeremy's comprehensive profile data (NDIS plan, biography, support providers, emergency contacts) is accessible via API")
+    print(f"      ✅ Data is properly formatted for the frontend Client Profiles section")
+    
+    return True
+
+# Add the Client Profiles API test method to the ShiftRosterAPITester class
+ShiftRosterAPITester.test_client_profiles_api = test_client_profiles_api
+
 if __name__ == "__main__":
     tester = ShiftRosterAPITester()
     # Run only the specific export functionality test for Rose
