@@ -6194,7 +6194,8 @@ class ShiftRosterAPITester:
             "GET",
             f"api/export/csv/{test_month}",
             200,
-            use_auth=True
+            use_auth=True,
+            expect_json=False
         )
         
         if success:
