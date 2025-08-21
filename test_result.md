@@ -402,9 +402,9 @@ test_plan:
 
   - task: "Export Functionality Implementation"
     implemented: true
-    working: true
+    working: false
     file: "server.py"
-    stuck_count: 0
+    stuck_count: 1
     priority: "high"
     needs_retesting: false
     status_history:
@@ -414,6 +414,9 @@ test_plan:
         - working: true
           agent: "testing"
           comment: "🎉 EXPORT FUNCTIONALITY COMPREHENSIVE TESTING COMPLETED - 100% SUCCESS! All three export formats (CSV, Excel, PDF) working perfectly for both Admin and Staff users. ✅ Authentication & Role-Based Access: Admin credentials (Admin/0000) provide full access to all roster data, Staff credentials (rose/888888) correctly filter to show only own shifts, proper authorization controls in place. ✅ Export Endpoints: CSV export generating proper formatted files, Excel export with professional styling and headers, PDF export with formatted tables and proper layout. ✅ Data Content: All required fields included (Date, Staff Name, Hours, Pay, etc.), NDIS billing information correctly included for Admin users only, Staff users see only their own shift data as required. ✅ Error Handling: Invalid month formats properly validated, unauthorized access blocked appropriately, months with no data handled gracefully. ✅ File Response: Correct Content-Type headers for each format, proper Content-Disposition headers for file naming, streaming responses working correctly. CRITICAL FIXES APPLIED: Fixed database collection name (roster vs roster_entries), improved hourly rate calculation from base_pay/hours_worked, enhanced staff name handling for unassigned shifts. Generated 372 test roster entries for comprehensive testing. Export functionality is production-ready and meets all requirements."
+        - working: false
+          agent: "testing"
+          comment: "🚨 CRITICAL ISSUE DISCOVERED: Role-based filtering in roster endpoint is BROKEN for staff users. During specific testing of Rose's August 2025 export functionality, discovered that staff user Rose can see ALL 124 shifts instead of only her own 25 assigned shifts. This is a MAJOR security and privacy violation. The export endpoints themselves work correctly, but the underlying GET /api/roster endpoint is not properly filtering data by staff_id for staff users. This means staff users can export ALL roster data instead of just their own shifts, which violates role-based access control requirements. IMPACT: Staff users can access and export confidential shift data of other staff members, privacy breach for all staff members, export functionality unusable for staff until fixed. REQUIRED FIX: The GET /api/roster endpoint must implement proper role-based filtering to return only shifts where staff_id matches the authenticated staff user's ID."
 
 agent_communication:
     - agent: "main"
