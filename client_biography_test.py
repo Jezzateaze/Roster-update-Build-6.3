@@ -253,12 +253,12 @@ class ClientBiographyTester:
             f"Update Biography Without Auth (Should Fail)",
             "PUT",
             f"api/clients/{self.jeremy_client_id}/biography",
-            401,  # Expect unauthorized
+            403,  # Expect forbidden (backend returns 403 for "Not authenticated")
             data={"strengths": "Unauthorized update"},
             use_auth=False
         )
 
-        if success:  # Success means we got expected 401
+        if success:  # Success means we got expected 403
             print(f"   ✅ Unauthenticated access correctly blocked")
         else:
             print(f"   ❌ Unauthenticated access was not properly blocked")
