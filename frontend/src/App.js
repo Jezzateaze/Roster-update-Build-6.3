@@ -10206,115 +10206,359 @@ function App() {
       )}
       
       {/* Authentication Dialogs - Always available */}
-      {/* Login Dialog */}
-      <Dialog open={showLoginDialog && !isAuthenticated} onOpenChange={() => {}}>
-        <DialogContent className="max-w-md" closable={false}>
+      {/* Enhanced Login Dialog */}
+      <Dialog open={showLoginDialog} onOpenChange={() => {}}>
+        <DialogContent className="sm:max-w-lg">
           <DialogHeader>
-            <DialogTitle className="text-center">
-              🔐 Shift Roster Login
+            <DialogTitle className="text-center text-xl font-bold">
+              🔐 Workforce Management Login
             </DialogTitle>
           </DialogHeader>
-          <div className="space-y-4">
-            <div className="text-center text-sm text-slate-600">
-              <p>Welcome to the Workforce Management System</p>
-              <p>Please enter your credentials to continue</p>
-            </div>
-
-            {authError && (
-              <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
-                {authError}
-              </div>
-            )}
-
-            <div className="space-y-3">
-              {useDropdown && availableUsers.length > 0 ? (
-                <div>
-                  <Label htmlFor="userSelect">Select User</Label>
+          
+          <div className="space-y-6 pt-4">
+            
+            {/* Step 1: User Selection */}
+            {loginStep === 'user-selection' && (
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-gray-700">Choose User</label>
                   <select
-                    id="userSelect"
-                    className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-slate-900"
-                    value={loginData.username}
-                    onChange={(e) => {
-                      console.log('Dropdown selection changed to:', e.target.value);
-                      setLoginData({ ...loginData, username: e.target.value });
-                    }}
+                    className="w-full p-4 border-2 rounded-lg text-lg bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+                    value={selectedUserId}
+                    onChange={(e) => handleUserSelection(e.target.value)}
                   >
-                    <option value="">Choose a user...</option>
-                    {availableUsers.map((user, index) => (
-                      <option key={index} value={user.username}>
-                        {user.displayName}
+                    <option value="">👤 Select a user...</option>
+                    {availableUsers.map(user => (
+                      <option key={user.id} value={user.id}>
+                        {user.role === 'admin' ? '👑' : '👤'} {user.username} 
+                        {user.role === 'admin' ? ' (Administrator)' : ' (Staff)'}
                       </option>
                     ))}
                   </select>
-                  <div className="mt-1 text-xs text-slate-500">
-                    Don't see your name? 
-                    <button 
-                      type="button"
-                      className="ml-1 text-blue-600 hover:text-blue-800 underline"
-                      onClick={() => {
-                        console.log('Switching to manual input');
-                        setUseDropdown(false);
-                      }}
-                    >
-                      Type username manually
-                    </button>
+                </div>
+                
+                <div className="text-center text-sm text-gray-500 bg-blue-50 p-3 rounded-lg">
+                  <p><strong>Default PINs:</strong></p>
+                  <p>👑 Admin: <span className="font-mono">1234</span></p>
+                  <p>👤 Staff: <span className="font-mono">888888</span></p>
+                  <p className="text-xs mt-1">You'll be asked to change your PIN on first login</p>
+                </div>
+              </div>
+            )}
+            
+            {/* Step 2: PIN Entry with Keypad */}
+            {loginStep === 'pin-entry' && selectedUser && (
+              <div className="space-y-4">
+                <div className="text-center">
+                  <div className="text-lg font-medium text-gray-800">
+                    Welcome, {selectedUser.username}
+                  </div>
+                  <div className="text-sm text-gray-500">
+                    {selectedUser.role === 'admin' ? '👑 Administrator' : '👤 Staff Member'}
                   </div>
                 </div>
-              ) : (
-                <div>
-                  <Label htmlFor="username">Username</Label>
-                  <Input
-                    id="username"
-                    type="text"
-                    placeholder="Enter username"
-                    value={loginData.username}
-                    onChange={(e) => setLoginData({ ...loginData, username: e.target.value })}
-                  />
-                  {availableUsers.length > 0 && (
-                    <div className="mt-1 text-xs text-slate-500">
-                      Prefer a dropdown? 
-                      <button 
-                        type="button"
-                        className="ml-1 text-blue-600 hover:text-blue-800 underline"
-                        onClick={() => {
-                          console.log('Switching to dropdown, available users:', availableUsers);
-                          setUseDropdown(true);
-                        }}
+                
+                {/* PIN Display */}
+                <div className="text-center">
+                  <div className="text-sm font-medium text-gray-700 mb-2">Enter Your PIN</div>
+                  <div className="flex justify-center space-x-2 mb-4">
+                    {[...Array(6)].map((_, index) => (
+                      <div
+                        key={index}
+                        className={`w-12 h-12 border-2 rounded-lg flex items-center justify-center text-2xl font-bold
+                          ${index < pinInput.length 
+                            ? 'bg-blue-500 text-white border-blue-500' 
+                            : 'bg-gray-100 border-gray-300'
+                          }`}
                       >
-                        Select from list
-                      </button>
-                    </div>
-                  )}
+                        {index < pinInput.length ? '●' : ''}
+                      </div>
+                    ))}
+                  </div>
                 </div>
-              )}
-              <div>
-                <Label htmlFor="pin">PIN (4 or 6 digits)</Label>
-                <Input
-                  id="pin"
-                  type="password"
-                  placeholder="Enter PIN"
-                  value={loginData.pin}
-                  onChange={(e) => setLoginData({ ...loginData, pin: e.target.value })}
+                
+                {/* Numerical Keypad */}
+                <NumericKeypad
+                  onNumberPress={handleKeypadNumber}
+                  onBackspace={handleKeypadBackspace}
+                  onClear={handleKeypadClear}
+                  maxLength={6}
+                  currentInput={pinInput}
                 />
+                
+                {/* Action Buttons */}
+                <div className="flex space-x-3">
+                  <Button 
+                    variant="outline" 
+                    onClick={() => {
+                      setLoginStep('user-selection');
+                      setSelectedUser(null);
+                      setPinInput('');
+                      setSelectedUserId('');
+                    }}
+                    className="flex-1"
+                  >
+                    ← Back
+                  </Button>
+                  <Button 
+                    onClick={handlePinSubmission}
+                    disabled={pinInput.length < 4}
+                    className="flex-1"
+                  >
+                    Login
+                  </Button>
+                </div>
               </div>
-            </div>
-
-            <div className="text-xs text-slate-500 p-3 bg-slate-50 border border-slate-200 rounded-lg">
-              <p><strong>Default Login:</strong></p>
-              <p>• Admin: Username "Admin", PIN "0000"</p>
-              <p>• New Staff: PIN "888888" (must change on first login)</p>
-            </div>
-
-            <Button 
-              onClick={login} 
-              className="w-full"
-              disabled={!loginData.username || !loginData.pin}
-            >
-              Sign In
-            </Button>
+            )}
+            
+            {/* Step 3: First-Time Login Setup */}
+            {loginStep === 'first-time-setup' && (
+              <div className="space-y-4 text-center">
+                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                  <h3 className="text-lg font-semibold text-yellow-800 mb-2">
+                    🔒 First-Time Login Detected
+                  </h3>
+                  <p className="text-yellow-700 text-sm">
+                    For security reasons, you must change your default PIN to a personal one.
+                  </p>
+                </div>
+                
+                <Button 
+                  onClick={handleFirstTimeSetup}
+                  className="w-full"
+                >
+                  Continue to PIN Setup →
+                </Button>
+              </div>
+            )}
+            
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* PIN Change Dialog */}
+      <Dialog open={showPinChangeDialog} onOpenChange={() => {}}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="text-center text-xl font-bold">
+              🔐 Set Your New PIN
+            </DialogTitle>
+          </DialogHeader>
+          
+          <div className="space-y-6 pt-4">
+            
+            {/* PIN Length Selection */}
+            {!newPin && (
+              <div className="space-y-4">
+                <div className="text-center">
+                  <h3 className="text-lg font-medium mb-2">Choose PIN Length</h3>
+                  <p className="text-sm text-gray-600 mb-4">Select your preferred PIN length for security</p>
+                </div>
+                
+                <div className="grid grid-cols-2 gap-4">
+                  <button
+                    onClick={() => handlePinDigitSelection(4)}
+                    className="p-6 border-2 border-gray-300 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-colors"
+                  >
+                    <div className="text-2xl font-bold text-blue-600 mb-2">4</div>
+                    <div className="text-sm font-medium">Digits</div>
+                    <div className="text-xs text-gray-500 mt-1">Quick & Easy</div>
+                  </button>
+                  
+                  <button
+                    onClick={() => handlePinDigitSelection(6)}
+                    className="p-6 border-2 border-gray-300 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-colors"
+                  >
+                    <div className="text-2xl font-bold text-green-600 mb-2">6</div>
+                    <div className="text-sm font-medium">Digits</div>
+                    <div className="text-xs text-gray-500 mt-1">More Secure</div>
+                  </button>
+                </div>
+              </div>
+            )}
+            
+            {/* New PIN Entry */}
+            {newPin === '' && pinDigits > 0 && (
+              <div className="space-y-4">
+                <div className="text-center">
+                  <div className="text-lg font-medium mb-2">Enter New {pinDigits}-Digit PIN</div>
+                  <div className="flex justify-center space-x-2 mb-4">
+                    {[...Array(pinDigits)].map((_, index) => (
+                      <div
+                        key={index}
+                        className={`w-12 h-12 border-2 rounded-lg flex items-center justify-center text-2xl font-bold
+                          ${index < newPin.length 
+                            ? 'bg-green-500 text-white border-green-500' 
+                            : 'bg-gray-100 border-gray-300'
+                          }`}
+                      >
+                        {index < newPin.length ? '●' : ''}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                
+                <NumericKeypad
+                  onNumberPress={(num) => {
+                    if (newPin.length < pinDigits) {
+                      handleNewPinEntry(newPin + num, false);
+                    }
+                  }}
+                  onBackspace={() => handleNewPinEntry(newPin.slice(0, -1), false)}
+                  onClear={() => handleNewPinEntry('', false)}
+                  maxLength={pinDigits}
+                  currentInput={newPin}
+                />
+              </div>
+            )}
+            
+            {/* Confirm PIN Entry */}
+            {newPin.length === pinDigits && confirmPin.length < pinDigits && (
+              <div className="space-y-4">
+                <div className="text-center">
+                  <div className="text-lg font-medium mb-2">Confirm Your {pinDigits}-Digit PIN</div>
+                  <div className="flex justify-center space-x-2 mb-4">
+                    {[...Array(pinDigits)].map((_, index) => (
+                      <div
+                        key={index}
+                        className={`w-12 h-12 border-2 rounded-lg flex items-center justify-center text-2xl font-bold
+                          ${index < confirmPin.length 
+                            ? 'bg-blue-500 text-white border-blue-500' 
+                            : 'bg-gray-100 border-gray-300'
+                          }`}
+                      >
+                        {index < confirmPin.length ? '●' : ''}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                
+                <NumericKeypad
+                  onNumberPress={(num) => {
+                    if (confirmPin.length < pinDigits) {
+                      handleNewPinEntry(confirmPin + num, true);
+                    }
+                  }}
+                  onBackspace={() => handleNewPinEntry(confirmPin.slice(0, -1), true)}
+                  onClear={() => handleNewPinEntry('', true)}
+                  maxLength={pinDigits}
+                  currentInput={confirmPin}
+                />
+                
+                <Button 
+                  variant="outline" 
+                  onClick={() => {
+                    setNewPin('');
+                    setConfirmPin('');
+                  }}
+                  className="w-full"
+                >
+                  ← Start Over
+                </Button>
+              </div>
+            )}
+            
+            {/* Final Confirmation */}
+            {newPin.length === pinDigits && confirmPin.length === pinDigits && (
+              <div className="space-y-4 text-center">
+                {newPin === confirmPin ? (
+                  <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                    <div className="text-green-800 font-semibold mb-2">✅ PINs Match!</div>
+                    <div className="text-green-700 text-sm">Your {pinDigits}-digit PIN is ready to be set.</div>
+                  </div>
+                ) : (
+                  <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                    <div className="text-red-800 font-semibold mb-2">❌ PINs Don't Match</div>
+                    <div className="text-red-700 text-sm">Please try again.</div>
+                  </div>
+                )}
+                
+                <div className="flex space-x-3">
+                  <Button 
+                    variant="outline"
+                    onClick={() => {
+                      setNewPin('');
+                      setConfirmPin('');
+                    }}
+                    className="flex-1"
+                  >
+                    Try Again
+                  </Button>
+                  <Button 
+                    onClick={submitPinChange}
+                    disabled={newPin !== confirmPin}
+                    className="flex-1"
+                  >
+                    Set PIN
+                  </Button>
+                </div>
+              </div>
+            )}
+            
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* PIN Reset Dialog (Admin Only) */}
+      {currentUser?.role === 'admin' && (
+        <Dialog open={showPinResetDialog} onOpenChange={setShowPinResetDialog}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle>🔄 Reset Staff PIN</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4 pt-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Select Staff Member</label>
+                <select
+                  className="w-full p-3 border rounded-lg"
+                  onChange={(e) => {
+                    const user = availableUsers.find(u => u.id === e.target.value);
+                    setResetTargetUser(user);
+                  }}
+                >
+                  <option value="">Choose staff member...</option>
+                  {availableUsers.filter(u => u.role === 'staff').map(user => (
+                    <option key={user.id} value={user.id}>
+                      👤 {user.username}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              
+              {resetTargetUser && (
+                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+                  <p className="text-sm text-yellow-800">
+                    Reset <strong>{resetTargetUser.username}</strong>'s PIN back to default (888888)?
+                  </p>
+                  <p className="text-xs text-yellow-600 mt-1">
+                    They will need to change it on their next login.
+                  </p>
+                </div>
+              )}
+              
+              <div className="flex space-x-3">
+                <Button 
+                  variant="outline" 
+                  onClick={() => {
+                    setShowPinResetDialog(false);
+                    setResetTargetUser(null);
+                  }}
+                  className="flex-1"
+                >
+                  Cancel
+                </Button>
+                <Button 
+                  onClick={() => handlePinReset(resetTargetUser?.id)}
+                  disabled={!resetTargetUser}
+                  className="flex-1"
+                >
+                  Reset PIN
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
 
       {/* Change PIN Dialog */}
       <Dialog open={showChangePinDialog} onOpenChange={setShowChangePinDialog}>
