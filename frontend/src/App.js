@@ -530,6 +530,18 @@ function App() {
   const [showClientDialog, setShowClientDialog] = useState(false);
   const [showClientProfileDialog, setShowClientProfileDialog] = useState(false);
   const [editingClient, setEditingClient] = useState(null);
+  
+  // Client Biography Dialog States
+  const [showClientBiographyDialog, setShowClientBiographyDialog] = useState(false);
+  const [editingClientBiography, setEditingClientBiography] = useState(null);
+  const [clientBiographyData, setClientBiographyData] = useState({
+    strengths: '',
+    living_arrangements: '',
+    daily_life: '',
+    goals: [],
+    supports: [],
+    additional_info: ''
+  });
   const [newClient, setNewClient] = useState({
     full_name: '',
     date_of_birth: '',
