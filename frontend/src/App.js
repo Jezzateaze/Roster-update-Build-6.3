@@ -1071,6 +1071,109 @@ function App() {
   }, [isAuthenticated, authToken]);
 
   // =====================================
+  // CLIENT BIOGRAPHY MANAGEMENT FUNCTIONS
+  // =====================================
+
+  // Open client biography dialog for editing
+  const openClientBiographyDialog = (client) => {
+    setEditingClientBiography(client);
+    setClientBiographyData({
+      strengths: client.biography?.strengths || '',
+      living_arrangements: client.biography?.living_arrangements || '',
+      daily_life: client.biography?.daily_life || '',
+      goals: client.biography?.goals || [],
+      supports: client.biography?.supports || [],
+      additional_info: client.biography?.additional_info || ''
+    });
+    setShowClientBiographyDialog(true);
+  };
+
+  // Update client biography
+  const updateClientBiography = async (clientId, biographyData) => {
+    try {
+      const response = await axios.put(`${API_BASE_URL}/api/clients/${clientId}/biography`, biographyData, {
+        headers: { 'Authorization': `Bearer ${authToken}` }
+      });
+      
+      alert('✅ Client biography updated successfully!');
+      fetchClients(); // Refresh client list
+      setShowClientBiographyDialog(false);
+      return response.data;
+    } catch (error) {
+      console.error('Error updating client biography:', error);
+      if (error.response?.status === 403) {
+        alert('❌ Access denied - You don\'t have permission to edit this information.');
+      } else {
+        alert('❌ Failed to update client biography. Please try again.');
+      }
+      throw error;
+    }
+  };
+
+  // Add new goal to biography
+  const addGoalToBiography = () => {
+    const newGoal = {
+      title: '',
+      description: '',
+      how_to_achieve: ''
+    };
+    setClientBiographyData(prev => ({
+      ...prev,
+      goals: [...prev.goals, newGoal]
+    }));
+  };
+
+  // Remove goal from biography
+  const removeGoalFromBiography = (index) => {
+    setClientBiographyData(prev => ({
+      ...prev,
+      goals: prev.goals.filter((_, i) => i !== index)
+    }));
+  };
+
+  // Update goal in biography
+  const updateGoalInBiography = (index, field, value) => {
+    setClientBiographyData(prev => ({
+      ...prev,
+      goals: prev.goals.map((goal, i) => 
+        i === index ? { ...goal, [field]: value } : goal
+      )
+    }));
+  };
+
+  // Add new support to biography
+  const addSupportToBiography = () => {
+    const newSupport = {
+      description: '',
+      provider: '',
+      frequency: '',
+      type: ''
+    };
+    setClientBiographyData(prev => ({
+      ...prev,
+      supports: [...prev.supports, newSupport]
+    }));
+  };
+
+  // Remove support from biography
+  const removeSupportFromBiography = (index) => {
+    setClientBiographyData(prev => ({
+      ...prev,
+      supports: prev.supports.filter((_, i) => i !== index)
+    }));
+  };
+
+  // Update support in biography
+  const updateSupportInBiography = (index, field, value) => {
+    setClientBiographyData(prev => ({
+      ...prev,
+      supports: prev.supports.map((support, i) => 
+        i === index ? { ...support, [field]: value } : support
+      )
+    }));
+  };
+
+  // =====================================
   // OCR DOCUMENT PROCESSING FUNCTIONS
   // =====================================
 
