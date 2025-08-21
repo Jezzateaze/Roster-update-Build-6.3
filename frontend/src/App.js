@@ -10502,6 +10502,24 @@ function App() {
                     <div className="text-xs text-gray-500 mt-1">More Secure</div>
                   </button>
                 </div>
+                
+                {/* Cancel Button */}
+                <div className="flex justify-center mt-4">
+                  <Button 
+                    variant="outline"
+                    onClick={() => {
+                      setShowPinChangeDialog(false);
+                      setNewPin('');
+                      setConfirmPin('');
+                      setPinDigits(4);
+                      setLoginStep('user-selection');
+                      resetLoginStates();
+                    }}
+                    className="w-full"
+                  >
+                    ← Cancel & Return to Login
+                  </Button>
+                </div>
               </div>
             )}
             
