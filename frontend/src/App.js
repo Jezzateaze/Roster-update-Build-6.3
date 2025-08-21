@@ -1945,6 +1945,11 @@ function App() {
     
     console.log('✅ Direct admin login successful');
     console.log('User:', mockAdminUser);
+    
+    // Immediately fetch clients after direct auth
+    setTimeout(() => {
+      fetchClients();
+    }, 100);
   };
 
   useEffect(() => {
