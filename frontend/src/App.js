@@ -3568,46 +3568,110 @@ function App() {
   // EXPORT FUNCTIONALITY
   // =====================================
 
+  // Helper function to calculate date ranges
+  const calculateDateRange = (rangeType, customStart = '', customEnd = '') => {
+    const today = getBrisbaneDate();
+    let startDate, endDate;
+
+    switch (rangeType) {
+      case 'weekly':
+        // Current week (Monday to Sunday)
+        const dayOfWeek = today.getDay();
+        const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+        
+        startDate = new Date(today);
+        startDate.setDate(today.getDate() + mondayOffset);
+        
+        endDate = new Date(startDate);
+        endDate.setDate(startDate.getDate() + 6);
+        break;
+        
+      case 'monthly':
+        // Current month
+        startDate = new Date(today.getFullYear(), today.getMonth(), 1);
+        endDate = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+        break;
+        
+      case 'custom':
+        if (!customStart || !customEnd) {
+          throw new Error('Custom date range requires start and end dates');
+        }
+        startDate = new Date(customStart);
+        endDate = new Date(customEnd);
+        break;
+        
+      default:
+        // Default to current month
+        startDate = new Date(today.getFullYear(), today.getMonth(), 1);
+        endDate = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+    }
+
+    return {
+      startDate: formatDateString(startDate),
+      endDate: formatDateString(endDate),
+      displayRange: rangeType === 'custom' 
+        ? `${formatDateString(startDate)} to ${formatDateString(endDate)}`
+        : rangeType === 'weekly'
+        ? `Week of ${formatDateString(startDate)}`
+        : `${startDate.toLocaleString('default', { month: 'long', year: 'numeric' })}`
+    };
+  };
+
   const exportRosterData = async (format) => {
     try {
-      const currentMonth = formatDateString(currentDate).substring(0, 7); // Get YYYY-MM format
-      const monthName = currentDate.toLocaleString('default', { month: 'long', year: 'numeric' });
+      let apiUrl, displayName;
       
-      console.log(`Exporting ${format.toUpperCase()} for ${monthName} (${currentMonth})`);
+      if (exportRangeType === 'monthly') {
+        // Use existing monthly endpoint for backward compatibility
+        const currentMonth = formatDateString(currentDate).substring(0, 7); // Get YYYY-MM format
+        const monthName = currentDate.toLocaleString('default', { month: 'long', year: 'numeric' });
+        
+        console.log(`Exporting ${format.toUpperCase()} for ${monthName} (${currentMonth})`);
+        
+        apiUrl = `${API_BASE_URL}/api/export/${format}/${currentMonth}`;
+        displayName = monthName;
+      } else {
+        // Use new date range endpoints
+        const { startDate, endDate, displayRange } = calculateDateRange(
+          exportRangeType, 
+          exportStartDate, 
+          exportEndDate
+        );
+        
+        console.log(`Exporting ${format.toUpperCase()} for ${displayRange} (${startDate} to ${endDate})`);
+        
+        apiUrl = `${API_BASE_URL}/api/export/range/${format}?start_date=${startDate}&end_date=${endDate}`;
+        displayName = displayRange;
+      }
       
       // Make API call to export endpoint
-      const response = await axios.get(`${API_BASE_URL}/api/export/${format}/${currentMonth}`, {
+      const response = await axios.get(apiUrl, {
         headers: { 
           'Authorization': `Bearer ${authToken}`,
         },
-        responseType: 'blob' // Important for file downloads
-      });
-      
-      // Create blob from response data
-      const blob = new Blob([response.data], { 
-        type: response.headers['content-type'] 
+        responseType: 'blob',
       });
       
       // Get filename from response headers or create default
       const contentDisposition = response.headers['content-disposition'];
-      let filename = `roster_export_${monthName.replace(' ', '_')}.${format}`;
+      let filename = `roster_export_${displayName.replace(/[^a-zA-Z0-9]/g, '_')}.${format}`;
       
       if (contentDisposition) {
         const filenameMatch = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
-        if (filenameMatch && filenameMatch[1]) {
+        if (filenameMatch) {
           filename = filenameMatch[1].replace(/['"]/g, '');
         }
       }
       
-      // Create download link and trigger download
+      // Create blob URL and trigger download
+      const blob = new Blob([response.data], { type: response.headers['content-type'] });
       const downloadUrl = window.URL.createObjectURL(blob);
+      
       const link = document.createElement('a');
       link.href = downloadUrl;
       link.download = filename;
       document.body.appendChild(link);
       link.click();
-      
-      // Cleanup
       document.body.removeChild(link);
       window.URL.revokeObjectURL(downloadUrl);
       
@@ -3619,18 +3683,26 @@ function App() {
       let errorMessage = 'Export failed. Please try again.';
       
       if (error.response?.status === 404) {
-        errorMessage = 'No roster data found for the current month.';
+        errorMessage = 'No roster data found for the selected date range.';
       } else if (error.response?.status === 403) {
         errorMessage = 'You do not have permission to export data.';
+      } else if (error.response?.status === 400) {
+        errorMessage = error.response.data?.detail || 'Invalid date range specified.';
       } else if (error.response?.data) {
         try {
           // Try to parse error message from blob response
-          const errorText = await error.response.data.text();
-          const errorData = JSON.parse(errorText);
-          errorMessage = errorData.detail || errorMessage;
+          const reader = new FileReader();
+          reader.onload = function() {
+            try {
+              const errorData = JSON.parse(reader.result);
+              console.error('Export error details:', errorData);
+            } catch (e) {
+              console.error('Export error (non-JSON):', reader.result);
+            }
+          };
+          reader.readAsText(error.response.data);
         } catch (e) {
-          // Fallback if can't parse error
-          console.log('Could not parse error response');
+          console.error('Error reading response:', e);
         }
       }
       
