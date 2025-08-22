@@ -10590,7 +10590,7 @@ function App() {
       </Dialog>
 
       {/* PIN Change Dialog */}
-      <Dialog open={showPinChangeDialog} onOpenChange={false}>
+      <Dialog open={showPinChangeDialog} onOpenChange={() => {}}>
         <DialogContent className="sm:max-w-lg">
           <DialogHeader>
             <DialogTitle className="text-center text-xl font-bold">
