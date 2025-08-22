@@ -2173,23 +2173,35 @@ async def generate_roster_from_template(template_id: str, month: str, force_over
 # Roster endpoints
 @app.get("/api/roster")
 async def get_roster(month: str, current_user: dict = Depends(get_current_user)):
-    """Get roster for a specific month (YYYY-MM format) with role-based filtering"""
+    """Get roster for a specific month (YYYY-MM format) with role-based filtering and pay privacy"""
     
     # Base query for the specified month
     query = {"date": {"$regex": f"^{month}"}}
     
-    # Apply role-based filtering
-    if current_user["role"] == "staff":
-        # Staff users can only see their own shifts
-        staff_id = current_user.get("staff_id") or current_user.get("id")
-        if staff_id:
-            query["staff_id"] = staff_id
-        else:
-            # If no staff_id found, return empty list (security fallback)
-            return []
-    
-    # Admin and Supervisor users can see all roster entries
+    # Get all roster entries for the month (no filtering by staff for staff users anymore)
     roster_entries = list(db.roster.find(query, {"_id": 0}))
+    
+    # Apply pay filtering for staff users
+    if current_user["role"] == "staff":
+        staff_id = current_user.get("staff_id") or current_user.get("id")
+        
+        # Filter pay information based on staff access rules:
+        # - Staff can see pay for their own shifts
+        # - Staff can see pay for unassigned shifts 
+        # - Staff cannot see pay for other staff's shifts
+        for entry in roster_entries:
+            # If shift is assigned to someone else (not this staff member and not unassigned)
+            if entry.get("staff_id") and entry.get("staff_id") != staff_id:
+                # Remove pay information for other staff's shifts
+                entry["total_pay"] = None
+                entry["base_pay"] = None
+                entry["sleepover_allowance"] = None
+                entry["ndis_total_charge"] = None
+                entry["ndis_hourly_charge"] = None
+                entry["ndis_shift_charge"] = None
+                # Keep staff_name, hours_worked, time info for display
+            # For own shifts and unassigned shifts, keep all pay information intact
+    
     return roster_entries
 
 @app.post("/api/roster")
