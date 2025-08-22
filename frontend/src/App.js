@@ -4563,14 +4563,34 @@ function App() {
                       )}
                       
                       <div 
-                        className={`flex-1 ${isAdmin() ? 'cursor-pointer' : 'cursor-default'} ${bulkSelectionMode ? 'ml-6' : ''}`}
+                        className={`flex-1 ${(isAdmin() || (isStaff() && (!entry.staff_id || !entry.staff_name))) ? 'cursor-pointer' : 'cursor-default'} ${bulkSelectionMode ? 'ml-6' : ''}`}
                         onClick={() => {
-                          if (!isAdmin()) return; // Staff cannot edit shifts
                           if (bulkSelectionMode) {
-                            toggleShiftSelection(entry.id);
-                          } else {
+                            if (isAdmin()) {
+                              toggleShiftSelection(entry.id);
+                            }
+                            return;
+                          }
+                          
+                          // Admin can edit any shift
+                          if (isAdmin()) {
                             setSelectedShift(entry);
                             setShowShiftDialog(true);
+                            return;
+                          }
+                          
+                          // Staff can request unassigned shifts
+                          if (isStaff() && (!entry.staff_id || !entry.staff_name)) {
+                            setSelectedUnassignedShift({
+                              id: entry.id,
+                              date: entry.date,
+                              start_time: entry.start_time,
+                              end_time: entry.end_time,
+                              hours_worked: entry.hours_worked,
+                              total_pay: entry.total_pay,
+                              requestNotes: ''
+                            });
+                            setShowShiftRequestDialog(true);
                           }
                         }}
                       >
