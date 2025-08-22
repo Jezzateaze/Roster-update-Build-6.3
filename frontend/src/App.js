@@ -3841,21 +3841,24 @@ function App() {
   };
 
   // Privacy control: Check if current user should see pay information
+  // Note: Backend now handles pay filtering by setting pay fields to null for restricted entries
   const canViewPayInformation = (entryStaffId = null) => {
     if (!currentUser) return false;
     
     // Admin can see all pay information
     if (currentUser.role === 'admin') return true;
     
-    // Staff can see pay for unassigned shifts
+    // Staff can see pay for unassigned shifts and their own shifts
+    // Backend ensures pay fields are null for other staff's shifts
     if (!entryStaffId) return true;
     
-    // Staff can only see their own pay information for assigned shifts
+    // For staff users, pay visibility is now controlled by the backend
+    // If pay info is null, it means staff shouldn't see it
     if (currentUser.role === 'staff') {
-      return currentUser.staff_id === entryStaffId;
+      return entryStaffId === (currentUser.staff_id || currentUser.id) || !entryStaffId;
     }
     
-    return false;
+    return true;
   };
 
   // Check if current user should see NDIS charge information (Admin only)
