@@ -59,6 +59,8 @@
 ## agent_communication:
 ##     - agent: "main"
 ##       message: "COMPLETED: Enhanced Login System fixes and Date Filtering implementation. ✅ Fixed login dropdown rendering by installing missing libmagic library. ✅ Fixed PIN change dialog unresponsiveness by adding proper onOpenChange handler and cancel buttons. ✅ Implemented date filtering for Available Unassigned Shifts - Staff users see only current date forward, Admin users have toggle switch (default hide past shifts). Ready for comprehensive testing."
+##     - agent: "main"
+##       message: "STARTING: Phase 1 - Roster Display Modifications for Staff Users. Implementing requirement: Staff should see ALL shifts (assigned and unassigned) but only their own pay rates + unassigned shift pay rates. Other staff shifts should show staff name, time, hours without pay info. This requires backend API modification to return all roster entries with appropriate pay filtering, and frontend updates to handle the new display logic."
 
 # Protocol Guidelines for Main agent
 #
