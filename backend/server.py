@@ -4248,82 +4248,275 @@ async def export_pdf(month: str, current_user: dict = Depends(get_current_user))
         # Create PDF document
         doc = SimpleDocTemplate(output, pagesize=A4, rightMargin=30, leftMargin=30, topMargin=30, bottomMargin=30)
         
-        # Container for the 'Flowable' objects
-        story = []
-        
-        # Styles
+        # Define styles
+        from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+        from reportlab.lib.enums import TA_CENTER
         styles = getSampleStyleSheet()
+        
         title_style = ParagraphStyle(
             'CustomTitle',
             parent=styles['Heading1'],
             fontSize=16,
             spaceAfter=30,
-            alignment=1  # Center alignment
+            alignment=TA_CENTER
         )
         
+        # Create story (content)
+        story = []
+        
         # Add title
-        month_name = datetime.strptime(f"{month}-01", "%Y-%m-%d").strftime("%B %Y")
+        year_month = datetime.strptime(month + "-01", "%Y-%m-%d")
+        month_name = year_month.strftime("%B %Y")
         title = Paragraph(f"Roster Export - {month_name}", title_style)
         story.append(title)
         
+        # Prepare data for table
         if export_data:
-            # Prepare table data
-            # Select key columns for PDF (to fit on page)
-            pdf_columns = ["Date", "Day of Week", "Staff Name", "Start Time", "End Time", "Hours Worked", "Shift Type", "Total Pay"]
+            # Get headers
+            headers = list(export_data[0].keys())
             
-            # Filter data for PDF columns
-            pdf_data = []
-            header_row = pdf_columns
-            pdf_data.append(header_row)
+            # Create table data
+            table_data = [headers]  # Header row
             
-            for row in export_data:
-                pdf_row = [str(row.get(col, "")) for col in pdf_columns]
-                pdf_data.append(pdf_row)
+            for entry in export_data:
+                row = [str(entry.get(key, '')) for key in headers]
+                table_data.append(row)
             
             # Create table
-            table = Table(pdf_data)
+            from reportlab.platypus import Table, TableStyle
+            from reportlab.lib import colors
             
-            # Style the table
+            table = Table(table_data)
             table.setStyle(TableStyle([
-                # Header row styling
-                ('BACKGROUND', (0, 0), (-1, 0), colors.darkblue),
+                ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
                 ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
                 ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
                 ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-                ('FONTSIZE', (0, 0), (-1, 0), 10),
+                ('FONTSIZE', (0, 0), (-1, 0), 8),
                 ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
-                
-                # Data rows styling
                 ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
-                ('TEXTCOLOR', (0, 1), (-1, -1), colors.black),
-                ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
-                ('FONTSIZE', (0, 1), (-1, -1), 8),
-                ('GRID', (0, 0), (-1, -1), 1, colors.black),
-                
-                # Alternating row colors
-                ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.lightgrey]),
+                ('FONTSIZE', (0, 1), (-1, -1), 6),
+                ('GRID', (0, 0), (-1, -1), 1, colors.black)
             ]))
             
             story.append(table)
-        else:
-            no_data_text = Paragraph("No roster data available for the selected month.", styles['Normal'])
-            story.append(no_data_text)
         
         # Build PDF
         doc.build(story)
         output.seek(0)
         
-        month_name = datetime.strptime(f"{month}-01", "%Y-%m-%d").strftime("%B_%Y")
-        filename = f"roster_export_{month_name}.pdf"
+        # Create filename
+        filename = f"roster_export_{month.replace('-', '_')}.pdf"
         
         return StreamingResponse(
-            output,
+            io.BytesIO(output.read()),
             media_type="application/pdf",
             headers={"Content-Disposition": f"attachment; filename={filename}"}
         )
         
     except HTTPException as he:
         # Re-raise HTTP exceptions (like 404) without wrapping them
+        raise he
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error generating PDF: {str(e)}")
+
+# NEW DATE RANGE EXPORT ENDPOINTS
+@app.get("/api/export/range/csv")
+async def export_csv_range(start_date: str, end_date: str, current_user: dict = Depends(get_current_user)):
+    """Export roster data as CSV file for custom date range"""
+    
+    try:
+        # Validate date format
+        try:
+            datetime.strptime(start_date, "%Y-%m-%d")
+            datetime.strptime(end_date, "%Y-%m-%d")
+        except ValueError:
+            raise HTTPException(status_code=400, detail="Invalid date format. Use YYYY-MM-DD")
+        
+        # Get roster data
+        export_data = get_roster_data_for_export(start_date, end_date, current_user)
+        
+        if not export_data:
+            raise HTTPException(status_code=404, detail="No roster data found for the specified date range")
+        
+        # Create CSV in memory
+        output = io.StringIO()
+        if export_data:
+            fieldnames = export_data[0].keys()
+            writer = csv.DictWriter(output, fieldnames=fieldnames)
+            writer.writeheader()
+            writer.writerows(export_data)
+        
+        # Get CSV content
+        csv_content = output.getvalue()
+        output.close()
+        
+        # Create filename
+        filename = f"roster_export_{start_date}_to_{end_date}.csv"
+        
+        return Response(
+            content=csv_content,
+            media_type="text/csv",
+            headers={"Content-Disposition": f"attachment; filename={filename}"}
+        )
+        
+    except HTTPException as he:
+        raise he
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error generating CSV: {str(e)}")
+
+@app.get("/api/export/range/excel")
+async def export_excel_range(start_date: str, end_date: str, current_user: dict = Depends(get_current_user)):
+    """Export roster data as Excel file for custom date range"""
+    
+    try:
+        # Validate date format
+        try:
+            datetime.strptime(start_date, "%Y-%m-%d")
+            datetime.strptime(end_date, "%Y-%m-%d")
+        except ValueError:
+            raise HTTPException(status_code=400, detail="Invalid date format. Use YYYY-MM-DD")
+        
+        # Get roster data
+        export_data = get_roster_data_for_export(start_date, end_date, current_user)
+        
+        if not export_data:
+            raise HTTPException(status_code=404, detail="No roster data found for the specified date range")
+        
+        # Create Excel file in memory
+        output = io.BytesIO()
+        
+        # Create workbook and worksheet
+        with pd.ExcelWriter(output, engine='openpyxl') as writer:
+            # Convert data to DataFrame
+            df = pd.DataFrame(export_data)
+            
+            # Write to Excel
+            df.to_excel(writer, sheet_name='Roster Export', index=False)
+            
+            # Get workbook and worksheet objects
+            workbook = writer.book
+            worksheet = writer.sheets['Roster Export']
+            
+            # Auto-adjust column widths
+            for column in worksheet.columns:
+                max_length = 0
+                column_letter = column[0].column_letter
+                for cell in column:
+                    try:
+                        if len(str(cell.value)) > max_length:
+                            max_length = len(str(cell.value))
+                    except:
+                        pass
+                adjusted_width = min(max_length + 2, 50)
+                worksheet.column_dimensions[column_letter].width = adjusted_width
+        
+        output.seek(0)
+        
+        # Create filename
+        filename = f"roster_export_{start_date}_to_{end_date}.xlsx"
+        
+        return StreamingResponse(
+            io.BytesIO(output.read()),
+            media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            headers={"Content-Disposition": f"attachment; filename={filename}"}
+        )
+        
+    except HTTPException as he:
+        raise he
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error generating Excel: {str(e)}")
+
+@app.get("/api/export/range/pdf")
+async def export_pdf_range(start_date: str, end_date: str, current_user: dict = Depends(get_current_user)):
+    """Export roster data as PDF file for custom date range"""
+    
+    try:
+        # Validate date format
+        try:
+            start_dt = datetime.strptime(start_date, "%Y-%m-%d")
+            end_dt = datetime.strptime(end_date, "%Y-%m-%d")
+        except ValueError:
+            raise HTTPException(status_code=400, detail="Invalid date format. Use YYYY-MM-DD")
+        
+        # Get roster data
+        export_data = get_roster_data_for_export(start_date, end_date, current_user)
+        
+        if not export_data:
+            raise HTTPException(status_code=404, detail="No roster data found for the specified date range")
+        
+        # Create PDF in memory
+        output = io.BytesIO()
+        
+        # Create PDF document
+        doc = SimpleDocTemplate(output, pagesize=A4, rightMargin=30, leftMargin=30, topMargin=30, bottomMargin=30)
+        
+        # Define styles
+        from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+        from reportlab.lib.enums import TA_CENTER
+        styles = getSampleStyleSheet()
+        
+        title_style = ParagraphStyle(
+            'CustomTitle',
+            parent=styles['Heading1'],
+            fontSize=16,
+            spaceAfter=30,
+            alignment=TA_CENTER
+        )
+        
+        # Create story (content)
+        story = []
+        
+        # Add title
+        title_text = f"Roster Export - {start_dt.strftime('%B %d, %Y')} to {end_dt.strftime('%B %d, %Y')}"
+        title = Paragraph(title_text, title_style)
+        story.append(title)
+        
+        # Prepare data for table
+        if export_data:
+            # Get headers
+            headers = list(export_data[0].keys())
+            
+            # Create table data
+            table_data = [headers]  # Header row
+            
+            for entry in export_data:
+                row = [str(entry.get(key, '')) for key in headers]
+                table_data.append(row)
+            
+            # Create table
+            from reportlab.platypus import Table, TableStyle
+            from reportlab.lib import colors
+            
+            table = Table(table_data)
+            table.setStyle(TableStyle([
+                ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+                ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+                ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+                ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                ('FONTSIZE', (0, 0), (-1, 0), 8),
+                ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+                ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
+                ('FONTSIZE', (0, 1), (-1, -1), 6),
+                ('GRID', (0, 0), (-1, -1), 1, colors.black)
+            ]))
+            
+            story.append(table)
+        
+        # Build PDF
+        doc.build(story)
+        output.seek(0)
+        
+        # Create filename
+        filename = f"roster_export_{start_date}_to_{end_date}.pdf"
+        
+        return StreamingResponse(
+            io.BytesIO(output.read()),
+            media_type="application/pdf",
+            headers={"Content-Disposition": f"attachment; filename={filename}"}
+        )
+        
+    except HTTPException as he:
         raise he
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error generating PDF: {str(e)}")
