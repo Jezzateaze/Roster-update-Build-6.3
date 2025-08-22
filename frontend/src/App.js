@@ -5532,6 +5532,16 @@ function App() {
               <Settings className="w-4 h-4 mr-2" />
               Settings
             </Button>
+            {/* Print Button */}
+            {isAuthenticated && (
+              <Button
+                variant="outline"
+                onClick={() => setShowPrintDialog(true)}
+              >
+                <FileText className="w-4 h-4 mr-2" />
+                Print
+              </Button>
+            )}
             {/* Logout Button */}
             {isAuthenticated && (
               <Button
