@@ -8029,6 +8029,32 @@ function App() {
                 </div>
               )}
 
+              {/* PIN Change Section - Available to All Users */}
+              <div>
+                <h3 className="text-lg font-medium mb-4">🔐 Security Settings</h3>
+                <div className="bg-slate-50 rounded-lg p-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <Label className="text-base font-medium">Change PIN</Label>
+                      <p className="text-sm text-slate-600 mt-1">
+                        Update your personal identification number for login
+                      </p>
+                    </div>
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        setShowSettingsDialog(false);
+                        setShowPinChangeDialog(true);
+                      }}
+                      className="flex items-center space-x-2"
+                    >
+                      <Settings className="w-4 h-4" />
+                      <span>Change PIN</span>
+                    </Button>
+                  </div>
+                </div>
+              </div>
+
               <Separator />
 
               <div className="flex justify-end space-x-2">
