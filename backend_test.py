@@ -76,7 +76,7 @@ class ShiftRosterAPITester:
         }
         
         success, response = self.run_test(
-            "Admin Login with PIN 0000",
+            "Admin Login with PIN 1234",
             "POST",
             "api/auth/login",
             200,
