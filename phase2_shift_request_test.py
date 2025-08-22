@@ -167,8 +167,25 @@ class Phase2ShiftRequestTester:
         # Test creating shift request for first unassigned shift
         test_shift = self.unassigned_shifts[0]
         
+        # Get staff info from authentication
+        success, staff_profile = self.run_test(
+            "Get Staff Profile",
+            "GET",
+            "api/users/me",
+            200,
+            use_auth=True,
+            token=self.staff_token
+        )
+        
+        if not success:
+            print("   ❌ Could not get staff profile")
+            return False
+        
         request_data = {
             "roster_entry_id": test_shift['id'],
+            "staff_id": staff_profile.get('staff_id', staff_profile.get('id')),
+            "staff_name": staff_profile.get('first_name') or staff_profile.get('username'),
+            "request_date": datetime.utcnow().isoformat(),
             "notes": "I would like to work this shift. Available and ready to help."
         }
         
