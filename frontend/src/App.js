@@ -3869,15 +3869,21 @@ function App() {
 
   // Get appropriate amount to display based on user role
   const getDisplayAmount = (entry, entryStaffId = null) => {
-    if (!isAuthenticated || !currentUser || !canViewPayInformation(entryStaffId)) {
+    if (!isAuthenticated || !currentUser) {
       return null; // No pay information visible
     }
     
     // Admin users see NDIS charges, Staff users see staff pay
     if (canViewNDISCharges()) {
-      return entry.ndis_total_charge || 0;
+      // For admin, check if NDIS charge is available (backend filtering)
+      return entry.ndis_total_charge !== null && entry.ndis_total_charge !== undefined 
+        ? entry.ndis_total_charge 
+        : null;
     } else {
-      return entry.total_pay || 0;
+      // For staff, check if total_pay is available (backend filtering)
+      return entry.total_pay !== null && entry.total_pay !== undefined 
+        ? entry.total_pay 
+        : null;
     }
   };
 
