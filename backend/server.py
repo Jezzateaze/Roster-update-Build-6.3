@@ -4134,8 +4134,23 @@ async def export_excel(month: str, current_user: dict = Depends(get_current_user
     """Export roster data as Excel file"""
     
     try:
+        # Parse month (YYYY-MM format) and convert to date range
+        try:
+            year, month_num = map(int, month.split("-"))
+        except ValueError:
+            raise HTTPException(status_code=400, detail="Invalid month format. Use YYYY-MM")
+        
+        start_date = f"{year}-{month_num:02d}-01"
+        if month_num == 12:
+            end_year = year + 1
+            end_month = 1
+        else:
+            end_year = year
+            end_month = month_num + 1
+        end_date = f"{end_year}-{end_month:02d}-01"
+        
         # Get roster data
-        export_data = get_roster_data_for_export(month, current_user)
+        export_data = get_roster_data_for_export(start_date, end_date, current_user)
         
         if not export_data:
             raise HTTPException(status_code=404, detail="No roster data found for the specified month")
