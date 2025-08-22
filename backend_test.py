@@ -142,7 +142,7 @@ class ShiftRosterAPITester:
         print(f"\n   🎯 TEST 3: Login with wrong PIN (should fail with 401)")
         wrong_pin_data = {
             "username": "Admin",
-            "pin": "1234"  # Wrong PIN
+            "pin": "0000"  # Wrong PIN (correct is 1234)
         }
         
         success, response = self.run_test(
