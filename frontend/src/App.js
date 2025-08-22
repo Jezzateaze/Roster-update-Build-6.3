@@ -3400,15 +3400,8 @@ function App() {
         const user = response.data.user;
         const token = response.data.token;
         
-        if (isFirstTimeLogin) {
-          // Show PIN change dialog for first-time users
-          setLoginStep('first-time-setup');
-          setCurrentUser(user);
-          setAuthToken(token);
-        } else {
-          // Complete login
-          completeLogin(user, token);
-        }
+        // Always complete login directly (no forced PIN change)
+        completeLogin(user, token);
       }
     } catch (error) {
       console.error('Login error:', error);
