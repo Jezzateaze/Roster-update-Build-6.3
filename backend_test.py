@@ -68,11 +68,11 @@ class ShiftRosterAPITester:
         """Test comprehensive authentication system as per review request"""
         print(f"\n🔐 Testing Authentication System - COMPREHENSIVE REVIEW REQUEST TESTS...")
         
-        # Test 1: Admin login with correct credentials (Admin/0000)
-        print(f"\n   🎯 TEST 1: Admin Login with username='Admin' and pin='0000'")
+        # Test 1: Admin login with correct credentials (Admin/1234)
+        print(f"\n   🎯 TEST 1: Admin Login with username='Admin' and pin='1234'")
         login_data = {
             "username": "Admin",
-            "pin": "0000"
+            "pin": "1234"
         }
         
         success, response = self.run_test(
