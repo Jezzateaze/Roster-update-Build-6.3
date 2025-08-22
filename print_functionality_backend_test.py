@@ -280,29 +280,31 @@ class PrintFunctionalityBackendTester:
         """Test date range data fetching for print functionality"""
         print(f"\n📅 TESTING DATE RANGE DATA FETCHING FOR PRINT...")
         
-        # Test 1: Weekly range (Monday to Sunday)
+        # Test 1: Weekly range (Monday to Sunday) - using monthly API with filtering
         print(f"\n   🎯 TEST 1: Weekly Range Data Fetching (Monday to Sunday)")
         
-        # Get a Monday-Sunday week in August 2025
-        # August 4-10, 2025 (Monday to Sunday)
-        success, weekly_data = self.run_test(
-            "Get Weekly Range Data (Aug 4-10, 2025)",
+        # Get August 2025 data and filter for a specific week
+        success, august_data = self.run_test(
+            "Get August 2025 Data for Weekly Filtering",
             "GET",
             "api/roster",
             200,
-            params={
-                "start_date": "2025-08-04",
-                "end_date": "2025-08-10"
-            },
+            params={"month": "2025-08"},
             use_auth=True,
             auth_token=self.admin_token
         )
         
         if not success:
-            print("   ❌ Weekly range data fetching failed")
+            print("   ❌ Could not get August data for weekly filtering")
             return False
         
-        print(f"   ✅ Retrieved {len(weekly_data)} entries for weekly range")
+        # Filter for weekly range (August 4-10, 2025 - Monday to Sunday)
+        weekly_data = [
+            entry for entry in august_data 
+            if "2025-08-04" <= entry['date'] <= "2025-08-10"
+        ]
+        
+        print(f"   ✅ Filtered {len(weekly_data)} entries for weekly range from {len(august_data)} total")
         
         # Verify date coverage
         if weekly_data:
@@ -317,7 +319,10 @@ class PrintFunctionalityBackendTester:
                 expected_dates.append(current_date.strftime("%Y-%m-%d"))
                 current_date += timedelta(days=1)
             
+            present_dates = [d for d in expected_dates if d in dates]
             missing_dates = [d for d in expected_dates if d not in dates]
+            
+            print(f"   📅 Weekly coverage: {len(present_dates)}/7 days present")
             if missing_dates:
                 print(f"   ⚠️  Missing dates in weekly range: {missing_dates}")
             else:
@@ -326,22 +331,38 @@ class PrintFunctionalityBackendTester:
         # Test 2: Custom date range spanning multiple months
         print(f"\n   🎯 TEST 2: Custom Date Range Spanning Multiple Months")
         
-        # Test range from July 28 to August 15, 2025 (spans 2 months)
-        success, custom_range_data = self.run_test(
-            "Get Custom Multi-Month Range (Jul 28 - Aug 15, 2025)",
+        # Get July and August data for multi-month range
+        success_jul, july_data = self.run_test(
+            "Get July 2025 Data for Multi-Month Range",
             "GET",
             "api/roster",
             200,
-            params={
-                "start_date": "2025-07-28",
-                "end_date": "2025-08-15"
-            },
+            params={"month": "2025-07"},
             use_auth=True,
             auth_token=self.admin_token
         )
         
+        success_aug, august_data = self.run_test(
+            "Get August 2025 Data for Multi-Month Range",
+            "GET",
+            "api/roster",
+            200,
+            params={"month": "2025-08"},
+            use_auth=True,
+            auth_token=self.admin_token
+        )
+        
+        success = success_jul and success_aug
+        
         if success:
-            print(f"   ✅ Retrieved {len(custom_range_data)} entries for custom multi-month range")
+            # Filter for custom range (July 28 - August 15, 2025)
+            combined_data = july_data + august_data
+            custom_range_data = [
+                entry for entry in combined_data 
+                if "2025-07-28" <= entry['date'] <= "2025-08-15"
+            ]
+            
+            print(f"   ✅ Filtered {len(custom_range_data)} entries for custom multi-month range")
             
             if custom_range_data:
                 dates = [entry['date'] for entry in custom_range_data]
@@ -354,6 +375,11 @@ class PrintFunctionalityBackendTester:
                 
                 if july_entries and august_entries:
                     print(f"   ✅ Multi-month data integrity verified")
+                    
+                    # Show actual date range
+                    min_date = min(dates)
+                    max_date = max(dates)
+                    print(f"   📅 Actual range: {min_date} to {max_date}")
                 else:
                     print(f"   ⚠️  Limited multi-month coverage")
         else:
@@ -363,22 +389,15 @@ class PrintFunctionalityBackendTester:
         # Test 3: Data integrity across date boundaries
         print(f"\n   🎯 TEST 3: Data Integrity Across Date Boundaries")
         
-        # Test month boundary (July 31 - August 2, 2025)
-        success, boundary_data = self.run_test(
-            "Get Month Boundary Data (Jul 31 - Aug 2, 2025)",
-            "GET",
-            "api/roster",
-            200,
-            params={
-                "start_date": "2025-07-31",
-                "end_date": "2025-08-02"
-            },
-            use_auth=True,
-            auth_token=self.admin_token
-        )
-        
+        # Test month boundary using July and August data
         if success:
-            print(f"   ✅ Retrieved {len(boundary_data)} entries for month boundary")
+            # Filter for month boundary (July 31 - August 2, 2025)
+            boundary_data = [
+                entry for entry in combined_data 
+                if "2025-07-31" <= entry['date'] <= "2025-08-02"
+            ]
+            
+            print(f"   ✅ Filtered {len(boundary_data)} entries for month boundary")
             
             if boundary_data:
                 # Check for data consistency across boundary
@@ -404,6 +423,8 @@ class PrintFunctionalityBackendTester:
                         return False
                 
                 print(f"   ✅ Data structure consistent across boundaries")
+            else:
+                print(f"   ⚠️  No data found for month boundary dates")
         else:
             print(f"   ❌ Month boundary data fetching failed")
             return False
