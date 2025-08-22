@@ -299,11 +299,13 @@ class Phase2ShiftRequestTester:
             print(f"   Admin notes: {response.get('admin_notes')}")
             
             # Verify shift is assigned to staff member in roster
+            current_month = datetime.now().strftime("%Y-%m")
             success, roster_data = self.run_test(
                 "Verify Shift Assignment in Roster",
                 "GET",
                 "api/roster",
                 200,
+                params={"month": current_month},
                 use_auth=True,
                 token=self.admin_token
             )
