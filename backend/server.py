@@ -3237,6 +3237,29 @@ async def reject_shift_request(request_id: str, admin_notes: Optional[str] = Non
     )
     db.notifications.insert_one(notification.dict())
     
+    # Send email notification to staff member
+    try:
+        staff_user = db.users.find_one({"staff_id": shift_request["staff_id"]})
+        if staff_user and staff_user.get("email") and roster_entry:
+            shift_time = f"{roster_entry['start_time']}-{roster_entry['end_time']}"
+            html_content, text_content = get_shift_request_rejection_email(
+                staff_name=shift_request["staff_name"],
+                shift_date=roster_entry['date'],
+                shift_time=shift_time,
+                admin_notes=admin_notes
+            )
+            
+            # Schedule email sending (async)
+            import asyncio
+            asyncio.create_task(send_email_notification(
+                to_email=staff_user["email"],
+                subject="📋 Shift Request Update - Workforce Management",
+                html_content=html_content,
+                text_content=text_content
+            ))
+    except Exception as e:
+        print(f"⚠️ Email notification failed: {str(e)}")
+    
     return {"message": "Shift request rejected"}
 
 # Additional CRUD endpoints for shift requests (Admin only)
