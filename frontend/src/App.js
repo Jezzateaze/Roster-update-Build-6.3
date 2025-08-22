@@ -3652,6 +3652,31 @@ function App() {
         responseType: 'blob',
       });
       
+      // Check if response is actually a JSON error (not a file)
+      if (response.data.type === 'application/json') {
+        const reader = new FileReader();
+        reader.onload = function() {
+          try {
+            const errorData = JSON.parse(reader.result);
+            console.error('Export API returned error:', errorData);
+            alert(`❌ Export failed: ${errorData.detail || 'Unknown error'}`);
+          } catch (e) {
+            console.error('Failed to parse error response:', e);
+            alert('❌ Export failed: Invalid response from server');
+          }
+        };
+        reader.readAsText(response.data);
+        return;
+      }
+      
+      // Check response size
+      if (response.data.size === 0) {
+        alert('❌ Export failed: No data returned from server');
+        return;
+      }
+      
+      console.log(`✅ Export response: ${response.data.size} bytes, type: ${response.data.type}`);
+      
       // Get filename from response headers or create default
       const contentDisposition = response.headers['content-disposition'];
       let filename = `roster_export_${displayName.replace(/[^a-zA-Z0-9]/g, '_')}.${format}`;
