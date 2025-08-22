@@ -40,6 +40,12 @@ import csv
 import io
 from fastapi.responses import StreamingResponse
 
+# Email notification imports
+import aiosmtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+from jinja2 import Template
+
 # Database setup
 MONGO_URL = os.environ.get("MONGO_URL", "mongodb://localhost:27017")
 DB_NAME = os.environ.get("DB_NAME", "shift_roster_db")
