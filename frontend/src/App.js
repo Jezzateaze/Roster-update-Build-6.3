@@ -3900,20 +3900,26 @@ function App() {
 
   // Get appropriate hourly rate for display based on user role
   const getDisplayHourlyRate = (entry) => {
-    if (!canViewPayInformation(entry.staff_id)) {
+    if (!isAuthenticated || !currentUser) {
       return null;
     }
     
     // Admin users see NDIS hourly rates, Staff users see staff rates
     if (canViewNDISCharges()) {
-      return entry.ndis_hourly_charge || 0;
+      return entry.ndis_hourly_charge !== null && entry.ndis_hourly_charge !== undefined
+        ? entry.ndis_hourly_charge
+        : null;
     } else {
-      // Calculate staff hourly rate from total pay and hours
+      // Calculate staff hourly rate from total pay and hours (only if pay is visible)
+      if (entry.total_pay === null || entry.total_pay === undefined) {
+        return null; // Pay info filtered out by backend
+      }
+      
       const hours = entry.hours_worked || 0;
       if (hours > 0) {
-        return (entry.total_pay || 0) / hours;
+        return entry.total_pay / hours;
       }
-      return 0;
+      return entry.total_pay !== null ? 0 : null;
     }
   };
 
