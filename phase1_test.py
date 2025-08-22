@@ -68,10 +68,10 @@ class Phase1RosterTester:
         # Step 1: Admin Authentication and Roster Access
         print(f"\n   🎯 STEP 1: Admin Authentication and Full Roster Access")
         
-        # Login as Admin with PIN 0000
+        # Login as Admin with PIN 1234
         admin_login_data = {
             "username": "Admin",
-            "pin": "0000"
+            "pin": "1234"
         }
         
         success, admin_response = self.run_test(
