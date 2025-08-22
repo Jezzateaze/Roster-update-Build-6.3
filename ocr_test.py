@@ -13,7 +13,7 @@ import time
 from datetime import datetime
 
 class OCRTester:
-    def __init__(self, base_url="https://workforce-wizard-1.preview.emergentagent.com"):
+    def __init__(self, base_url="https://shift-master-10.preview.emergentagent.com"):
         self.base_url = base_url
         self.tests_run = 0
         self.tests_passed = 0
