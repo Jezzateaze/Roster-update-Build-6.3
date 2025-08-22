@@ -4001,26 +4001,10 @@ async def cleanup_ocr_results(current_user: dict = Depends(get_current_user)):
 # EXPORT FUNCTIONALITY ENDPOINTS
 # =====================================
 
-def get_roster_data_for_export(month: str, current_user: dict):
-    """Get roster data for export with role-based filtering"""
+def get_roster_data_for_export(start_date: str, end_date: str, current_user: dict):
+    """Get roster data for export with date range support"""
     
-    # Parse month (YYYY-MM format)
-    try:
-        year, month_num = map(int, month.split("-"))
-    except ValueError:
-        raise HTTPException(status_code=400, detail="Invalid month format. Use YYYY-MM")
-    
-    # Get all roster entries for the specified month
-    start_date = f"{year}-{month_num:02d}-01"
-    if month_num == 12:
-        end_year = year + 1
-        end_month = 1
-    else:
-        end_year = year
-        end_month = month_num + 1
-    end_date = f"{end_year}-{end_month:02d}-01"
-    
-    # Query roster entries for the month
+    # Query roster entries for the date range
     query = {
         "date": {"$gte": start_date, "$lt": end_date}
     }
