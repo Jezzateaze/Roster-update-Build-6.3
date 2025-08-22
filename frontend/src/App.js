@@ -13621,6 +13621,159 @@ function App() {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Print Dialog */}
+      <Dialog open={showPrintDialog} onOpenChange={setShowPrintDialog}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center space-x-2">
+              <FileText className="w-5 h-5" />
+              <span>Print Roster</span>
+            </DialogTitle>
+            <p className="text-sm text-slate-600 mt-2">
+              Select a date range and print the complete roster in landscape format.
+              {currentUser?.role === 'staff' && <span className="text-blue-600 font-medium"> Staff users can only print their own shift data and unassigned shifts.</span>}
+            </p>
+          </DialogHeader>
+          <div className="space-y-6">
+            {/* Print Range Selection */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-medium text-slate-800">📅 Select Date Range</h3>
+              
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {/* Weekly Option */}
+                <div 
+                  className={`p-4 border-2 rounded-lg cursor-pointer transition-all ${
+                    printRangeType === 'weekly' 
+                      ? 'border-blue-500 bg-blue-50' 
+                      : 'border-gray-300 hover:border-blue-300'
+                  }`}
+                  onClick={() => setPrintRangeType('weekly')}
+                >
+                  <div className="text-center">
+                    <div className="text-2xl mb-2">📅</div>
+                    <h4 className="font-semibold">Current Week</h4>
+                    <p className="text-sm text-gray-600 mt-1">Monday to Sunday</p>
+                    {printRangeType === 'weekly' && (
+                      <div className="text-xs text-blue-600 mt-2 font-medium">
+                        {(() => {
+                          try {
+                            const { displayRange } = calculateDateRange('weekly', '', '');
+                            return displayRange;
+                          } catch (e) {
+                            return 'Current Week';
+                          }
+                        })()}
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Monthly Option */}
+                <div 
+                  className={`p-4 border-2 rounded-lg cursor-pointer transition-all ${
+                    printRangeType === 'monthly' 
+                      ? 'border-blue-500 bg-blue-50' 
+                      : 'border-gray-300 hover:border-blue-300'
+                  }`}
+                  onClick={() => setPrintRangeType('monthly')}
+                >
+                  <div className="text-center">
+                    <div className="text-2xl mb-2">🗓️</div>
+                    <h4 className="font-semibold">Current Month</h4>
+                    <p className="text-sm text-gray-600 mt-1">Full month view</p>
+                    {printRangeType === 'monthly' && (
+                      <div className="text-xs text-blue-600 mt-2 font-medium">
+                        {currentDate.toLocaleString('default', { month: 'long', year: 'numeric' })}
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Custom Range Option */}
+                <div 
+                  className={`p-4 border-2 rounded-lg cursor-pointer transition-all ${
+                    printRangeType === 'custom' 
+                      ? 'border-blue-500 bg-blue-50' 
+                      : 'border-gray-300 hover:border-blue-300'
+                  }`}
+                  onClick={() => setPrintRangeType('custom')}
+                >
+                  <div className="text-center">
+                    <div className="text-2xl mb-2">📆</div>
+                    <h4 className="font-semibold">Custom Range</h4>
+                    <p className="text-sm text-gray-600 mt-1">Choose specific dates</p>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Custom Date Range Inputs */}
+              {printRangeType === 'custom' && (
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                  <h4 className="font-medium text-blue-800 mb-3">Select Custom Date Range</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="print-start-date">Start Date</Label>
+                      <Input
+                        id="print-start-date"
+                        type="date"
+                        value={printStartDate}
+                        onChange={(e) => setPrintStartDate(e.target.value)}
+                        className="mt-1"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="print-end-date">End Date</Label>
+                      <Input
+                        id="print-end-date"
+                        type="date"
+                        value={printEndDate}
+                        onChange={(e) => setPrintEndDate(e.target.value)}
+                        min={printStartDate}
+                        className="mt-1"
+                      />
+                    </div>
+                  </div>
+                  
+                  {printStartDate && printEndDate && (
+                    <div className="mt-3 p-3 bg-white rounded border">
+                      <p className="text-sm text-blue-800">
+                        <strong>Selected Range:</strong> {new Date(printStartDate).toLocaleDateString()} to {new Date(printEndDate).toLocaleDateString()}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Print Information */}
+            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+              <h4 className="font-medium text-yellow-800 mb-2">🖨️ Print Information</h4>
+              <ul className="text-sm text-yellow-700 space-y-1">
+                <li>• Roster will be printed in landscape orientation</li>
+                <li>• Includes date, time, staff assignment, hours, and pay information</li>
+                <li>• {currentUser?.role === 'staff' ? 'Shows your shifts and unassigned shifts only' : 'Shows all shifts for selected date range'}</li>
+                <li>• Optimized for standard paper sizes (A4/Letter)</li>
+              </ul>
+            </div>
+
+            {/* Print Actions */}
+            <div className="flex justify-end space-x-2">
+              <Button variant="outline" onClick={() => setShowPrintDialog(false)}>
+                Cancel
+              </Button>
+              <Button 
+                onClick={printRosterData}
+                disabled={printRangeType === 'custom' && (!printStartDate || !printEndDate)}
+                className="flex items-center space-x-2"
+              >
+                <FileText className="w-4 h-4" />
+                <span>Print Roster</span>
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
       
     </div>
   );
