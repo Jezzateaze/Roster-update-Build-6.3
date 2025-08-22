@@ -10590,18 +10590,7 @@ function App() {
       </Dialog>
 
       {/* PIN Change Dialog */}
-      <Dialog open={showPinChangeDialog} onOpenChange={(open) => {
-        // Only allow closing if user explicitly cancels or completes PIN change
-        // Prevent accidental closure during PIN entry process
-        if (!open && newPin === '' && confirmPin === '') {
-          // Allow closing only if no PIN entry is in progress
-          setShowPinChangeDialog(false);
-          setNewPin('');
-          setConfirmPin('');
-          setPinDigits(4);
-        }
-        // If PIN entry is in progress, keep dialog open
-      }}>
+      <Dialog open={showPinChangeDialog} onOpenChange={false}>
         <DialogContent className="sm:max-w-lg">
           <DialogHeader>
             <DialogTitle className="text-center text-xl font-bold">
