@@ -180,19 +180,31 @@ class PrintFunctionalityBackendTester:
         # Test 2: Cross-month data retrieval for weekly/custom ranges
         print(f"\n   🎯 TEST 2: Cross-Month Data Retrieval for Weekly/Custom Ranges")
         
-        # Test weekly range spanning months (end of August to beginning of September)
-        success, cross_month_roster = self.run_test(
-            "Get Cross-Month Roster Data (Aug-Sep 2025)",
+        # Since API only supports monthly queries, test getting multiple months
+        # Get August 2025 data
+        success_aug, august_data = self.run_test(
+            "Get August 2025 Data for Cross-Month Range",
             "GET",
             "api/roster",
             200,
-            params={
-                "start_date": "2025-08-25",
-                "end_date": "2025-09-05"
-            },
+            params={"month": "2025-08"},
             use_auth=True,
             auth_token=self.admin_token
         )
+        
+        # Get September 2025 data
+        success_sep, september_data = self.run_test(
+            "Get September 2025 Data for Cross-Month Range",
+            "GET",
+            "api/roster",
+            200,
+            params={"month": "2025-09"},
+            use_auth=True,
+            auth_token=self.admin_token
+        )
+        
+        success = success_aug and success_sep
+        cross_month_roster = august_data + september_data if success else []
         
         if success:
             print(f"   ✅ Retrieved {len(cross_month_roster)} entries for cross-month range")
