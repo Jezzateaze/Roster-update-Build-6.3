@@ -389,7 +389,7 @@ class Phase1RosterTester:
         
         # Final Assessment
         print(f"\n   🎉 PHASE 1 ROSTER DISPLAY MODIFICATIONS TEST RESULTS:")
-        print(f"      ✅ Admin Authentication: Working with Admin/0000")
+        print(f"      ✅ Admin Authentication: Working with Admin/1234")
         print(f"      ✅ Staff Authentication: Working with rose/888888")
         print(f"      ✅ Admin Roster Access: {len(admin_roster)} entries with full pay information")
         print(f"      ✅ Staff Roster Access: {len(staff_roster)} entries with filtered pay information")
