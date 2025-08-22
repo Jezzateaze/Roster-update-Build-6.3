@@ -3499,11 +3499,15 @@ function App() {
         localStorage.setItem('currentUser', JSON.stringify(updatedUser));
         setCurrentUser(updatedUser);
         
-        // Complete login
-        setIsAuthenticated(true);
-        setShowLoginDialog(false);
+        // Reset states and close dialog
         setShowPinChangeDialog(false);
-        resetLoginStates();
+        setNewPin('');
+        setConfirmPin('');
+        setPinInput('');
+        setPinDigits(4);
+        
+        // Don't affect authentication status if user is already logged in
+        // (only relevant for settings-based PIN changes)
       }
     } catch (error) {
       console.error('PIN change error:', error);
