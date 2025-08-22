@@ -489,6 +489,245 @@ def send_reset_email(email: str, temp_pin: str):
     print(f"🔐 RESET PIN for {email}: {temp_pin}")
     print("📧 In production, this would be sent via email")
 
+# Email notification functions
+async def send_email_notification(to_email: str, subject: str, html_content: str, text_content: str = None):
+    """Send email notification using SMTP"""
+    try:
+        # For development/demo - just log the email instead of sending
+        print(f"\n📧 EMAIL NOTIFICATION:")
+        print(f"   To: {to_email}")
+        print(f"   Subject: {subject}")
+        print(f"   Content: {text_content or html_content[:200]}...")
+        print(f"   Status: ✅ Email logged (SMTP not configured for demo)")
+        
+        # In production, you would uncomment this code and configure SMTP:
+        # msg = MIMEMultipart('alternative')
+        # msg['Subject'] = subject
+        # msg['From'] = f"{EMAIL_CONFIG['from_name']} <{EMAIL_CONFIG['from_email']}>"
+        # msg['To'] = to_email
+        # 
+        # if text_content:
+        #     msg.attach(MIMEText(text_content, 'plain'))
+        # msg.attach(MIMEText(html_content, 'html'))
+        # 
+        # await aiosmtplib.send(
+        #     msg,
+        #     hostname=EMAIL_CONFIG['smtp_server'],
+        #     port=EMAIL_CONFIG['smtp_port'],
+        #     use_tls=EMAIL_CONFIG['use_tls'],
+        #     username=EMAIL_CONFIG.get('smtp_username'),
+        #     password=EMAIL_CONFIG.get('smtp_password')
+        # )
+        
+        return True
+    except Exception as e:
+        print(f"❌ Email sending failed: {str(e)}")
+        return False
+
+def get_shift_request_approval_email(staff_name: str, shift_date: str, shift_time: str, admin_notes: str = None):
+    """Generate HTML email for shift request approval"""
+    html_template = """
+    <html>
+      <body style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <div style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; padding: 20px; border-radius: 8px 8px 0 0;">
+          <h1 style="margin: 0; font-size: 24px;">🎉 Shift Request Approved!</h1>
+        </div>
+        <div style="background: #f9fafb; padding: 20px; border-radius: 0 0 8px 8px;">
+          <p style="font-size: 16px; color: #374151;">Hi {{ staff_name }},</p>
+          <p style="font-size: 16px; color: #374151;">Great news! Your shift request has been <strong>approved</strong>.</p>
+          
+          <div style="background: white; padding: 15px; border-radius: 6px; margin: 20px 0; border-left: 4px solid #10b981;">
+            <h3 style="margin: 0 0 10px 0; color: #1f2937;">Shift Details:</h3>
+            <p style="margin: 5px 0; color: #6b7280;"><strong>Date:</strong> {{ shift_date }}</p>
+            <p style="margin: 5px 0; color: #6b7280;"><strong>Time:</strong> {{ shift_time }}</p>
+          </div>
+          
+          {% if admin_notes %}
+          <div style="background: #fef3c7; padding: 15px; border-radius: 6px; margin: 20px 0;">
+            <h4 style="margin: 0 0 10px 0; color: #92400e;">Admin Notes:</h4>
+            <p style="margin: 0; color: #92400e;">{{ admin_notes }}</p>
+          </div>
+          {% endif %}
+          
+          <p style="font-size: 14px; color: #6b7280; margin-top: 30px;">
+            Please check your roster to confirm the shift assignment.
+          </p>
+          
+          <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e7eb;">
+            <p style="font-size: 12px; color: #9ca3af; margin: 0;">
+              Workforce Management System<br>
+              This is an automated notification. Please do not reply.
+            </p>
+          </div>
+        </div>
+      </body>
+    </html>
+    """
+    
+    template = Template(html_template)
+    html_content = template.render(
+        staff_name=staff_name,
+        shift_date=shift_date,
+        shift_time=shift_time,
+        admin_notes=admin_notes
+    )
+    
+    text_content = f"""
+Shift Request Approved!
+
+Hi {staff_name},
+
+Your shift request has been approved.
+
+Shift Details:
+- Date: {shift_date}
+- Time: {shift_time}
+
+{f"Admin Notes: {admin_notes}" if admin_notes else ""}
+
+Please check your roster to confirm the shift assignment.
+
+Workforce Management System
+    """
+    
+    return html_content, text_content
+
+def get_shift_request_rejection_email(staff_name: str, shift_date: str, shift_time: str, admin_notes: str = None):
+    """Generate HTML email for shift request rejection"""
+    html_template = """
+    <html>
+      <body style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <div style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); color: white; padding: 20px; border-radius: 8px 8px 0 0;">
+          <h1 style="margin: 0; font-size: 24px;">📋 Shift Request Update</h1>
+        </div>
+        <div style="background: #f9fafb; padding: 20px; border-radius: 0 0 8px 8px;">
+          <p style="font-size: 16px; color: #374151;">Hi {{ staff_name }},</p>
+          <p style="font-size: 16px; color: #374151;">We have an update regarding your recent shift request.</p>
+          
+          <div style="background: white; padding: 15px; border-radius: 6px; margin: 20px 0; border-left: 4px solid #ef4444;">
+            <h3 style="margin: 0 0 10px 0; color: #1f2937;">Shift Details:</h3>
+            <p style="margin: 5px 0; color: #6b7280;"><strong>Date:</strong> {{ shift_date }}</p>
+            <p style="margin: 5px 0; color: #6b7280;"><strong>Time:</strong> {{ shift_time }}</p>
+            <p style="margin: 5px 0; color: #ef4444;"><strong>Status:</strong> Not approved at this time</p>
+          </div>
+          
+          {% if admin_notes %}
+          <div style="background: #fef2f2; padding: 15px; border-radius: 6px; margin: 20px 0;">
+            <h4 style="margin: 0 0 10px 0; color: #991b1b;">Additional Information:</h4>
+            <p style="margin: 0; color: #991b1b;">{{ admin_notes }}</p>
+          </div>
+          {% endif %}
+          
+          <p style="font-size: 14px; color: #6b7280; margin-top: 30px;">
+            Thank you for your interest in additional shifts. Please feel free to request other available shifts.
+          </p>
+          
+          <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e7eb;">
+            <p style="font-size: 12px; color: #9ca3af; margin: 0;">
+              Workforce Management System<br>
+              This is an automated notification. Please do not reply.
+            </p>
+          </div>
+        </div>
+      </body>
+    </html>
+    """
+    
+    template = Template(html_template)
+    html_content = template.render(
+        staff_name=staff_name,
+        shift_date=shift_date,
+        shift_time=shift_time,
+        admin_notes=admin_notes
+    )
+    
+    text_content = f"""
+Shift Request Update
+
+Hi {staff_name},
+
+Your shift request for {shift_date} at {shift_time} was not approved at this time.
+
+{f"Additional Information: {admin_notes}" if admin_notes else ""}
+
+Thank you for your interest in additional shifts. Please feel free to request other available shifts.
+
+Workforce Management System
+    """
+    
+    return html_content, text_content
+
+def get_admin_shift_request_notification_email(staff_name: str, shift_date: str, shift_time: str, request_notes: str = None):
+    """Generate HTML email for admin notification of new shift request"""
+    html_template = """
+    <html>
+      <body style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <div style="background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); color: white; padding: 20px; border-radius: 8px 8px 0 0;">
+          <h1 style="margin: 0; font-size: 24px;">🔔 New Shift Request</h1>
+        </div>
+        <div style="background: #f9fafb; padding: 20px; border-radius: 0 0 8px 8px;">
+          <p style="font-size: 16px; color: #374151;">Hello Administrator,</p>
+          <p style="font-size: 16px; color: #374151;">A staff member has submitted a new shift request that requires your approval.</p>
+          
+          <div style="background: white; padding: 15px; border-radius: 6px; margin: 20px 0; border-left: 4px solid #3b82f6;">
+            <h3 style="margin: 0 0 10px 0; color: #1f2937;">Request Details:</h3>
+            <p style="margin: 5px 0; color: #6b7280;"><strong>Staff Member:</strong> {{ staff_name }}</p>
+            <p style="margin: 5px 0; color: #6b7280;"><strong>Shift Date:</strong> {{ shift_date }}</p>
+            <p style="margin: 5px 0; color: #6b7280;"><strong>Shift Time:</strong> {{ shift_time }}</p>
+          </div>
+          
+          {% if request_notes %}
+          <div style="background: #eff6ff; padding: 15px; border-radius: 6px; margin: 20px 0;">
+            <h4 style="margin: 0 0 10px 0; color: #1e40af;">Staff Notes:</h4>
+            <p style="margin: 0; color: #1e40af;">{{ request_notes }}</p>
+          </div>
+          {% endif %}
+          
+          <div style="background: #f0fdf4; padding: 15px; border-radius: 6px; margin: 20px 0;">
+            <p style="margin: 0; color: #166534; font-weight: 500;">
+              Please log in to the Workforce Management System to approve or reject this request.
+            </p>
+          </div>
+          
+          <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e7eb;">
+            <p style="font-size: 12px; color: #9ca3af; margin: 0;">
+              Workforce Management System<br>
+              This is an automated notification. Please do not reply.
+            </p>
+          </div>
+        </div>
+      </body>
+    </html>
+    """
+    
+    template = Template(html_template)
+    html_content = template.render(
+        staff_name=staff_name,
+        shift_date=shift_date,
+        shift_time=shift_time,
+        request_notes=request_notes
+    )
+    
+    text_content = f"""
+New Shift Request
+
+Hello Administrator,
+
+A staff member has submitted a new shift request:
+
+Staff Member: {staff_name}
+Shift Date: {shift_date}
+Shift Time: {shift_time}
+
+{f"Staff Notes: {request_notes}" if request_notes else ""}
+
+Please log in to the Workforce Management System to approve or reject this request.
+
+Workforce Management System
+    """
+    
+    return html_content, text_content
+
 # Initialize admin user on startup
 create_admin_user()
 
