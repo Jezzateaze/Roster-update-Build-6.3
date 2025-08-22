@@ -75,7 +75,7 @@ class Phase1RosterTester:
         }
         
         success, admin_response = self.run_test(
-            "Admin Login (Admin/0000)",
+            "Admin Login (Admin/1234)",
             "POST",
             "api/auth/login",
             200,
