@@ -3321,7 +3321,9 @@ function App() {
                     : 'active:scale-95'
                   }
                 `}
-                onClick={() => {
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
                   if (item === 'Clear') {
                     onClear();
                   } else if (item === '⌫') {
