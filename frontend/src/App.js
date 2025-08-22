@@ -3741,6 +3741,286 @@ function App() {
     }
   };
 
+  // Print roster data functionality
+  const printRosterData = async () => {
+    if (!isAuthenticated) {
+      alert('Please log in to print roster');
+      return;
+    }
+
+    try {
+      let rosterData;
+      let displayTitle;
+      
+      // Get roster data based on selected date range
+      if (printRangeType === 'monthly') {
+        const currentMonth = formatDateString(currentDate).substring(0, 7); // Get YYYY-MM format
+        const monthName = currentDate.toLocaleString('default', { month: 'long', year: 'numeric' });
+        
+        const response = await fetch(`${import.meta.env.REACT_APP_BACKEND_URL}/api/roster?month=${currentMonth}`, {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          }
+        });
+        
+        if (!response.ok) {
+          throw new Error('Failed to fetch roster data');
+        }
+        
+        rosterData = await response.json();
+        displayTitle = `Roster - ${monthName}`;
+      } else {
+        // For weekly and custom ranges, get data using date range
+        const { startDate, endDate, displayRange } = calculateDateRange(
+          printRangeType, 
+          printStartDate, 
+          printEndDate
+        );
+        
+        // Get all roster data and filter by date range
+        const allMonths = [];
+        const start = new Date(startDate);
+        const end = new Date(endDate);
+        
+        // Get all months that fall within the date range
+        let current = new Date(start.getFullYear(), start.getMonth(), 1);
+        while (current <= end) {
+          allMonths.push(current.toISOString().substring(0, 7)); // YYYY-MM format
+          current.setMonth(current.getMonth() + 1);
+        }
+        
+        // Fetch data for all relevant months
+        const allRosterData = [];
+        for (const month of allMonths) {
+          try {
+            const response = await fetch(`${import.meta.env.REACT_APP_BACKEND_URL}/api/roster?month=${month}`, {
+              headers: {
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+              }
+            });
+            
+            if (response.ok) {
+              const monthData = await response.json();
+              allRosterData.push(...monthData);
+            }
+          } catch (error) {
+            console.warn(`Failed to fetch data for month ${month}`);
+          }
+        }
+        
+        // Filter by exact date range
+        rosterData = allRosterData.filter(entry => {
+          const entryDate = new Date(entry.date);
+          return entryDate >= start && entryDate <= end;
+        });
+        
+        displayTitle = `Roster - ${displayRange}`;
+      }
+
+      // Sort roster data by date and time
+      rosterData.sort((a, b) => {
+        const dateComparison = new Date(a.date) - new Date(b.date);
+        if (dateComparison !== 0) return dateComparison;
+        return a.start_time.localeCompare(b.start_time);
+      });
+
+      // Close print dialog and open print window
+      setShowPrintDialog(false);
+      
+      // Generate and print the roster
+      generatePrintableRoster(rosterData, displayTitle);
+
+    } catch (error) {
+      console.error('Print failed:', error);
+      alert('Print failed. Please try again.');
+    }
+  };
+
+  // Generate printable roster HTML
+  const generatePrintableRoster = (rosterData, title) => {
+    const printWindow = window.open('', '_blank', 'width=1200,height=800');
+    
+    if (!printWindow) {
+      alert('Print popup was blocked. Please allow popups and try again.');
+      return;
+    }
+
+    const html = `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>${title}</title>
+          <style>
+            @page {
+              size: landscape;
+              margin: 0.5in;
+            }
+            
+            * {
+              margin: 0;
+              padding: 0;
+              box-sizing: border-box;
+            }
+            
+            body {
+              font-family: Arial, sans-serif;
+              font-size: 11px;
+              line-height: 1.3;
+              color: #333;
+            }
+            
+            .print-header {
+              text-align: center;
+              margin-bottom: 20px;
+              padding-bottom: 10px;
+              border-bottom: 2px solid #333;
+            }
+            
+            .print-header h1 {
+              font-size: 20px;
+              font-weight: bold;
+              margin-bottom: 5px;
+            }
+            
+            .print-header p {
+              font-size: 12px;
+              color: #666;
+            }
+            
+            .roster-table {
+              width: 100%;
+              border-collapse: collapse;
+              margin-top: 10px;
+            }
+            
+            .roster-table th {
+              background-color: #f5f5f5;
+              border: 1px solid #333;
+              padding: 6px 4px;
+              text-align: left;
+              font-weight: bold;
+              font-size: 10px;
+            }
+            
+            .roster-table td {
+              border: 1px solid #333;
+              padding: 4px;
+              font-size: 10px;
+              vertical-align: top;
+            }
+            
+            .roster-table tr:nth-child(even) {
+              background-color: #f9f9f9;
+            }
+            
+            .date-cell {
+              font-weight: bold;
+              white-space: nowrap;
+            }
+            
+            .time-cell {
+              white-space: nowrap;
+            }
+            
+            .staff-cell {
+              font-weight: 500;
+            }
+            
+            .unassigned {
+              color: #dc2626;
+              font-style: italic;
+            }
+            
+            .pay-cell {
+              text-align: right;
+              font-weight: 500;
+            }
+            
+            .hours-cell {
+              text-align: center;
+            }
+            
+            .print-footer {
+              position: fixed;
+              bottom: 20px;
+              left: 0;
+              right: 0;
+              text-align: center;
+              font-size: 9px;
+              color: #666;
+              border-top: 1px solid #ccc;
+              padding-top: 10px;
+            }
+            
+            @media print {
+              .print-footer {
+                position: fixed;
+                bottom: 0;
+              }
+            }
+          </style>
+        </head>
+        <body>
+          <div class="print-header">
+            <h1>Workforce Management System</h1>
+            <p>${title}</p>
+            <p>Generated on ${new Date().toLocaleDateString()} at ${new Date().toLocaleTimeString()}</p>
+            ${currentUser ? `<p>Generated by: ${currentUser.username} (${currentUser.role})</p>` : ''}
+          </div>
+
+          <table class="roster-table">
+            <thead>
+              <tr>
+                <th style="width: 12%;">Date</th>
+                <th style="width: 15%;">Time</th>
+                <th style="width: 18%;">Staff Member</th>
+                <th style="width: 25%;">Client/Location</th>
+                <th style="width: 8%;">Hours</th>
+                ${canViewPayInformation() ? `<th style="width: 12%;">Pay/Charge</th>` : ''}
+                <th style="width: 10%;">Notes</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${rosterData.map(entry => {
+                const payAmount = getDisplayAmount(entry, entry.staff_id);
+                const showPay = payAmount !== null;
+                
+                return `
+                  <tr>
+                    <td class="date-cell">${formatDateDisplay(entry.date)}</td>
+                    <td class="time-cell">${formatTime(entry.start_time, settings.time_format === '24hr')} - ${formatTime(entry.end_time, settings.time_format === '24hr')}</td>
+                    <td class="staff-cell ${!entry.staff_name ? 'unassigned' : ''}">${entry.staff_name || 'Unassigned'}</td>
+                    <td>${entry.client_name || 'N/A'}</td>
+                    <td class="hours-cell">${entry.hours_worked || 0}h</td>
+                    ${canViewPayInformation() ? `<td class="pay-cell">${showPay ? `$${payAmount.toFixed(2)}` : '***'}</td>` : ''}
+                    <td>${entry.notes || ''}</td>
+                  </tr>
+                `;
+              }).join('')}
+            </tbody>
+          </table>
+
+          <div class="print-footer">
+            <p>Workforce Management System - Roster Report</p>
+            <p>Total Shifts: ${rosterData.length} | 
+            Assigned: ${rosterData.filter(e => e.staff_name).length} | 
+            Unassigned: ${rosterData.filter(e => !e.staff_name).length}</p>
+          </div>
+        </body>
+      </html>
+    `;
+
+    printWindow.document.write(html);
+    printWindow.document.close();
+    
+    // Wait for content to load then trigger print
+    printWindow.onload = () => {
+      setTimeout(() => {
+        printWindow.print();
+      }, 500);
+    };
+  };
+
   const getDayEntries = (date) => {
     // Ensure we're working with a proper date and format it consistently
     const targetDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
