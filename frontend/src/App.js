@@ -6792,46 +6792,181 @@ function App() {
                   <span>Export Options</span>
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <p className="text-slate-600">Export roster and pay data in various formats:</p>
+              <CardContent className="space-y-6">
+                <p className="text-slate-600">
+                  Export roster and pay data in various formats. 
+                  {currentUser?.role === 'staff' && <span className="text-blue-600 font-medium"> Staff users can only export their own shift data.</span>}
+                </p>
                 
-                {/* Month Selection for Export */}
-                <div className="flex items-center space-x-4 p-3 bg-blue-50 rounded-lg border">
-                  <label className="text-sm font-medium text-blue-800">Select Month:</label>
-                  <input
-                    type="month"
-                    value={formatDateString(currentDate).substring(0, 7)} // YYYY-MM format
-                    onChange={(e) => {
-                      const [year, month] = e.target.value.split('-');
-                      setCurrentDate(new Date(parseInt(year), parseInt(month) - 1, 1));
-                    }}
-                    className="px-3 py-1 border rounded text-sm"
-                  />
-                  <span className="text-xs text-blue-600">
-                    {currentUser?.role === 'staff' ? 'Your shifts only' : 'All roster data'}
-                  </span>
-                </div>
-                
-                <div className="flex space-x-4">
-                  <Button variant="outline" onClick={() => exportRosterData('pdf')}>
-                    <Download className="w-4 h-4 mr-2" />
-                    Export PDF
-                  </Button>
-                  <Button variant="outline" onClick={() => exportRosterData('excel')}>
-                    <Download className="w-4 h-4 mr-2" />
-                    Export Excel
-                  </Button>
-                  <Button variant="outline" onClick={() => exportRosterData('csv')}>
-                    <Download className="w-4 h-4 mr-2" />
-                    Export CSV
-                  </Button>
-                </div>
-                
-                <div className="text-xs text-slate-500 mt-2">
-                  <p><strong>Export includes:</strong> Date, Staff Name, Hours, Pay Rates, Total Pay, Client Info</p>
-                  {currentUser?.role === 'admin' && (
-                    <p><strong>Admin only:</strong> NDIS billing charges and line item details</p>
+                {/* Export Range Selection */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-medium text-slate-800">📅 Select Date Range</h3>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    {/* Weekly Option */}
+                    <div 
+                      className={`p-4 border-2 rounded-lg cursor-pointer transition-all ${
+                        exportRangeType === 'weekly' 
+                          ? 'border-blue-500 bg-blue-50' 
+                          : 'border-gray-300 hover:border-blue-300'
+                      }`}
+                      onClick={() => setExportRangeType('weekly')}
+                    >
+                      <div className="text-center">
+                        <div className="text-2xl mb-2">📅</div>
+                        <h4 className="font-semibold">Current Week</h4>
+                        <p className="text-sm text-gray-600 mt-1">Monday to Sunday</p>
+                        {exportRangeType === 'weekly' && (
+                          <div className="text-xs text-blue-600 mt-2 font-medium">
+                            {(() => {
+                              try {
+                                const { displayRange } = calculateDateRange('weekly');
+                                return displayRange;
+                              } catch (e) {
+                                return 'Current Week';
+                              }
+                            })()}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                    
+                    {/* Monthly Option */}
+                    <div 
+                      className={`p-4 border-2 rounded-lg cursor-pointer transition-all ${
+                        exportRangeType === 'monthly' 
+                          ? 'border-blue-500 bg-blue-50' 
+                          : 'border-gray-300 hover:border-blue-300'
+                      }`}
+                      onClick={() => setExportRangeType('monthly')}
+                    >
+                      <div className="text-center">
+                        <div className="text-2xl mb-2">🗓️</div>
+                        <h4 className="font-semibold">Current Month</h4>
+                        <p className="text-sm text-gray-600 mt-1">Full month view</p>
+                        {exportRangeType === 'monthly' && (
+                          <div className="text-xs text-blue-600 mt-2 font-medium">
+                            {currentDate.toLocaleString('default', { month: 'long', year: 'numeric' })}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                    
+                    {/* Custom Range Option */}
+                    <div 
+                      className={`p-4 border-2 rounded-lg cursor-pointer transition-all ${
+                        exportRangeType === 'custom' 
+                          ? 'border-blue-500 bg-blue-50' 
+                          : 'border-gray-300 hover:border-blue-300'
+                      }`}
+                      onClick={() => setExportRangeType('custom')}
+                    >
+                      <div className="text-center">
+                        <div className="text-2xl mb-2">📆</div>
+                        <h4 className="font-semibold">Custom Range</h4>
+                        <p className="text-sm text-gray-600 mt-1">Choose specific dates</p>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* Custom Date Range Inputs */}
+                  {exportRangeType === 'custom' && (
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                      <h4 className="font-medium text-blue-800 mb-3">Select Custom Date Range</h4>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <Label htmlFor="export-start-date" className="text-sm font-medium text-blue-800">
+                            Start Date
+                          </Label>
+                          <Input
+                            id="export-start-date"
+                            type="date"
+                            value={exportStartDate}
+                            onChange={(e) => setExportStartDate(e.target.value)}
+                            className="mt-1"
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="export-end-date" className="text-sm font-medium text-blue-800">
+                            End Date
+                          </Label>
+                          <Input
+                            id="export-end-date"
+                            type="date"
+                            value={exportEndDate}
+                            onChange={(e) => setExportEndDate(e.target.value)}
+                            className="mt-1"
+                          />
+                        </div>
+                      </div>
+                      {exportStartDate && exportEndDate && (
+                        <div className="text-sm text-blue-700 mt-2">
+                          <strong>Range:</strong> {exportStartDate} to {exportEndDate}
+                        </div>
+                      )}
+                    </div>
                   )}
+                </div>
+                
+                {/* Export Format Buttons */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-medium text-slate-800">📄 Export Formats</h3>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <Button 
+                      variant="outline" 
+                      onClick={() => exportRosterData('pdf')}
+                      disabled={exportRangeType === 'custom' && (!exportStartDate || !exportEndDate)}
+                      className="flex flex-col items-center p-6 h-auto space-y-2"
+                    >
+                      <Download className="w-6 h-6" />
+                      <div>
+                        <div className="font-semibold">Export PDF</div>
+                        <div className="text-xs text-gray-500">Formatted report</div>
+                      </div>
+                    </Button>
+                    
+                    <Button 
+                      variant="outline" 
+                      onClick={() => exportRosterData('excel')}
+                      disabled={exportRangeType === 'custom' && (!exportStartDate || !exportEndDate)}
+                      className="flex flex-col items-center p-6 h-auto space-y-2"
+                    >
+                      <Download className="w-6 h-6" />
+                      <div>
+                        <div className="font-semibold">Export Excel</div>
+                        <div className="text-xs text-gray-500">Spreadsheet format</div>
+                      </div>
+                    </Button>
+                    
+                    <Button 
+                      variant="outline" 
+                      onClick={() => exportRosterData('csv')}
+                      disabled={exportRangeType === 'custom' && (!exportStartDate || !exportEndDate)}
+                      className="flex flex-col items-center p-6 h-auto space-y-2"
+                    >
+                      <Download className="w-6 h-6" />
+                      <div>
+                        <div className="font-semibold">Export CSV</div>
+                        <div className="text-xs text-gray-500">Data format</div>
+                      </div>
+                    </Button>
+                  </div>
+                </div>
+                
+                {/* Export Information */}
+                <div className="bg-slate-50 border border-slate-200 rounded-lg p-4">
+                  <h4 className="font-medium text-slate-800 mb-2">📋 Export Details</h4>
+                  <div className="text-sm text-slate-600 space-y-1">
+                    <p><strong>Includes:</strong> Date, Staff Name, Hours, Pay Rates, Total Pay, Client Info</p>
+                    {currentUser?.role === 'admin' && (
+                      <p><strong>Admin only:</strong> NDIS billing charges and line item details</p>
+                    )}
+                    {currentUser?.role === 'staff' && (
+                      <p><strong>Staff view:</strong> Only your assigned shifts are included in exports</p>
+                    )}
+                    <p><strong>Time Zone:</strong> All times displayed in Brisbane/Australia timezone</p>
+                  </div>
                 </div>
               </CardContent>
             </Card>
