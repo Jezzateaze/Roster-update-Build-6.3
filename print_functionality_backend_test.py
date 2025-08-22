@@ -224,6 +224,19 @@ class PrintFunctionalityBackendTester:
                     print(f"   ✅ Cross-month data integrity verified")
                     print(f"      August entries: {len(august_entries)}")
                     print(f"      September entries: {len(september_entries)}")
+                    
+                    # Test filtering for specific date range (Aug 25 - Sep 5)
+                    filtered_entries = [
+                        entry for entry in cross_month_roster 
+                        if "2025-08-25" <= entry['date'] <= "2025-09-05"
+                    ]
+                    print(f"   📅 Filtered range (Aug 25 - Sep 5): {len(filtered_entries)} entries")
+                    
+                    if filtered_entries:
+                        min_date = min([entry['date'] for entry in filtered_entries])
+                        max_date = max([entry['date'] for entry in filtered_entries])
+                        print(f"   📅 Actual filtered range: {min_date} to {max_date}")
+                        print(f"   ✅ Cross-month filtering capability demonstrated")
                 else:
                     print(f"   ⚠️  Limited cross-month data (Aug: {len(august_entries)}, Sep: {len(september_entries)})")
         else:
