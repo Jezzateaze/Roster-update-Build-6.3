@@ -126,11 +126,15 @@ class Phase2ShiftRequestTester:
         """Get unassigned shifts from roster"""
         print(f"\n📋 Getting unassigned shifts from roster...")
         
+        # Get current month for roster query
+        current_month = datetime.now().strftime("%Y-%m")
+        
         success, roster_data = self.run_test(
             "Get Roster Data",
             "GET",
             "api/roster",
             200,
+            params={"month": current_month},
             use_auth=True,
             token=self.staff_token
         )
