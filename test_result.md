@@ -381,6 +381,7 @@ metadata:
 
 test_plan:
   current_focus:
+    - "Print Functionality Backend Support"
     - "Enhanced Availability Layout with Tabbed Views"
     - "Admin CRUD for Shift Requests Management"
     - "Admin CRUD for Staff Availability Management" 
