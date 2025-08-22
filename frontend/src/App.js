@@ -3987,7 +3987,7 @@ function App() {
                 
                 return `
                   <tr>
-                    <td class="date-cell">${formatDateDisplay(entry.date)}</td>
+                    <td class="date-cell">${new Date(entry.date).toLocaleDateString('en-AU')}</td>
                     <td class="time-cell">${formatTime(entry.start_time, settings.time_format === '24hr')} - ${formatTime(entry.end_time, settings.time_format === '24hr')}</td>
                     <td class="staff-cell ${!entry.staff_name ? 'unassigned' : ''}">${entry.staff_name || 'Unassigned'}</td>
                     <td>${entry.client_name || 'N/A'}</td>
