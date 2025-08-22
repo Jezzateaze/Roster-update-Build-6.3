@@ -10613,14 +10613,141 @@ function App() {
         <DialogContent className="sm:max-w-lg">
           <DialogHeader>
             <DialogTitle className="text-center text-xl font-bold">
-              🔐 Set Your New PIN
+              🔐 Change Your PIN
             </DialogTitle>
           </DialogHeader>
           
           <div className="space-y-6 pt-4">
             
+            {/* Current PIN Verification - Only for settings-initiated PIN changes */}
+            {!newPin && !confirmPin && (
+              <div className="space-y-4">
+                <div className="text-center">
+                  <h3 className="text-lg font-medium mb-2">Verify Current PIN</h3>
+                  <p className="text-sm text-gray-600 mb-4">Enter your current PIN to continue</p>
+                </div>
+                
+                <div className="flex justify-center">
+                  <div className="flex space-x-2">
+                    {Array.from({ length: 6 }, (_, index) => (
+                      <div
+                        key={index}
+                        className="w-12 h-12 border-2 border-gray-300 rounded-lg flex items-center justify-center text-2xl font-bold"
+                      >
+                        {index < pinInput.length ? '●' : ''}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                
+                {/* Numerical Keypad for current PIN */}
+                <NumericKeypad
+                  onNumberPress={handleKeypadNumber}
+                  onBackspace={handleKeypadBackspace}
+                  onClear={handleKeypadClear}
+                  maxLength={6}
+                  currentInput={pinInput}
+                />
+                
+                <div className="flex justify-center space-x-4">
+                  <Button 
+                    variant="outline"
+                    onClick={() => {
+                      setShowPinChangeDialog(false);
+                      setPinInput('');
+                      setNewPin('');
+                      setConfirmPin('');
+                    }}
+                    className="w-full"
+                  >
+                    ← Cancel
+                  </Button>
+                  <Button 
+                    onClick={async () => {
+                      // Verify current PIN before proceeding
+                      try {
+                        const response = await axios.post(`${API_BASE_URL}/api/auth/login`, {
+                          username: currentUser.username,
+                          pin: pinInput
+                        });
+                        if (response.data.token) {
+                          // Current PIN is correct, proceed to PIN length selection
+                          setPinInput('');
+                          setNewPin('start'); // Use 'start' as a flag to show PIN length selection
+                        }
+                      } catch (error) {
+                        alert('❌ Current PIN is incorrect. Please try again.');
+                        setPinInput('');
+                      }
+                    }}
+                    disabled={pinInput.length === 0}
+                    className="w-full"
+                  >
+                    Verify PIN →
+                  </Button>
+                </div>
+              </div>
+            )}
+            
             {/* PIN Length Selection */}
-            {!newPin && (
+            {newPin === 'start' && (
+              <div className="space-y-4">
+                <div className="text-center">
+                  <h3 className="text-lg font-medium mb-2">Choose New PIN Length</h3>
+                  <p className="text-sm text-gray-600 mb-4">Select your preferred PIN length for security</p>
+                </div>
+                
+                <div className="grid grid-cols-2 gap-4">
+                  <button
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      handlePinDigitSelection(4);
+                      setNewPin(''); // Reset to empty for PIN entry
+                    }}
+                    className="p-6 border-2 border-gray-300 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-colors"
+                  >
+                    <div className="text-2xl font-bold text-blue-600 mb-2">4</div>
+                    <div className="text-sm font-medium">Digits</div>
+                    <div className="text-xs text-gray-500 mt-1">Quick & Easy</div>
+                  </button>
+                  
+                  <button
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      handlePinDigitSelection(6);
+                      setNewPin(''); // Reset to empty for PIN entry
+                    }}
+                    className="p-6 border-2 border-gray-300 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-colors"
+                  >
+                    <div className="text-2xl font-bold text-green-600 mb-2">6</div>
+                    <div className="text-sm font-medium">Digits</div>
+                    <div className="text-xs text-gray-500 mt-1">More Secure</div>
+                  </button>
+                </div>
+                
+                {/* Cancel Button */}
+                <div className="flex justify-center mt-4">
+                  <Button 
+                    variant="outline"
+                    onClick={() => {
+                      setShowPinChangeDialog(false);
+                      setNewPin('');
+                      setConfirmPin('');
+                      setPinDigits(4);
+                      setPinInput('');
+                    }}
+                    className="w-full"
+                  >
+                    ← Cancel & Return to Settings
+                  </Button>
+                </div>
+              </div>
+            )}
+            
+            {/* New PIN Entry */}
+            {newPin && newPin !== 'start' && !confirmPin && (
               <div className="space-y-4">
                 <div className="text-center">
                   <h3 className="text-lg font-medium mb-2">Choose PIN Length</h3>
