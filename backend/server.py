@@ -3112,6 +3112,28 @@ async def create_shift_request(request: ShiftRequest, current_user: dict = Depen
     request.created_at = datetime.utcnow()
     
     db.shift_requests.insert_one(request.dict())
+    
+    # Send email notification to admin
+    try:
+        shift_time = f"{roster_entry['start_time']}-{roster_entry['end_time']}"
+        html_content, text_content = get_admin_shift_request_notification_email(
+            staff_name=request.staff_name,
+            shift_date=roster_entry['date'],
+            shift_time=shift_time,
+            request_notes=request.notes
+        )
+        
+        # Schedule email sending to admin (async)
+        import asyncio
+        asyncio.create_task(send_email_notification(
+            to_email=EMAIL_CONFIG["admin_email"],
+            subject=f"🔔 New Shift Request from {request.staff_name} - Workforce Management",
+            html_content=html_content,
+            text_content=text_content
+        ))
+    except Exception as e:
+        print(f"⚠️ Admin email notification failed: {str(e)}")
+    
     return request
 
 @app.put("/api/shift-requests/{request_id}/approve")
