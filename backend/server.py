@@ -64,6 +64,16 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Email Configuration
+EMAIL_CONFIG = {
+    "smtp_server": "smtp.gmail.com",
+    "smtp_port": 587,
+    "use_tls": True,
+    "admin_email": "jeremy.tomlinson88@gmail.com",
+    "from_email": "noreply@workforce-management.com",  # This should be configured with proper SMTP credentials
+    "from_name": "Workforce Management System"
+}
+
 # Enums
 class PayMode(str, Enum):
     DEFAULT = "default"
