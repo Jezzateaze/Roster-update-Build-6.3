@@ -10619,7 +10619,11 @@ function App() {
                 
                 <div className="grid grid-cols-2 gap-4">
                   <button
-                    onClick={() => handlePinDigitSelection(4)}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      handlePinDigitSelection(4);
+                    }}
                     className="p-6 border-2 border-gray-300 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-colors"
                   >
                     <div className="text-2xl font-bold text-blue-600 mb-2">4</div>
@@ -10628,7 +10632,11 @@ function App() {
                   </button>
                   
                   <button
-                    onClick={() => handlePinDigitSelection(6)}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      handlePinDigitSelection(6);
+                    }}
                     className="p-6 border-2 border-gray-300 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-colors"
                   >
                     <div className="text-2xl font-bold text-green-600 mb-2">6</div>
