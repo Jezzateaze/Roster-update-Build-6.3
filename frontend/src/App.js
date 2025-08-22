@@ -544,6 +544,12 @@ function App() {
   const [exportStartDate, setExportStartDate] = useState('');
   const [exportEndDate, setExportEndDate] = useState('');
   
+  // State for print functionality
+  const [showPrintDialog, setShowPrintDialog] = useState(false);
+  const [printRangeType, setPrintRangeType] = useState('monthly'); // 'weekly', 'monthly', 'custom'
+  const [printStartDate, setPrintStartDate] = useState('');
+  const [printEndDate, setPrintEndDate] = useState('');
+  
   // Shift Request CRUD states
   const [showEditShiftRequestDialog, setShowEditShiftRequestDialog] = useState(false);
   const [showAddShiftRequestDialog, setShowAddShiftRequestDialog] = useState(false);
